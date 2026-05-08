@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Chefão — Prensadão</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #4a148c 0%, #1a237e 100%);
+    }
+    .login-box {
+      background: #fff; border-radius: 20px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .login-box h1 { font-size: 1.5rem; color: #4a148c; text-align: center; margin-bottom: 6px; }
+    .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
+    .login-box input { width: 100%; padding: 12px 16px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; margin-bottom: 14px; outline: none; }
+    .login-box input:focus { border-color: #4a148c; }
+    .login-box button { width: 100%; padding: 14px; background: #4a148c; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
+
+    #app { display: none; }
+    .topbar { background: #4a148c; color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .topbar h1 { font-size: 1rem; font-weight: 700; }
+    .topbar button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
+
+    .tabs { display: flex; background: #fff; border-bottom: 2px solid #eee; overflow-x: auto; }
+    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 600; color: #888; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
+    .tab.active { color: #4a148c; border-bottom-color: #4a148c; }
+
+    .screen { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+    .screen.active { display: block; }
+
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card h3 { font-size: 0.95rem; color: #333; margin-bottom: 12px; }
+
+    .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .btn-purple { background: #4a148c; color: #fff; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-blue { background: #1565c0; color: #fff; }
+    .btn-gray { background: #f5f5f5; color: #333; }
+
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; outline: none; }
+    input:focus, select:focus { border-color: #4a148c; }
+    label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+
+    .unidade-header {
+      padding: 10px 14px; border-radius: 10px; color: #fff; font-weight: 700;
+      margin-bottom: 10px; font-size: 0.95rem;
+    }
+    .unidade-cd { background: #607d8b; }
+    .unidade-centro { background: #2e7d32; }
+    .unidade-delivery { background: #1565c0; }
+
+    .prod-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; border-radius: 8px; margin-bottom: 4px;
+      background: #f9f9f9; border-left: 4px solid #eee;
+    }
+    .prod-row.ok { border-left-color: #2e7d32; }
+    .prod-row.zerado { border-left-color: #b71c1c; }
+    .prod-row.baixo { border-left-color: #ff9800; }
+
+    #toast {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+      font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { background: #2e7d32; }
+    #toast.error { background: #b71c1c; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #fff; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+    .stat-num { font-size: 1.4rem; font-weight: 700; color: #4a148c; }
+    .stat-label { font-size: 0.72rem; color: #888; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <h1>👑 Chefão</h1>
+    <p>Painel Matriz — Prensadão</p>
+    <label>Usuário</label>
+    <input type="text" id="login-usuario" placeholder="Ex: Lucas" />
+    <label>Senha</label>
+    <input type="password" id="login-senha" placeholder="••••" />
+    <button onclick="fazerLogin()">Entrar</button>
+    <div id="login-erro">Usuário ou senha incorretos</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>👑 Chefão — Prensadão</h1>
+      <span id="topbar-usuario" style="font-size:0.78rem;opacity:0.85;"></span>
+    </div>
+    <button onclick="sair()">Sair</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('estoque')">📦 Estoque Geral</div>
+    <div class="tab" onclick="showTab('entradas')">📥 Entradas</div>
+    <div class="tab" onclick="showTab('contagens')">📊 Contagens</div>
+    <div class="tab" onclick="showTab('pedidos')">🛒 Pedidos</div>
+  </div>
+
+  <!-- ESTOQUE GERAL -->
+  <div class="screen active" id="tab-estoque">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="stat-cd">—</div><div class="stat-label">🏭 CD</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-centro">—</div><div class="stat-label">🏪 Centro</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-delivery">—</div><div class="stat-label">🚗 Delivery</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <select id="filtro-unidade" onchange="renderEstoqueGeral()" style="margin:0;">
+        <option value="">Todas unidades</option>
+        <option value="cd">🏭 CD</option>
+        <option value="centro">🏪 Centro</option>
+        <option value="delivery">🚗 Delivery</option>
+      </select>
+      <select id="filtro-cat" onchange="renderEstoqueGeral()" style="margin:0;">
+        <option value="">Todas cats.</option>
+        <option>Bruto</option>
+        <option>Processado</option>
+      </select>
+    </div>
+    <button class="btn btn-purple" onclick="carregarTudo()">🔄 Atualizar</button>
+    <div id="lista-estoque-geral"></div>
+  </div>
+
+  <!-- ENTRADAS -->
+  <div class="screen" id="tab-entradas">
+    <div class="card">
+      <h3>📥 Entradas por Unidade</h3>
+      <input type="date" id="ent-data" onchange="carregarEntradas()" />
+    </div>
+    <div id="lista-entradas"></div>
+  </div>
+
+  <!-- CONTAGENS -->
+  <div class="screen" id="tab-contagens">
+    <div class="card">
+      <h3>📊 Contagens por Unidade</h3>
+      <input type="date" id="cont-data" onchange="carregarContagens()" />
+    </div>
+    <div id="lista-contagens"></div>
+  </div>
+
+  <!-- PEDIDOS -->
+  <div class="screen" id="tab-pedidos">
+    <div class="card">
+      <h3>🛒 Sugestão de Pedidos</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do estoque mínimo em cada unidade</p>
+      <button class="btn btn-purple" onclick="carregarPedidos()">🔄 Atualizar</button>
+    </div>
+    <div id="lista-pedidos"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+const UNIDADES = ['cd', 'centro', 'delivery'];
+const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery' };
+const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery' };
+
+let todosEstoques = [];
+
+function showToast(msg, tipo='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + tipo;
+  setTimeout(() => t.className = '', 2500);
+}
+
+function fmtQ(v, u) {
+  if (v === null || v === undefined) return '—';
+  return u === 'kg' ? parseFloat(v).toFixed(3) + ' kg' : parseFloat(v) + ' ' + u;
+}
+
+function dataHoje() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function supa(tabela, params='') {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, {
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+  });
+  return r.json();
+}
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  const res = await supa('usuario', `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.matriz&select=*`);
+  if (res && res.length > 0) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('topbar-usuario').textContent = res[0].usuario;
+    const hoje = dataHoje();
+    document.getElementById('ent-data').value = hoje;
+    document.getElementById('cont-data').value = hoje;
+    carregarTudo();
+  } else {
+    document.getElementById('login-erro').style.display = 'block';
+  }
+}
+
+document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+function sair() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'entradas') carregarEntradas();
+  if (name === 'contagens') carregarContagens();
+  if (name === 'pedidos') carregarPedidos();
+}
+
+// ── ESTOQUE GERAL ──
+async function carregarTudo() {
+  showToast('Atualizando...', '');
+  todosEstoques = await supa('produtos', 'select=*&order=nome.asc');
+  // Stats por unidade
+  UNIDADES.forEach(u => {
+    const prods = todosEstoques.filter(p => p.unidade_loja === u);
+    document.getElementById('stat-' + u).textContent = prods.length + ' prod.';
+  });
+  renderEstoqueGeral();
+}
+
+function renderEstoqueGeral() {
+  const filtroUnidade = document.getElementById('filtro-unidade').value;
+  const filtroCat = document.getElementById('filtro-cat').value;
+  const el = document.getElementById('lista-estoque-geral');
+
+  const unidades = filtroUnidade ? [filtroUnidade] : UNIDADES;
+  let html = '';
+
+  unidades.forEach(u => {
+    let prods = todosEstoques.filter(p => p.unidade_loja === u && (!filtroCat || p.categoria === filtroCat));
+    if (!prods.length) return;
+
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]}</div>`;
+    prods.forEach(p => {
+      const est = parseFloat(p.estoque) || 0;
+      const min = parseFloat(p.estoque_min) || 0;
+      const cls = est === 0 ? 'zerado' : (min > 0 && est <= min) ? 'baixo' : 'ok';
+      html += `<div class="prod-row ${cls}">
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">${p.categoria}</div>
+        </div>
+        <div style="font-weight:700;color:#1a237e;">${fmtQ(est, p.unidade)}</div>
+      </div>`;
+    });
+    html += '<div style="margin-bottom:16px;"></div>';
+  });
+
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+}
+
+// ── ENTRADAS ──
+async function carregarEntradas() {
+  const data = document.getElementById('ent-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-entradas');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const movs = await supa('movimentacoes', `tipo=eq.entrada&created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+
+  if (!movs.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma entrada nesta data</p>'; return; }
+
+  let html = '';
+  UNIDADES.forEach(u => {
+    const lista = movs.filter(m => m.unidade_loja === u);
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} entradas</div>`;
+    lista.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      html += `<div class="prod-row ok">
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;">${m.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div>
+        </div>
+        <div style="font-weight:700;color:#2e7d32;">+${fmtQ(m.qtd, m.unidade)}</div>
+      </div>`;
+    });
+    html += '<div style="margin-bottom:16px;"></div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── CONTAGENS ──
+async function carregarContagens() {
+  const data = document.getElementById('cont-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-contagens');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const movs = await supa('movimentacoes', `tipo=eq.contagem&created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+
+  if (!movs.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma contagem nesta data</p>'; return; }
+
+  let html = '';
+  UNIDADES.forEach(u => {
+    const lista = movs.filter(m => m.unidade_loja === u);
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} contagens</div>`;
+    lista.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      html += `<div class="prod-row ok">
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;">${m.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div>
+        </div>
+        <div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div>
+      </div>`;
+    });
+    html += '<div style="margin-bottom:16px;"></div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── PEDIDOS ──
+async function carregarPedidos() {
+  const el = document.getElementById('lista-pedidos');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const prods = await supa('produtos', 'select=*&order=nome.asc');
+  const comPedido = prods.filter(p => p.estoque_min > 0 && (parseFloat(p.estoque)||0) < p.estoque_min);
+
+  if (!comPedido.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">✅ Tudo em dia — nenhum pedido necessário</p>'; return; }
+
+  let html = '';
+  UNIDADES.forEach(u => {
+    const lista = comPedido.filter(p => p.unidade_loja === u);
+    if (!lista.length) return;
+    html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} itens para pedir</div>`;
+    lista.forEach(p => {
+      const est = parseFloat(p.estoque) || 0;
+      const pedir = p.estoque_min - est;
+      html += `<div class="prod-row zerado">
+        <div>
+          <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
+          <div style="font-size:0.72rem;color:#aaa;">Tem: ${fmtQ(est, p.unidade)} | Mín: ${fmtQ(p.estoque_min, p.unidade)}</div>
+        </div>
+        <div style="font-weight:700;color:#b71c1c;">Pedir ${fmtQ(pedir, p.unidade)}</div>
+      </div>`;
+    });
+    html += '<div style="margin-bottom:16px;"></div>';
+  });
+  el.innerHTML = html;
+}
+
+document.getElementById('login-usuario').focus();
+</script>
+</body>
+</html>
