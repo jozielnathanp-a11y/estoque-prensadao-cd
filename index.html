@@ -198,6 +198,19 @@
         <option value="">-- Selecione --</option>
       </select>
       <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
+
+      <!-- Multiplicador -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin-bottom:10px;">
+        <label style="margin-bottom:6px;">✖️ Multiplicador (opcional)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="lanc-pct" placeholder="Nº de PCT" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">×</span>
+          <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">=</span>
+          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
+        </div>
+      </div>
+
       <label>Quantidade</label>
       <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
       <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
@@ -233,27 +246,30 @@
   <!-- PRODUTOS (ADM) -->
   <div class="screen adm-only" id="tab-produtos">
     <div class="card">
-      <h3>⚙️ Cadastrar / Editar Produto</h3>
-      <input type="hidden" id="prod-id" />
-      <label>Código (EAN/barras)</label>
-      <input type="text" id="prod-codigo" placeholder="Ex: 7894900015119" />
-      <label>Nome</label>
-      <input type="text" id="prod-nome" placeholder="Ex: Coca Cola 1L" />
-      <label>Categoria</label>
-      <select id="prod-cat">
-        <option>Bruto</option><option>Processado</option>
-      </select>
-      <label>Unidade</label>
-      <select id="prod-unidade">
-        <option>un</option><option>kg</option><option>g</option>
-        <option>L</option><option>ml</option><option>cx</option><option>pct</option>
-      </select>
-      <label>Estoque mínimo</label>
-      <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
-      <label>Qtd por PCT (kg, opcional)</label>
-      <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
-      <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
-      <button class="btn btn-gray" onclick="limparFormProduto()">🗑️ Limpar</button>
+      <h3>➕ Novo Produto</h3>
+      <button class="btn btn-red" onclick="mostrarFormProduto()" id="btn-novo-produto">+ Cadastrar novo produto</button>
+      <div id="form-produto" style="display:none;margin-top:10px;">
+        <input type="hidden" id="prod-id" />
+        <label>Código (EAN/barras)</label>
+        <input type="text" id="prod-codigo" placeholder="Ex: 7894900015119" />
+        <label>Nome</label>
+        <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
+        <label>Categoria</label>
+        <select id="prod-cat">
+          <option>Bruto</option><option>Processado</option>
+        </select>
+        <label>Unidade</label>
+        <select id="prod-unidade">
+          <option>un</option><option>kg</option><option>g</option>
+          <option>L</option><option>ml</option><option>cx</option><option>pct</option>
+        </select>
+        <label>Estoque mínimo</label>
+        <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
+        <label>Qtd por PCT em kg (opcional)</label>
+        <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
+        <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
+        <button class="btn btn-gray" onclick="limparFormProduto()">✖ Cancelar</button>
+      </div>
     </div>
     <div class="card">
       <h3>📦 Produtos Cadastrados</h3>
@@ -448,6 +464,19 @@ function renderProdutos() {
     </div>`).join('');
 }
 
+function calcMultiplicador() {
+  const pct = parseFloat(document.getElementById('lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('lanc-fator').value) || 0;
+  const total = document.getElementById('lanc-total');
+  if (pct > 0 && fator > 0) {
+    const resultado = pct * fator;
+    total.textContent = resultado.toFixed(3);
+    document.getElementById('lanc-qtd').value = resultado.toFixed(3);
+  } else {
+    total.textContent = '—';
+  }
+}
+
 function popularSelectProdutos() {
   const sel = document.getElementById('lanc-produto');
   const lista = Object.values(produtosCache).sort((a,b) => a.nome.localeCompare(b.nome));
@@ -456,10 +485,17 @@ function popularSelectProdutos() {
   sel.onchange = () => {
     const p = getProduto(sel.value);
     const info = document.getElementById('lanc-info');
+    // Limpar multiplicador
+    document.getElementById('lanc-pct').value = '';
+    document.getElementById('lanc-total').textContent = '—';
     if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
       info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
       info.style.display = 'block';
-    } else { info.style.display = 'none'; }
+      document.getElementById('lanc-fator').value = p.qtd_por_pct;
+    } else {
+      info.style.display = 'none';
+      document.getElementById('lanc-fator').value = '';
+    }
   };
 }
 
@@ -494,6 +530,17 @@ async function salvarProduto() {
   carregarProdutos();
 }
 
+function mostrarFormProduto() {
+  document.getElementById('form-produto').style.display = 'block';
+  document.getElementById('btn-novo-produto').style.display = 'none';
+}
+
+function limparFormProduto() {
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('form-produto').style.display = 'none';
+  document.getElementById('btn-novo-produto').style.display = 'block';
+}
+
 function editarProduto(cod) {
   const p = getProduto(cod);
   if (!p) return;
@@ -504,8 +551,8 @@ function editarProduto(cod) {
   document.getElementById('prod-unidade').value = p.unidade;
   document.getElementById('prod-min').value = p.estoque_min || '';
   document.getElementById('prod-pct').value = p.qtd_por_pct || '';
-  if (usuarioLogado.perfil === 'adm') showTab('produtos');
-  document.getElementById('prod-nome').focus();
+  mostrarFormProduto();
+  showTab('produtos');
   showToast('Editando: ' + p.nome, '');
 }
 
