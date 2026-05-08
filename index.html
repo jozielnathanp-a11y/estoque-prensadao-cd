@@ -163,9 +163,7 @@
       <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">Todas</option>
-        <option>Carnes</option><option>Frios</option><option>Bebidas</option>
-        <option>Alimentos</option><option>Embalagens</option><option>Temperos</option>
-        <option>Higiene</option><option>Outros</option>
+        <option>Bruto</option><option>Processado</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -221,10 +219,7 @@
       <h3>📊 Relatório de Contagem</h3>
       <input type="date" id="rel-data" />
       <select id="rel-cat" multiple style="height:120px;margin-bottom:10px;">
-        <option selected>Carnes</option><option selected>Frios</option>
-        <option selected>Bebidas</option><option selected>Alimentos</option>
-        <option selected>Embalagens</option><option selected>Temperos</option>
-        <option selected>Higiene</option><option selected>Outros</option>
+        <option selected>Bruto</option><option selected>Processado</option>
       </select>
       <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
     </div>
@@ -242,9 +237,7 @@
       <input type="text" id="prod-nome" placeholder="Ex: Coca Cola 1L" />
       <label>Categoria</label>
       <select id="prod-cat">
-        <option>Carnes</option><option>Frios</option><option>Bebidas</option>
-        <option>Alimentos</option><option>Embalagens</option><option>Temperos</option>
-        <option>Higiene</option><option>Outros</option>
+        <option>Bruto</option><option>Processado</option>
       </select>
       <label>Unidade</label>
       <select id="prod-unidade">
