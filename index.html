@@ -222,6 +222,10 @@
         <option selected>Bruto</option><option selected>Processado</option>
       </select>
       <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-green" onclick="compartilharWhatsApp()" style="flex:1;">📱 WhatsApp</button>
+        <button class="btn btn-blue" onclick="exportarCSV()" style="flex:1;">📊 Planilha CSV</button>
+      </div>
     </div>
     <div id="relatorio-resultado"></div>
   </div>
@@ -635,6 +639,7 @@ async function gerarRelatorio() {
   }
 
   const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
+  window._ultimoRelatorio = itens;
 
   if (!itens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto encontrado</p>'; return; }
 
@@ -650,6 +655,57 @@ async function gerarRelatorio() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── COMPARTILHAR WHATSAPP ──
+function compartilharWhatsApp() {
+  const data = document.getElementById('rel-data').value;
+  const el = document.getElementById('relatorio-resultado');
+  if (!el.innerHTML || el.innerHTML.includes('Carregando') || el.innerHTML.includes('Selecione')) {
+    showToast('Gere o relatório primeiro!', 'error'); return;
+  }
+
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
+
+  itens.forEach(p => {
+    const semCont = p.contagem === null;
+    texto += `▪️ *${p.nome}*\n`;
+    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
+    if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
+    if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
+    texto += '\n';
+  });
+
+  texto += `\n_Gerado por Estoques Prensadão CD_`;
+  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+}
+
+// ── EXPORTAR CSV ──
+function exportarCSV() {
+  const data = document.getElementById('rel-data').value;
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let csv = 'Produto;Unidade;Estoque;Entrada;Consumo\n';
+  itens.forEach(p => {
+    const est = p.contagem !== null ? p.contagem : '';
+    const ent = p.entradas > 0 ? p.entradas : '';
+    const con = p.consumo > 0 ? p.consumo : '';
+    csv += `"${p.nome}";${p.unidade};${est};${ent};${con}\n`;
+  });
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `estoque_prensadao_${dia}-${mes}-${ano}.csv`;
+  link.click();
+  showToast('✅ Planilha baixada!', 'success');
 }
 
 // ── SCANNER ──
