@@ -76,8 +76,11 @@
 
     .card-icon { font-size: 2.8rem; margin-bottom: 8px; }
     .card-chefao .card-icon { font-size: 3.5rem; }
-    .card-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; filter: grayscale(20%) brightness(0.85); }
-    .card-chefao .card-img { width: 100px; height: 100px; }
+    .card-img { width: 90px; height: 90px; object-fit: contain; margin-bottom: 10px; filter: brightness(0) invert(1); opacity: 0.85; }
+    .card-chefao .card-img { width: 110px; height: 110px; }
+    .card-cd .card-img { filter: brightness(0) saturate(100%) invert(78%) sepia(99%) saturate(300%) hue-rotate(155deg) brightness(1.2); }
+    .card-centro .card-img { filter: brightness(0) saturate(100%) invert(40%) sepia(90%) saturate(500%) hue-rotate(200deg) brightness(1.3); }
+    .card-delivery .card-img { filter: brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(700%) hue-rotate(330deg) brightness(1.3); }
 
     .card-titulo {
       font-family: 'Bebas Neue', sans-serif;
@@ -158,7 +161,7 @@
   <a href="cd.html" class="card card-cd">
     <div class="badge badge-cyan"></div>
     <div class="card-inner">
-      <img class="card-img" src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200&q=80" alt="Cozinha" />
+      <img class="card-img" src="https://cdn-icons-png.flaticon.com/512/2276/2276931.png" alt="Cozinha" />
       <div class="card-titulo">CD</div>
       <div class="card-sub">COZINHA</div>
     </div>
@@ -167,7 +170,7 @@
   <a href="centro.html" class="card card-centro">
     <div class="badge badge-blue"></div>
     <div class="card-inner">
-      <img class="card-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=200&q=80" alt="Mesa e Garçom" />
+      <img class="card-img" src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="Mesa e Garçom" />
       <div class="card-titulo">CENTRO</div>
       <div class="card-sub">UNIDADE CENTRO</div>
     </div>
@@ -176,7 +179,7 @@
   <a href="delivery.html" class="card card-delivery">
     <div class="badge badge-red"></div>
     <div class="card-inner">
-      <img class="card-img" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=80" alt="Moto Delivery" />
+      <img class="card-img" src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png" alt="Moto Delivery" />
       <div class="card-titulo">DELIVERY</div>
       <div class="card-sub">UNIDADE DELIVERY</div>
     </div>
