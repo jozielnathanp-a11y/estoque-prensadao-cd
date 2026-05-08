@@ -278,6 +278,15 @@
       <input type="text" id="busca-prod" placeholder="🔍 Buscar..." oninput="renderProdutos()" />
       <div id="lista-produtos"></div>
     </div>
+    <div class="card">
+      <h3>🗑️ Zerar Histórico</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Apaga todas as movimentações do banco. O estoque atual não é alterado.</p>
+      <input type="date" id="hist-zerar-data" style="margin-bottom:8px;" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data selecionada</button>
+        <button class="btn btn-red" style="flex:1;background:#b71c1c;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -657,6 +666,28 @@ async function carregarHistorico() {
       <div style="font-size:0.75rem;color:#888;">por ${m.colaborador}</div>
     </div>`;
   }).join('');
+}
+
+async function zerarHistorico(modo) {
+  if (modo === 'tudo') {
+    if (!confirm('Apagar TODO o histórico de movimentações? O estoque atual não muda.')) return;
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=neq.00000000-0000-0000-0000-000000000000`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  } else {
+    const data = document.getElementById('hist-zerar-data').value;
+    if (!data) { showToast('Selecione uma data!', 'error'); return; }
+    if (!confirm(`Apagar histórico de ${data.split('-').reverse().join('/')}?`)) return;
+    const inicio = data + 'T00:00:00';
+    const fim = data + 'T23:59:59';
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?created_at=gte.${inicio}&created_at=lte.${fim}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico do dia zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  }
 }
 
 function selecionarTipo(tipo) {
