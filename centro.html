@@ -319,10 +319,14 @@ let modalTipo = null;
 // ── UTILS ──
 function showToast(msg, tipo='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + tipo;
-  setTimeout(() => t.className = '', 2500);
+  t.textContent = msg; t.className = 'show ' + tipo;
+  t.onclick = () => { t.className = ''; };
+  t.style.cursor = 'pointer';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  const duracao = tipo === 'error' ? 999999 : 3000;
+  _toastTimer = setTimeout(() => t.className = '', duracao);
 }
+let _toastTimer = null;
 
 function fmtQ(v, u) {
   if (!v && v !== 0) return '—';
