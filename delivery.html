@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Estoques Prensadão Delivery</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+    body { font-family: 'Rajdhani', sans-serif; background: #0a0a0a; min-height: 100vh; color: #f0f0f0; letter-spacing: 0.02em; }
 
     /* LOGIN */
     #login-screen {
@@ -14,19 +15,19 @@
       background: linear-gradient(135deg, #616161 0%, #37474f 100%);
     }
     .login-box {
-      background: #fff; border-radius: 20px; padding: 40px 32px; width: 90%; max-width: 380px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 0 40px #ff174444; border: 1px solid #ff174433;
     }
     .login-box h1 { font-size: 1.4rem; color: #b71c1c; text-align: center; margin-bottom: 6px; }
     .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
     .login-box input {
-      width: 100%; padding: 12px 16px; border: 2px solid #eee; border-radius: 10px;
+      width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
       font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
     }
     .login-box input:focus { border-color: #b71c1c; }
     .login-box button {
-      width: 100%; padding: 14px; background: #b71c1c; color: #fff; color: #fff; border: none;
-      border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      width: 100%; padding: 14px; background: #ff1744; color: #000; border: none;
+      border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
     }
     .login-box button:hover { background: #7f0000; }
     #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
@@ -34,7 +35,7 @@
     /* APP */
     #app { display: none; }
     .topbar {
-      background: #b71c1c; color: #fff; padding: 12px 16px;
+      background: #111; color: #ff1744; padding: 12px 16px; border-bottom: 2px solid #ff174444;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
@@ -42,37 +43,37 @@
     .topbar span { font-size: 0.78rem; opacity: 0.85; }
     .topbar button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
 
-    .tabs { display: flex; background: #fff; border-bottom: 2px solid #eee; overflow-x: auto; }
-    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 600; color: #888; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
-    .tab.active { color: #b71c1c; border-bottom-color: #b71c1c; }
+    .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
+    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
+    .tab.active { color: #ff1744; border-bottom-color: #ff1744; }
 
-    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
+    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; background: #0a0a0a; }
     .screen.active { display: block; }
 
-    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 0.95rem; color: #333; margin-bottom: 12px; }
+    .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .card h3 { font-size: 1rem; color: #ff1744; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
 
     .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .btn-red { background: #b71c1c; color: #fff; }
+    .btn-red { background: #ff1744; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
     .btn-green { background: #2e7d32; color: #fff; }
     .btn-blue { background: #1a237e; color: #fff; }
-    .btn-gray { background: #f5f5f5; color: #333; }
+    .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
 
-    input, select { width: 100%; padding: 10px 12px; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; outline: none; }
-    input:focus, select:focus { border-color: #90a4ae; }
-    label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
+    input:focus, select:focus { border-color: #ff1744; }
+    label { font-size: 0.82rem; font-weight: 700; color: #ff1744; display: block; margin-bottom: 4px; letter-spacing: 1px; }
 
     .produto-item {
-      background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      background: #161616; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
       display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #eee;
+      border-left: 4px solid #333;
     }
     .produto-item.ok { border-left-color: #2e7d32; }
     .produto-item.baixo { border-left-color: #ff9800; }
     .produto-item.zerado { border-left-color: #b71c1c; }
-    .produto-nome { font-weight: 700; font-size: 0.88rem; }
-    .produto-cod { font-size: 0.72rem; color: #aaa; }
-    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #1a237e; }
+    .produto-nome { font-weight: 700; font-size: 0.9rem; color: #f0f0f0; }
+    .produto-cod { font-size: 0.72rem; color: #555; }
+    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #ff1744; }
     .produto-qty small { font-size: 0.7rem; color: #888; }
 
     #toast {
@@ -90,11 +91,11 @@
     .badge-op { background: #e8f5e9; color: #2e7d32; }
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .stat-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-    .stat-num { font-size: 1.6rem; font-weight: 700; color: #b71c1c; }
-    .stat-label { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    .stat-card { background: #161616; border-radius: 4px; padding: 14px; text-align: center; border: 1px solid #222; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #ff1744; font-family: 'Bebas Neue', sans-serif; }
+    .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
 
-    .hist-item { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
     .hist-item:last-child { border-bottom: none; }
     .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
     .hist-contagem { background: #e3f2fd; color: #1a237e; }
@@ -107,11 +108,11 @@
       z-index: 1000; align-items: flex-end; justify-content: center;
     }
     .modal-box {
-      background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      width: 100%; max-width: 480px;
+      background: #111; border-radius: 4px 4px 0 0; padding: 24px 20px 36px;
+      width: 100%; max-width: 480px; border-top: 2px solid #ff1744;
     }
-    .modal-box h2 { font-size: 1.1rem; color: #37474f; margin-bottom: 4px; }
-    .modal-box p { font-size: 0.8rem; color: #888; margin-bottom: 12px; }
+    .modal-box h2 { font-size: 1.3rem; color: #ff1744; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .modal-box p { font-size: 0.8rem; color: #555; margin-bottom: 12px; }
 
     @media (min-width: 600px) {
       .tabs { justify-content: center; }
@@ -125,13 +126,13 @@
 <div id="login-screen">
   <div class="login-box">
     <h1>🏪 Estoques Prensadão Delivery</h1>
-    <p>Faça login para continuar</p>
+    <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
-    <input type="text" id="login-usuario" placeholder="Ex: Prensadão CD" autocomplete="username" />
+    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
     <label>Senha</label>
-    <input type="password" id="login-senha" placeholder="••••" autocomplete="current-password" />
-    <button onclick="fazerLogin()">Entrar</button>
-    <div id="login-erro">Usuário ou senha incorretos</div>
+    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
 
@@ -142,15 +143,15 @@
       <h1>🏪 Prensadão DELIVERY</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <button onclick="sair()">Sair</button>
+    <button onclick="sair()">Saí fora</button>
   </div>
 
   <div class="tabs" id="tabs-bar">
-    <div class="tab active" onclick="showTab('estoque')">📦 Estoque</div>
-    <div class="tab" onclick="showTab('lancar')">➕ Lançar</div>
-    <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
-    <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
-    <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
+    <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO</div>
+    <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
+    <div class="tab" onclick="showTab('historico')">📋 ROLO</div>
+    <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
+    <div class="tab adm-only" onclick="showTab('produtos')">⚙️ BASE</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -160,7 +161,7 @@
       <div class="stat-card"><div class="stat-num" id="stat-baixo" style="color:#ff9800">0</div><div class="stat-label">Estoque baixo</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." style="margin:0;" oninput="renderEstoque()" />
+      <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">Todas</option>
         <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
@@ -185,7 +186,7 @@
       <!-- PASSO 2: Produto -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
-        <input type="text" id="scan-input" placeholder="Digite ou escaneie o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
+        <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
         <button onclick="abrirCamera()" style="background:#b71c1c;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="camera-area" style="display:none;margin-bottom:10px;">
@@ -227,7 +228,7 @@
   <div class="screen adm-only" id="tab-relatorio">
     <div class="card">
       <h3>📊 Relatório de Estoque</h3>
-      <label>Data</label>
+      <label>Qual data, irmão?</label>
       <input type="date" id="rel-data" />
       <label>Categoria</label>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
@@ -295,7 +296,7 @@
   <div class="modal-box">
     <h2 id="modal-nome"></h2>
     <p id="modal-info"></p>
-    <label>Quantidade</label>
+    <label>Quanto tem, parceiro?</label>
     <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="font-size:1.4rem;text-align:center;" />
     <div id="modal-unidade" style="font-size:0.8rem;color:#888;margin:-4px 0 10px;"></div>
     <button class="btn btn-green" onclick="confirmarModal()">✅ Confirmar</button>
