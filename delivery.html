@@ -17,24 +17,24 @@
       background: #fff; border-radius: 20px; padding: 40px 32px; width: 90%; max-width: 380px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
     }
-    .login-box h1 { font-size: 1.4rem; color: #37474f; text-align: center; margin-bottom: 6px; }
+    .login-box h1 { font-size: 1.4rem; color: #b71c1c; text-align: center; margin-bottom: 6px; }
     .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
     .login-box input {
       width: 100%; padding: 12px 16px; border: 2px solid #eee; border-radius: 10px;
       font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
     }
-    .login-box input:focus { border-color: #90a4ae; }
+    .login-box input:focus { border-color: #b71c1c; }
     .login-box button {
-      width: 100%; padding: 14px; background: #607d8b; color: #fff; color: #fff; border: none;
+      width: 100%; padding: 14px; background: #b71c1c; color: #fff; color: #fff; border: none;
       border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
     }
-    .login-box button:hover { background: #546e7a; }
+    .login-box button:hover { background: #7f0000; }
     #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
 
     /* APP */
     #app { display: none; }
     .topbar {
-      background: #607d8b; color: #fff; padding: 12px 16px;
+      background: #b71c1c; color: #fff; padding: 12px 16px;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
@@ -44,7 +44,7 @@
 
     .tabs { display: flex; background: #fff; border-bottom: 2px solid #eee; overflow-x: auto; }
     .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 600; color: #888; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
-    .tab.active { color: #607d8b; border-bottom-color: #607d8b; }
+    .tab.active { color: #b71c1c; border-bottom-color: #b71c1c; }
 
     .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
     .screen.active { display: block; }
@@ -53,7 +53,7 @@
     .card h3 { font-size: 0.95rem; color: #333; margin-bottom: 12px; }
 
     .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .btn-red { background: #607d8b; color: #fff; }
+    .btn-red { background: #b71c1c; color: #fff; }
     .btn-green { background: #2e7d32; color: #fff; }
     .btn-blue { background: #1a237e; color: #fff; }
     .btn-gray { background: #f5f5f5; color: #333; }
@@ -91,7 +91,7 @@
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .stat-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-    .stat-num { font-size: 1.6rem; font-weight: 700; color: #607d8b; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #b71c1c; }
     .stat-label { font-size: 0.75rem; color: #888; margin-top: 2px; }
 
     .hist-item { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
@@ -186,7 +186,7 @@
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
         <input type="text" id="scan-input" placeholder="Digite ou escaneie o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
-        <button onclick="abrirCamera()" style="background:#607d8b;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+        <button onclick="abrirCamera()" style="background:#b71c1c;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="camera-area" style="display:none;margin-bottom:10px;">
         <video id="camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
