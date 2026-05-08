@@ -163,7 +163,7 @@
       <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">Todas</option>
-        <option>Bruto</option><option>Processado</option>
+        <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -258,7 +258,7 @@
         <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
         <label>Categoria</label>
         <select id="prod-cat">
-          <option>Bruto</option><option>Processado</option>
+          <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
         </select>
         <label>Unidade</label>
         <select id="prod-unidade">
@@ -797,7 +797,7 @@ async function gerarRelatorio() {
   </div>`;
 
   itens.forEach(p => {
-    const isProc = p.categoria === 'Processado';
+    const isProc = true;
     const semCont = p.contagem === null;
     const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
     const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
