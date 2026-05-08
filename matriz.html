@@ -138,6 +138,7 @@
         <option>Processado</option>
       </select>
     </div>
+    <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." oninput="renderEstoque()" style="margin-bottom:8px;" />
     <button class="btn btn-gold" onclick="carregarTudo()">🔄 Atualizar</button>
     <div id="lista-estoque"></div>
   </div>
@@ -147,6 +148,15 @@
     <div class="card">
       <h3>📥 Entradas por Unidade</h3>
       <input type="date" id="ent-data" onchange="carregarEntradas()" />
+      <div style="display:flex;gap:8px;">
+        <select id="ent-unidade" onchange="renderEntradas()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-entradas" placeholder="🔍 Buscar..." oninput="renderEntradas()" style="margin:0;flex:1;" />
+      </div>
     </div>
     <div id="lista-entradas"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data</p></div>
   </div>
@@ -156,6 +166,15 @@
     <div class="card">
       <h3>📊 Contagens por Unidade</h3>
       <input type="date" id="cont-data" onchange="carregarContagens()" />
+      <div style="display:flex;gap:8px;">
+        <select id="cont-unidade" onchange="renderContagens()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-contagens" placeholder="🔍 Buscar..." oninput="renderContagens()" style="margin:0;flex:1;" />
+      </div>
     </div>
     <div id="lista-contagens"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data</p></div>
   </div>
@@ -165,6 +184,15 @@
     <div class="card">
       <h3>🛒 Lista de Compras</h3>
       <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do mínimo definido por unidade</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="ped-unidade" onchange="renderPedidos()" style="margin:0;flex:1;">
+          <option value="">Todas unidades</option>
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-pedidos" placeholder="🔍 Buscar..." oninput="renderPedidos()" style="margin:0;flex:1;" />
+      </div>
       <button class="btn btn-gold" onclick="carregarPedidos()">🔄 Atualizar</button>
     </div>
     <div id="lista-pedidos"></div>
@@ -175,11 +203,14 @@
     <div class="card">
       <h3>⚙️ Definir Estoque Mínimo</h3>
       <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Define quanto cada unidade precisa ter de cada produto</p>
-      <select id="min-unidade" onchange="renderMinimos()" style="margin-bottom:10px;">
-        <option value="cd">🏭 CD</option>
-        <option value="centro">🏪 Centro</option>
-        <option value="delivery">🚗 Delivery</option>
-      </select>
+      <div style="display:flex;gap:8px;">
+        <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
+          <option value="cd">🏭 CD</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+        </select>
+        <input type="text" id="busca-minimos" placeholder="🔍 Buscar..." oninput="renderMinimos()" style="margin:0;flex:1;" />
+      </div>
     </div>
     <div id="lista-minimos"></div>
   </div>
@@ -293,11 +324,16 @@ async function carregarTudo() {
 function renderEstoque() {
   const filtroU = document.getElementById('filtro-unidade').value;
   const filtroC = document.getElementById('filtro-cat').value;
+  const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
   const el = document.getElementById('lista-estoque');
   const unidades = filtroU ? [filtroU] : UNIDADES;
   let html = '';
   unidades.forEach(u => {
-    let prods = todosEstoques.filter(p => p.unidade_loja === u && (!filtroC || p.categoria === filtroC));
+    let prods = todosEstoques.filter(p =>
+      p.unidade_loja === u &&
+      (!filtroC || p.categoria === filtroC) &&
+      (!busca || p.nome.toLowerCase().includes(busca))
+    );
     if (!prods.length) return;
     html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]}</div>`;
     prods.forEach(p => {
@@ -348,16 +384,24 @@ async function confirmarCorrecao() {
 }
 
 // ── ENTRADAS ──
+let _movEntradas = [];
 async function carregarEntradas() {
   const data = document.getElementById('ent-data').value;
   if (!data) return;
   const el = document.getElementById('lista-entradas');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
-  const movs = await supa('GET', 'movimentacoes', `tipo=eq.entrada&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
-  if (!movs.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma entrada</p>'; return; }
+  _movEntradas = await supa('GET', 'movimentacoes', `tipo=eq.entrada&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  renderEntradas();
+}
+function renderEntradas() {
+  const el = document.getElementById('lista-entradas');
+  const filtroU = document.getElementById('ent-unidade').value;
+  const busca = (document.getElementById('busca-entradas').value || '').toLowerCase();
+  if (!_movEntradas.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma entrada</p>'; return; }
+  const unidades = filtroU ? [filtroU] : UNIDADES;
   let html = '';
-  UNIDADES.forEach(u => {
-    const lista = movs.filter(m => m.unidade_loja === u);
+  unidades.forEach(u => {
+    const lista = _movEntradas.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
     if (!lista.length) return;
     html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} entradas</div>`;
     lista.forEach(m => {
@@ -365,40 +409,57 @@ async function carregarEntradas() {
       html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#2e7d32;">+${fmtQ(m.qtd, m.unidade)}</div></div>`;
     });
   });
-  el.innerHTML = html;
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
 }
 
 // ── CONTAGENS ──
+let _movContagens = [];
 async function carregarContagens() {
   const data = document.getElementById('cont-data').value;
   if (!data) return;
   const el = document.getElementById('lista-contagens');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
-  const movs = await supa('GET', 'movimentacoes', `tipo=eq.contagem&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
-  if (!movs.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma contagem</p>'; return; }
+  _movContagens = await supa('GET', 'movimentacoes', `tipo=eq.contagem&created_at=gte.${data}T00:00:00&created_at=lte.${data}T23:59:59&order=created_at.desc&select=*`);
+  renderContagens();
+}
+function renderContagens() {
+  const el = document.getElementById('lista-contagens');
+  const filtroU = document.getElementById('cont-unidade').value;
+  const busca = (document.getElementById('busca-contagens').value || '').toLowerCase();
+  if (!_movContagens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma contagem</p>'; return; }
+  const unidades = filtroU ? [filtroU] : UNIDADES;
   let html = '';
-  UNIDADES.forEach(u => {
-    const lista = movs.filter(m => m.unidade_loja === u);
+  unidades.forEach(u => {
+    const lista = _movContagens.filter(m => m.unidade_loja === u && (!busca || m.nome.toLowerCase().includes(busca)));
     if (!lista.length) return;
     html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} contagens</div>`;
     lista.forEach(m => {
       const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
+      const estAnt = m.estoque_anterior != null ? fmtQ(m.estoque_anterior, m.unidade) : '—';
+      html += `<div class="prod-row ok"><div><div style="font-weight:600;font-size:0.88rem;">${m.nome}</div><div style="font-size:0.72rem;color:#aaa;">Anterior: ${estAnt} · por ${m.colaborador} às ${hora}</div></div><div style="font-weight:700;color:#1a237e;">${fmtQ(m.novo_estoque, m.unidade)}</div></div>`;
     });
   });
-  el.innerHTML = html;
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
 }
 
 // ── PEDIDOS ──
+let _todosPedidos = [];
 async function carregarPedidos() {
   const el = document.getElementById('lista-pedidos');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
   const prods = await supa('GET', 'produtos', 'select=*&order=nome.asc');
-  const comPedido = prods.filter(p => p.estoque_min > 0 && (parseFloat(p.estoque)||0) < p.estoque_min);
-  if (!comPedido.length) { el.innerHTML = '<p style="color:#2e7d32;text-align:center;padding:20px;font-weight:600;">✅ Tudo em dia — nenhum pedido necessário</p>'; return; }
+  _todosPedidos = prods.filter(p => p.estoque_min > 0 && (parseFloat(p.estoque)||0) < p.estoque_min);
+  renderPedidos();
+}
+function renderPedidos() {
+  const el = document.getElementById('lista-pedidos');
+  const filtroU = document.getElementById('ped-unidade').value;
+  const busca = (document.getElementById('busca-pedidos').value || '').toLowerCase();
+  const unidades = filtroU ? [filtroU] : UNIDADES;
+  if (!_todosPedidos.length) { el.innerHTML = '<p style="color:#2e7d32;text-align:center;padding:20px;font-weight:600;">✅ Tudo em dia — nenhum pedido necessário</p>'; return; }
   let html = '';
-  UNIDADES.forEach(u => {
-    const lista = comPedido.filter(p => p.unidade_loja === u);
+  unidades.forEach(u => {
+    const lista = _todosPedidos.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca)));
     if (!lista.length) return;
     html += `<div class="unidade-header ${UNIDADE_COR[u]}">${UNIDADE_LABEL[u]} — ${lista.length} itens</div>`;
     lista.forEach(p => {
@@ -407,13 +468,14 @@ async function carregarPedidos() {
       html += `<div class="prod-row zerado"><div><div style="font-weight:600;font-size:0.88rem;">${p.nome}</div><div style="font-size:0.72rem;color:#aaa;">Tem: ${fmtQ(est, p.unidade)} | Precisa: ${fmtQ(p.estoque_min, p.unidade)}</div></div><div style="font-weight:700;color:#b71c1c;">🛒 ${fmtQ(pedir, p.unidade)}</div></div>`;
     });
   });
-  el.innerHTML = html;
+  el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum resultado</p>';
 }
 
 // ── MÍNIMOS ──
 function renderMinimos() {
   const u = document.getElementById('min-unidade').value;
-  const prods = todosEstoques.filter(p => p.unidade_loja === u).sort((a,b) => a.nome.localeCompare(b.nome));
+  const busca = (document.getElementById('busca-minimos').value || '').toLowerCase();
+  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca))).sort((a,b) => a.nome.localeCompare(b.nome));
   const el = document.getElementById('lista-minimos');
   if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregue o estoque primeiro</p>'; return; }
 
