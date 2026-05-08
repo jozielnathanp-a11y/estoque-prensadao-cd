@@ -550,6 +550,7 @@ async function confirmarLancamento() {
   produtosCache[cod].estoque = novoEst;
   renderEstoque();
   document.getElementById('lanc-qtd').value = '';
+  beep();
   showToast('✅ ' + p.nome + ' — ' + fmtQ(novoEst, p.unidade), 'success');
 }
 
@@ -708,6 +709,22 @@ function exportarCSV() {
   showToast('✅ Planilha baixada!', 'success');
 }
 
+// ── BEEP ──
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 1200;
+    o.type = 'square';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
 // ── SCANNER ──
 let cameraStream = null;
 let barcodeDetector = null;
@@ -723,6 +740,7 @@ function buscarPorCodigo() {
     sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
     document.getElementById('lanc-qtd').focus();
+    beep();
     showToast('✅ ' + p.nome, 'success');
   } else {
     showToast('Produto não encontrado: ' + cod, 'error');
