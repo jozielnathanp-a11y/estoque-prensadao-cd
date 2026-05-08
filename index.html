@@ -419,7 +419,13 @@ async function carregarProdutos() {
   }
 }
 
-function getProduto(cod) { return produtosCache[cod] || null; }
+function getProduto(cod) {
+  if (produtosCache[cod]) return produtosCache[cod];
+  // buscar pelo sufixo da unidade (código do scanner sem _loja)
+  const chaves = Object.keys(produtosCache);
+  const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
+  return match ? produtosCache[match] : null;
+}
 
 function atualizarStats() {
   const lista = Object.values(produtosCache);
