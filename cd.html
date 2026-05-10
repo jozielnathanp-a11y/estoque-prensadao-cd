@@ -369,7 +369,8 @@ async function fazerLogin() {
   }
 }
 
-document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+// tecla enter no login — seguro
+const _ls = document.getElementById('login-senha'); if(_ls) _ls.addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
 
 function iniciarApp() {
   document.getElementById('login-screen').style.display = 'none';
