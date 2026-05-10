@@ -494,44 +494,30 @@ async function fazerLogin() {
 
 
 function iniciarApp() {
-  try { document.getElementById('login-screen').style.display = 'none'; } catch(e) {}
-  try { document.getElementById('app').style.display = 'block'; } catch(e) {}
-  try { document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador'); } catch(e) {}
-
-  // Esconder abas ADM se for operador
-  try {
-    if (usuarioLogado.perfil !== 'adm') {
-      document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
+  if (usuarioLogado.perfil !== 'adm') {
+    document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
+  }
+  const campoOp = document.getElementById('lanc-operador');
+  const labelOp = document.getElementById('label-lanc-operador');
+  if (campoOp) {
+    if (usuarioLogado.perfil === 'adm') {
+      campoOp.value = usuarioLogado.usuario;
+      campoOp.style.display = 'none';
+      if (labelOp) labelOp.style.display = 'none';
+    } else {
+      campoOp.value = '';
+      campoOp.style.display = '';
+      if (labelOp) labelOp.style.display = '';
     }
-  } catch(e) {}
-
-  // Campo de nome: ADM usa o login automaticamente, operador precisa digitar
-  try {
-    const campoOp = document.getElementById('lanc-operador');
-    const labelOp = document.getElementById('label-lanc-operador');
-    if (campoOp) {
-      if (usuarioLogado.perfil === 'adm') {
-        campoOp.value = usuarioLogado.usuario;
-        campoOp.style.display = 'none';
-        if (labelOp) labelOp.style.display = 'none';
-      } else {
-        campoOp.value = '';
-        campoOp.style.display = '';
-        if (labelOp) labelOp.style.display = '';
-      }
-    }
-  } catch(e) {}
-
-  try { carregarProdutos(); } catch(e) {}
-  try {
-    const hoje = dataHoje();
-    const hd = document.getElementById('hist-data');
-    const rd = document.getElementById('rel-data');
-    const ed = document.getElementById('entrada-data');
-    if (hd) hd.value = hoje;
-    if (rd) rd.value = hoje;
-    if (ed) ed.value = hoje;
-  } catch(e) {}
+  }
+  carregarProdutos();
+  const hoje = dataHoje();
+  document.getElementById('hist-data').value = hoje;
+  document.getElementById('rel-data').value = hoje;
+  document.getElementById('entrada-data').value = hoje;
 }
 
 function sair() {
