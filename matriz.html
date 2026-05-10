@@ -368,8 +368,36 @@ async function carregarTudo() {
     const zerados = prods.filter(p => parseFloat(p.estoque)||0 === 0).length;
     document.getElementById('stat-' + u).textContent = prods.length + ' prod.';
   });
+  atualizarCats();
   renderEstoque();
   showToast('✅ Atualizado!', 'success');
+}
+
+function atualizarCats() {
+  const filtroU = document.getElementById('filtro-unidade').value;
+  const sel = document.getElementById('filtro-cat');
+  const atual = sel.value;
+
+  // Pegar categorias da unidade selecionada com contagem e estoque total
+  const prods = filtroU
+    ? todosEstoques.filter(p => p.unidade_loja === filtroU)
+    : todosEstoques;
+
+  const cats = {};
+  prods.forEach(p => {
+    if (!cats[p.categoria]) cats[p.categoria] = { total: 0, zerados: 0 };
+    cats[p.categoria].total++;
+    if ((parseFloat(p.estoque) || 0) === 0) cats[p.categoria].zerados++;
+  });
+
+  const emojis = { 'Bebidas': '🍺', 'Embalagens': '📦', 'Embalagem': '📦', 'Processado': '🥩', 'Bruto': '🌿', 'Limpeza': '🧹', 'Temperos': '🧂' };
+
+  sel.innerHTML = '<option value="">📦 Todas (' + prods.length + ' produtos)</option>' +
+    Object.entries(cats).sort((a,b) => a[0].localeCompare(b[0])).map(([c, info]) => {
+      const emoji = emojis[c] || '📁';
+      const alerta = info.zerados > 0 ? ' ⚠️' + info.zerados + ' zerados' : '';
+      return `<option value="${c}" ${atual === c ? 'selected' : ''}>${emoji} ${c} (${info.total}${alerta})</option>`;
+    }).join('');
 }
 
 function renderEstoque() {
