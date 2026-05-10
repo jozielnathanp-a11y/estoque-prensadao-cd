@@ -133,6 +133,7 @@
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
         <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
       </select>
       <select id="filtro-cat" onchange="renderEstoque()" style="margin:0;flex:1;">
         <option value="">Todas cats.</option>
@@ -154,6 +155,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-entradas" placeholder="🔍 Buscar..." oninput="renderEntradas()" style="margin:0;flex:1;" />
       </div>
@@ -172,6 +174,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-contagens" placeholder="🔍 Buscar..." oninput="renderContagens()" style="margin:0;flex:1;" />
       </div>
@@ -190,6 +193,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-pedidos" placeholder="🔍 Buscar..." oninput="renderPedidos()" style="margin:0;flex:1;" />
       </div>
@@ -211,6 +215,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <select id="aud-acao" onchange="renderAuditoria()" style="margin:0;flex:1;">
           <option value="">Todas ações</option>
@@ -237,6 +242,7 @@
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🏪 Boqueirão</option>
         </select>
         <input type="text" id="busca-minimos" placeholder="🔍 Buscar..." oninput="renderMinimos()" style="margin:0;flex:1;" />
       </div>
@@ -262,9 +268,9 @@
 <script>
 const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
-const UNIDADES = ['cd', 'centro', 'delivery'];
-const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery' };
-const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery' };
+const UNIDADES = ['cd', 'centro', 'delivery', 'boqueiraw'];
+const UNIDADE_LABEL = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
+const UNIDADE_COR = { cd: 'unidade-cd', centro: 'unidade-centro', delivery: 'unidade-delivery', boqueiraw: 'unidade-centro' };
 
 let todosEstoques = [];
 let modalCodigo = null;
