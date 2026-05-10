@@ -472,22 +472,28 @@ let _toastTimer = null;
 
 // ── LOGIN ──
 async function fazerLogin() {
+  const el = document.getElementById('login-erro');
   const usuario = document.getElementById('login-usuario').value.trim();
   const senha = document.getElementById('login-senha').value.trim();
-  if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
+  if (!usuario || !senha) { el.textContent = '❌ Preenche tudo!'; el.style.display='block'; return; }
+  el.textContent = '⏳ Conectando...'; el.style.display='block';
   try {
     const url = `${SUPA_URL}/rest/v1/usuario?usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`;
+    el.textContent = '⏳ Buscando usuário...'; 
     const r = await fetch(url, { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } });
+    el.textContent = '⏳ Processando...';
     const res = await r.json();
     if (res && res.length > 0) {
+      el.textContent = '✅ OK! Abrindo...';
       usuarioLogado = res[0];
       iniciarApp();
     } else {
-      document.getElementById('login-erro').style.display = 'block';
+      el.textContent = '❌ Usuário ou senha errados!';
+      el.style.display = 'block';
     }
   } catch(e) {
-    document.getElementById('login-erro').textContent = 'Erro: ' + e.message;
-    document.getElementById('login-erro').style.display = 'block';
+    el.textContent = '❌ Erro: ' + e.message;
+    el.style.display = 'block';
   }
 }
 
