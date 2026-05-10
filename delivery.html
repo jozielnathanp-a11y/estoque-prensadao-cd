@@ -207,7 +207,7 @@
           <span style="color:#607d8b;font-weight:700;">×</span>
           <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
           <span style="color:#607d8b;font-weight:700;">=</span>
-          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
+          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">-</span>
         </div>
       </div>
       <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
@@ -316,7 +316,7 @@ let produtosCache = {};
 let modalCodigo = null;
 let modalTipo = null;
 
-// ── UTILS ──
+// UTILS
 function showToast(msg, tipo='') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'show ' + tipo;
@@ -329,7 +329,7 @@ function showToast(msg, tipo='') {
 let _toastTimer = null;
 
 function fmtQ(v, u) {
-  if (!v && v !== 0) return '—';
+  if (!v && v !== 0) return '-';
   return u === 'kg' ? parseFloat(v).toFixed(3) + ' kg' : parseFloat(v) + ' ' + u;
 }
 
@@ -338,7 +338,7 @@ function dataHoje() {
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
-// ── API SUPABASE ──
+// API SUPABASE
 async function supa(metodo, tabela, dados=null, params='') {
   const opts = {
     method: metodo,
@@ -355,7 +355,7 @@ async function supa(metodo, tabela, dados=null, params='') {
   return r.ok;
 }
 
-// ── LOGIN ──
+// LOGIN
 async function fazerLogin() {
   const usuario = document.getElementById('login-usuario').value.trim();
   const senha = document.getElementById('login-senha').value.trim();
@@ -374,7 +374,7 @@ async function fazerLogin() {
   }
 }
 
-// tecla enter no login — seguro
+// tecla enter no login - seguro
 const _ls = document.getElementById('login-senha'); if(_ls) _ls.addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
 
 function iniciarApp() {
@@ -401,7 +401,7 @@ function sair() {
   document.getElementById('login-senha').value = '';
 }
 
-// ── TABS ──
+// TABS
 function showTab(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -412,7 +412,7 @@ function showTab(name) {
   if (name === 'lancar') popularSelectProdutos();
 }
 
-// ── PRODUTOS ──
+// PRODUTOS
 async function carregarProdutos() {
   try {
     const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.delivery');
@@ -497,7 +497,7 @@ function calcMultiplicador() {
     total.textContent = resultado.toFixed(3);
     document.getElementById('lanc-qtd').value = resultado.toFixed(3);
   } else {
-    total.textContent = '—';
+    total.textContent = '-';
   }
 }
 
@@ -511,7 +511,7 @@ function popularSelectProdutos() {
     const info = document.getElementById('lanc-info');
     // Limpar multiplicador
     document.getElementById('lanc-pct').value = '';
-    document.getElementById('lanc-total').textContent = '—';
+    document.getElementById('lanc-total').textContent = '-';
     if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
       info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
       info.style.display = 'block';
@@ -523,7 +523,7 @@ function popularSelectProdutos() {
   };
 }
 
-// ── SALVAR PRODUTO ──
+// SALVAR PRODUTO
 async function salvarProduto() {
   const id = document.getElementById('prod-id').value;
   const dados = {
@@ -594,7 +594,7 @@ async function zerarEstoqueProduto(cod) {
   showToast('✅ Estoque zerado!', 'success');
 }
 
-// ── LANÇAMENTO ──
+// LANÇAMENTO
 async function confirmarLancamento() {
   const cod = document.getElementById('lanc-produto').value;
   const tipo = document.getElementById('lanc-tipo').value;
@@ -642,12 +642,12 @@ async function confirmarLancamento() {
   popularSelectProdutos();
   document.getElementById('lanc-qtd').value = '';
   document.getElementById('lanc-pct').value = '';
-  document.getElementById('lanc-total').textContent = '—';
+  document.getElementById('lanc-total').textContent = '-';
   beep();
-  showToast('✅ ' + p.nome + ' — ' + fmtQ(res[0].estoque, p.unidade), 'success');
+  showToast('✅ ' + p.nome + ' - ' + fmtQ(res[0].estoque, p.unidade), 'success');
 }
 
-// ── HISTÓRICO ──
+// HISTÓRICO
 async function carregarHistorico() {
   const data = document.getElementById('hist-data').value;
   if (!data) return;
@@ -717,7 +717,7 @@ function selecionarCat(cat) {
   document.getElementById('btn-cat-todos').className = 'btn ' + (cat === 'Todos' ? 'btn-red' : 'btn-gray');
 }
 
-// ── RELATÓRIO ──
+// RELATÓRIO
 async function gerarRelatorio() {
   const data = document.getElementById('rel-data').value;
   const cat = document.getElementById('rel-cat-sel').value;
@@ -816,14 +816,14 @@ async function gerarRelatorio() {
 
     if (isProc) {
       // PROCESSADO: Entrada anterior | Contagem | Entrada atual | Consumo
-      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
-      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem, p.unidade)}</b></span>`;
-      html += `<span style="background:#e8f5e9;padding:3px 8px;border-radius:6px;">📥 Ent. atual: <b style="color:#2e7d32">${p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '—'}</b></span>`;
+      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '-'}</b></span>`;
+      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '-' : fmtQ(p.contagem, p.unidade)}</b></span>`;
+      html += `<span style="background:#e8f5e9;padding:3px 8px;border-radius:6px;">📥 Ent. atual: <b style="color:#2e7d32">${p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '-'}</b></span>`;
       if (p.consumo !== null && p.consumo > 0) html += `<span style="background:#fff3e0;padding:3px 8px;border-radius:6px;">🍳 Consumo: <b style="color:#e65100">${fmtQ(p.consumo, p.unidade)}</b></span>`;
     } else {
       // BRUTO: Entrada anterior | Contagem | Pedido sugerido
-      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
-      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
+      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '-'}</b></span>`;
+      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '-' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
       const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
       if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
     }
@@ -834,7 +834,7 @@ async function gerarRelatorio() {
   el.innerHTML = html;
 }
 
-// ── COMPARTILHAR WHATSAPP ──
+// COMPARTILHAR WHATSAPP
 function compartilharWhatsApp() {
   const data = document.getElementById('rel-data').value;
   const el = document.getElementById('relatorio-resultado');
@@ -846,12 +846,12 @@ function compartilharWhatsApp() {
   if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
 
   const [ano, mes, dia] = data.split('-');
-  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
+  let texto = `📦 *Relatório de Estoque - Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
 
   itens.forEach(p => {
     const semCont = p.contagem === null;
     texto += `▪️ *${p.nome}*\n`;
-    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
+    texto += `   Estoque: ${semCont ? '-' : fmtQ(p.contagem, p.unidade)}`;
     if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
     if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
     texto += '\n';
@@ -862,7 +862,7 @@ function compartilharWhatsApp() {
   window.open(url, '_blank');
 }
 
-// ── EXPORTAR CSV ──
+// EXPORTAR CSV
 function exportarCSV() {
   const data = document.getElementById('rel-data').value;
   const itens = window._ultimoRelatorio;
@@ -885,7 +885,7 @@ function exportarCSV() {
   showToast('✅ Planilha baixada!', 'success');
 }
 
-// ── BEEP ──
+// BEEP
 function beep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -901,7 +901,7 @@ function beep() {
   } catch(e) {}
 }
 
-// ── SCANNER ──
+// SCANNER
 let cameraStream = null;
 let barcodeDetector = null;
 let scanLoop = null;
@@ -980,16 +980,16 @@ function compartilharPedidosWhats() {
     if (!window._ultimosPedidos || !window._ultimosPedidos.length) return;
   }
   const hoje = new Date().toLocaleDateString('pt-BR');
-  let texto = `🛒 *Pedido — ${hoje}*
+  let texto = `🛒 *Pedido - ${hoje}*
 
 `;
   window._ultimosPedidos.forEach(({ p, caixas, pct }) => {
     const labelCx = p.unidade === 'kg' ? 'pct' : 'cx';
     if (caixas && pct > 0) {
-      texto += `• *${p.nome}* — ${caixas} ${labelCx}
+      texto += `• *${p.nome}* - ${caixas} ${labelCx}
 `;
     } else {
-      texto += `• *${p.nome}* — ${fmtQ(p.precisar, p.unidade)}
+      texto += `• *${p.nome}* - ${fmtQ(p.precisar, p.unidade)}
 `;
     }
   });
@@ -1084,8 +1084,8 @@ async function enviarCatWhats(cat) {
   const movsAnt  = await supa('GET','movimentacoes',null,
     `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
 
-  let texto = `📦 *Relatório ${cat} — Prensadão*\n📅 ${dia}/${mes}/${ano}\n\n`;
-  let pedido = `🛒 *Pedido ${cat} — ${dia}/${mes}/${ano}*\n\n`;
+  let texto = `📦 *Relatório ${cat} - Prensadão*\n📅 ${dia}/${mes}/${ano}\n\n`;
+  let pedido = `🛒 *Pedido ${cat} - ${dia}/${mes}/${ano}*\n\n`;
   let temPedido = false;
 
   produtos.forEach(p => {
@@ -1102,7 +1102,7 @@ async function enviarCatWhats(cat) {
     texto += `▪️ *${p.nome}*\n`;
     if (estAnterior !== null) texto += `   Contagem ant.: ${fmtQ(estAnterior, p.unidade)}\n`;
     if (entH > 0) texto += `   Entrada: +${fmtQ(entH, p.unidade)}\n`;
-    texto += `   Contagem hoje: ${contH ? fmtQ(estAtual, p.unidade) : '—'}\n`;
+    texto += `   Contagem hoje: ${contH ? fmtQ(estAtual, p.unidade) : '-'}\n`;
 
     // Pedido sugerido
     if (p.estoque_min > 0 && estAtual !== null) {
@@ -1260,7 +1260,7 @@ async function lancarAutoUnd(p) {
   _scanAcum[p.codigo].qtd += 1;
 
   const qtdAtual = _scanAcum[p.codigo].qtd;
-  showToast('📦 ' + p.nome + ' — ' + qtdAtual + ' und (lendo...)', 'success');
+  showToast('📦 ' + p.nome + ' - ' + qtdAtual + ' und (lendo...)', 'success');
 
   clearTimeout(_scanTimer2);
   _scanTimer2 = setTimeout(async () => {
