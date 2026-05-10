@@ -131,7 +131,7 @@
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
     <label>Senha</label>
     <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
-    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <button id="btn-entrar">🔓 BORA ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
@@ -1425,6 +1425,7 @@ async function scanToque() {
     showToast('Erro na leitura. Tenta de novo!', 'error');
   }
 }
+document.getElementById('btn-entrar').addEventListener('click', fazerLogin);
 </script>
 </body>
 </html>
