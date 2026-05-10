@@ -243,7 +243,6 @@
         <button class="btn btn-blue" onclick="exportarCSV()" style="flex:1;">📊 Planilha CSV</button>
       </div>
     </div>
-    <button class="btn btn-green adm-only" onclick="gerarListaPedidos()" style="width:100%;margin-top:8px;">🛒 Lista de Pedidos WhatsApp</button>
     <div id="relatorio-resultado"></div>
   </div>
 
@@ -959,25 +958,6 @@ function fecharCamera() {
   if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
   if (scanLoop) { clearInterval(scanLoop); scanLoop = null; }
   document.getElementById('camera-area').style.display = 'none';
-}
-
-
-// Lista de Pedidos WhatsApp
-function gerarListaPedidos() {
-  const prods = Object.values(produtosCache);
-  const pedidos = [];
-  for (const p of prods) {
-    if (!p.estoque_max || !p.qtd_por_caixa) continue;
-    const precisa = p.estoque_max - (p.estoque_atual || 0);
-    if (precisa <= 0) continue;
-    const caixas = Math.ceil(precisa / p.qtd_por_caixa);
-    pedidos.push(p.nome + ': ' + caixas + ' cx');
-  }
-  if (pedidos.length === 0) { showToast('Estoque em dia! Nada para pedir.', 'success'); return; }
-  const texto = '*Pedido ' + UNIDADE_LOJA.toUpperCase() + '*
-' + pedidos.join('
-');
-  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
 }
 
 // Init
