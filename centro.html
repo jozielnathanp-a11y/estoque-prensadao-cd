@@ -246,6 +246,30 @@
     <div id="relatorio-resultado"></div>
   </div>
 
+
+  <!-- ABA BEBIDAS -->
+  <div class="screen adm-only" id="tab-bebidas">
+    <div class="card">
+      <h3>🍺 Relatório de Bebidas</h3>
+      <label>Data</label>
+      <input type="date" id="beb-data" />
+      <button class="btn btn-red" onclick="gerarRelatorioBebidas()">📊 Gerar Relatório</button>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-green" onclick="pedidoBebidas()" style="flex:1;">🛒 Fazer Pedido WhatsApp</button>
+      </div>
+    </div>
+    <div id="bebidas-resultado"></div>
+  </div>
+  <!-- ABA EMBALAGENS -->
+  <div class="screen adm-only" id="tab-embalagens">
+    <div class="card">
+      <h3>📦 Relatório de Embalagens</h3>
+      <button class="btn btn-red" onclick="gerarRelatorioEmbalagens()">📊 Ver Estoque</button>
+      <button class="btn btn-green" onclick="pedidoEmbalagens()" style="margin-top:4px;">📱 Enviar pelo WhatsApp o que precisa</button>
+    </div>
+    <div id="embalagens-resultado"></div>
+  </div>
+
   <!-- PRODUTOS (ADM) -->
   <div class="screen adm-only" id="tab-produtos">
     <div class="card">
