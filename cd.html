@@ -130,7 +130,7 @@
     <input type="text" id="login-usuario" placeholder="Ex: Prensadão CD" autocomplete="username" />
     <label>Senha</label>
     <input type="password" id="login-senha" placeholder="••••" autocomplete="current-password" />
-    <button onclick="fazerLogin()">Entrar</button>
+    <button id="btn-entrar">Entrar</button>
     <div id="login-erro">Usuário ou senha incorretos</div>
   </div>
 </div>
@@ -1294,6 +1294,7 @@ async function scanToque() {
     showToast('Erro na leitura. Tenta de novo!', 'error');
   }
 }
+document.getElementById('btn-entrar').addEventListener('click', fazerLogin);
 </script>
 </body>
 </html>
