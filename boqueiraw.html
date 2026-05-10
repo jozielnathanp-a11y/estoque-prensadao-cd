@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Estoques Prensadão Boqueirão</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Boogaloo&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Rajdhani', sans-serif; background: #0a0a0a; min-height: 100vh; color: #f0f0f0; letter-spacing: 0.02em; }
+
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #616161 0%, #37474f 100%);
+    }
+    .login-box {
+      background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 0 40px #2979ff44; border: 1px solid #2979ff33;
+    }
+    .login-box h1 { font-size: 1.4rem; color: #1565c0; text-align: center; margin-bottom: 6px; }
+    .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
+      font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
+    }
+    .login-box input:focus { border-color: #1565c0; }
+    .login-box button {
+      width: 100%; padding: 14px; background: #2979ff; color: #000; border: none;
+      border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
+    }
+    .login-box button:hover { background: #0d47a1; }
+    #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
+
+    /* APP */
+    #app { display: none; }
+    .topbar {
+      background: #111; color: #2979ff; padding: 12px 16px; border-bottom: 2px solid #2979ff44;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar h1 { font-size: 1rem; font-weight: 700; }
+    .topbar span { font-size: 0.78rem; opacity: 0.85; }
+    .topbar button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
+
+    .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
+    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
+    .tab.active { color: #2979ff; border-bottom-color: #2979ff; }
+
+    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; background: #0a0a0a; }
+    .screen.active { display: block; }
+
+    .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .card h3 { font-size: 1rem; color: #2979ff; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+    .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .btn-red { background: #2979ff; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-blue { background: #1a237e; color: #fff; }
+    .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
+
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
+    input:focus, select:focus { border-color: #2979ff; }
+    label { font-size: 0.82rem; font-weight: 700; color: #2979ff; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+
+    .produto-item {
+      background: #161616; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid #333;
+    }
+    .produto-item.ok { border-left-color: #2e7d32; }
+    .produto-item.baixo { border-left-color: #ff9800; }
+    .produto-item.zerado { border-left-color: #b71c1c; }
+    .produto-nome { font-weight: 700; font-size: 0.9rem; color: #f0f0f0; }
+    .produto-cod { font-size: 0.72rem; color: #555; }
+    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #2979ff; }
+    .produto-qty small { font-size: 0.7rem; color: #888; }
+
+    #toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+      font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      pointer-events: none; max-width: 90%;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { background: #2e7d32; }
+    #toast.error { background: #b71c1c; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
+    .badge-adm { background: #fde8e8; color: #b71c1c; }
+    .badge-op { background: #e8f5e9; color: #2e7d32; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #161616; border-radius: 4px; padding: 14px; text-align: center; border: 1px solid #222; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #2979ff; font-family: 'Bebas Neue', sans-serif; }
+    .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
+
+    .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
+    .hist-contagem { background: #e3f2fd; color: #1a237e; }
+    .hist-entrada { background: #e8f5e9; color: #2e7d32; }
+    .hist-saida { background: #fde8e8; color: #b71c1c; }
+
+    /* Modal movimentação */
+    #modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 1000; align-items: flex-end; justify-content: center;
+    }
+    .modal-box {
+      background: #111; border-radius: 4px 4px 0 0; padding: 24px 20px 36px;
+      width: 100%; max-width: 480px; border-top: 2px solid #2979ff;
+    }
+    .modal-box h2 { font-size: 1.3rem; color: #2979ff; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .modal-box p { font-size: 0.8rem; color: #555; margin-bottom: 12px; }
+
+    @media (min-width: 600px) {
+      .tabs { justify-content: center; }
+      .tab { padding: 14px 24px; }
+    }
+    /* ── TOAST ESTILO PICHAÇÃO ── */
+  
+
+  .toast-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: fadeInOverlay 0.2s ease;
+  }
+  .toast-overlay.show { display: flex; }
+  @keyframes fadeInOverlay {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .toast-box {
+    max-width: 88vw;
+    padding: 36px 32px;
+    border-radius: 18px;
+    text-align: center;
+    font-family: 'Boogaloo', cursive;
+    font-size: clamp(1.6rem, 6vw, 2.6rem);
+    line-height: 1.3;
+    letter-spacing: 1px;
+    pointer-events: none;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  }
+  .toast-box.success {
+    background: rgba(0,20,10,0.92);
+    color: #00ff99;
+    border: 3px solid #00ff99;
+    text-shadow: 0 0 18px #00ff99, 0 0 40px #00cc77;
+  }
+  .toast-box.error {
+    background: rgba(20,0,0,0.92);
+    color: #ff3355;
+    border: 3px solid #ff3355;
+    text-shadow: 0 0 18px #ff3355, 0 0 40px #cc0022;
+  }
+  .toast-hint {
+    margin-top: 22px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  /* Manter toast antigo oculto (compatibilidade) */
+  .toast { display: none !important; }
+  </style>
+<script defer>
+const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+const UNIDADE_LOJA = 'boqueiraw';
+
+let produtosCache = {};
+let modalCodigo = null;
+let modalTipo = null;
+let usuarioLogado = null;
+
+
+function fmtQ(v, u) {
+  if (!v && v !== 0) return '—';
+  return u === 'kg' ? parseFloat(v).toFixed(3) + ' kg' : parseFloat(v) + ' ' + u;
+}
+
+function dataHoje() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// ── API SUPABASE ──
+async function supa(metodo, tabela, dados=null, params='') {
+  const opts = {
+    method: metodo,
+    headers: {
+      'apikey': SUPA_ANON,
+      'Authorization': 'Bearer ' + SUPA_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': metodo === 'POST' ? 'return=representation' : 'return=minimal'
+    }
+  };
+  if (dados) opts.body = JSON.stringify(dados);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
+  if (metodo === 'GET') return r.json();
+  if (!r.ok) { const err = await r.text(); console.error('Supa erro:', err); return false; }
+  return true;
+}
+
+
+function showToast(msg, tipo='success') {
+  let overlay = document.getElementById('toast-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'toast-overlay';
+    overlay.className = 'toast-overlay';
+    overlay.innerHTML = '<div id="toast-box" class="toast-box"></div><div class="toast-hint">[ TOCA PRA FECHAR ]</div>';
+    overlay.addEventListener('click', () => overlay.classList.remove('show'));
+    document.body.appendChild(overlay);
+  }
+  const box = document.getElementById('toast-box');
+  box.textContent = msg;
+  box.className = 'toast-box ' + tipo;
+  overlay.classList.add('show');
+}
+let _toastTimer = null;
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const el = document.getElementById('login-erro');
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  if (!usuario || !senha) { el.textContent = '❌ Preenche tudo!'; el.style.display='block'; return; }
+  el.textContent = '⏳ Conectando...'; el.style.display='block';
+  try {
+    const url = `${SUPA_URL}/rest/v1/usuario?usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.boqueiraw&select=*`;
+    el.textContent = '⏳ Buscando usuário...'; 
+    const r = await fetch(url, { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } });
+    el.textContent = '⏳ Processando...';
+    const res = await r.json();
+    if (res && res.length > 0) {
+      el.textContent = '✅ OK! Abrindo...';
+      usuarioLogado = res[0];
+      iniciarApp();
+    } else {
+      el.textContent = '❌ Usuário ou senha errados!';
+      el.style.display = 'block';
+    }
+  } catch(e) {
+    el.textContent = '❌ Erro: ' + e.message;
+    el.style.display = 'block';
+  }
+}
+
+
+
+function iniciarApp() {
+  // Esconder login, mostrar app
+  const loginScreen = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+  if (loginScreen) loginScreen.style.display = 'none';
+  if (app) app.style.display = 'block';
+
+  // Topbar
+  const topbar = document.getElementById('topbar-usuario');
+  if (topbar && usuarioLogado) {
+    topbar.textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
+  }
+
+  // Esconder abas de ADM se for operador
+  if (usuarioLogado && usuarioLogado.perfil !== 'adm') {
+    document.querySelectorAll('.adm-only').forEach(function(el) { el.style.display = 'none'; });
+  }
+
+  // Campo operador
+  const campoOp = document.getElementById('lanc-operador');
+  const labelOp = document.getElementById('label-lanc-operador');
+  if (campoOp && usuarioLogado) {
+    if (usuarioLogado.perfil === 'adm') {
+      campoOp.value = usuarioLogado.usuario;
+      campoOp.style.display = 'none';
+      if (labelOp) labelOp.style.display = 'none';
+    } else {
+      campoOp.value = '';
+      campoOp.style.display = '';
+      if (labelOp) labelOp.style.display = '';
+    }
+  }
+
+  // Datas
+  const hoje = dataHoje();
+  ['hist-data','rel-data','entrada-data'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.value = hoje;
+  });
+
+  // Carregar produtos
+  carregarProdutos();
+}
+
+function sair() {
+  usuarioLogado = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-senha').value = '';
+}
+
+// ── TABS ──
+function showTab(name, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  else {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => { if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+name+"'")) t.classList.add('active'); });
+  }
+  if (name === 'historico') carregarHistorico();
+  if (name === 'lancar') popularSelectProdutos();
+  if (name === 'pendentes') carregarPendentes();
+}
+
+// ── PRODUTOS ──
+async function carregarProdutos() {
+  try {
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
+    produtosCache = {};
+    if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
+    renderEstoque();
+    renderProdutos();
+    atualizarStats();
+  } catch(e) {
+    showToast('Erro ao carregar produtos', 'error');
+  }
+}
+
+function getProduto(cod) {
+  if (produtosCache[cod]) return produtosCache[cod];
+  // buscar pelo sufixo da unidade (código do scanner sem _loja)
+  const chaves = Object.keys(produtosCache);
+  const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
+  return match ? produtosCache[match] : null;
+}
+
+function atualizarStats() {
+  const lista = Object.values(produtosCache);
+  document.getElementById('stat-total').textContent = lista.length;
+  document.getElementById('stat-baixo').textContent = lista.filter(p => parseFloat(p.estoque) > 0 && parseFloat(p.estoque) <= parseFloat(p.estoque_min || 0)).length;
+}
+
+function renderEstoque() {
+  const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
+  const cat = document.getElementById('filtro-cat').value;
+  const lista = Object.values(produtosCache)
+    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)))
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+
+  const el = document.getElementById('lista-estoque');
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto encontrado</p>'; return; }
+
+  el.innerHTML = lista.map(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const cls = est === 0 ? 'zerado' : (min > 0 && est <= min) ? 'baixo' : 'ok';
+    return `<div class="produto-item ${cls}">
+      <div>
+        <div class="produto-nome">${p.nome}</div>
+        <div class="produto-cod">${p.codigo} · ${p.categoria}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="produto-qty">${fmtQ(est, p.unidade)}<br><small>${p.unidade}</small></div>
+        ${usuarioLogado.perfil === 'adm' ? `<button onclick="editarProduto('${p.codigo}')" style="background:#f5f5f5;border:1.5px solid #ddd;border-radius:8px;padding:6px 9px;cursor:pointer;">✏️</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderProdutos() {
+  const busca = (document.getElementById('busca-prod')?.value || '').toLowerCase();
+  const lista = Object.values(produtosCache)
+    .filter(p => !busca || p.nome.toLowerCase().includes(busca))
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+
+  const el = document.getElementById('lista-produtos');
+  if (!el) return;
+  el.innerHTML = lista.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+      <div>
+        <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
+        <div style="font-size:0.72rem;color:#aaa;">${p.codigo} · ${p.categoria} · ${p.unidade}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="editarProduto('${p.codigo}')" style="background:#e3f2fd;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">✏️</button>
+        <button onclick="zerarEstoqueProduto('${p.codigo}')" style="background:#fff0f0;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function calcMultiplicador() {
+  const pct = parseFloat(document.getElementById('lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('lanc-fator').value) || 0;
+  const total = document.getElementById('lanc-total');
+  if (pct > 0 && fator > 0) {
+    const resultado = pct * fator;
+    total.textContent = resultado.toFixed(3);
+    document.getElementById('lanc-qtd').value = resultado.toFixed(3);
+  } else {
+    total.textContent = '—';
+  }
+}
+
+function popularSelectProdutos() {
+  const sel = document.getElementById('lanc-produto');
+  const lista = Object.values(produtosCache).sort((a,b) => a.nome.localeCompare(b.nome));
+  sel.innerHTML = '<option value="">-- Selecione --</option>' +
+    lista.map(p => `<option value="${p.codigo}">${p.nome} (${fmtQ(p.estoque, p.unidade)})</option>`).join('');
+  sel.onchange = () => {
+    const p = getProduto(sel.value);
+    const info = document.getElementById('lanc-info');
+    // Limpar multiplicador
+    document.getElementById('lanc-pct').value = '';
+    document.getElementById('lanc-total').textContent = '—';
+    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
+      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
+      info.style.display = 'block';
+      document.getElementById('lanc-multi-label').textContent = '📦 Nº PCT × kg/PCT (opcional)';
+      document.getElementById('lanc-pct').placeholder = 'Nº PCT';
+      document.getElementById('lanc-fator').placeholder = 'kg/PCT';
+      document.getElementById('lanc-fator').value = '';
+    } else if (p && p.unidade === 'und' && p.qtd_por_pct > 0) {
+      info.textContent = (p.unidade === 'kg' ? '1 PCT = ' : '1 CX = ') + p.qtd_por_pct + (p.unidade === 'kg' ? ' kg' : ' und');
+      info.style.display = 'block';
+      document.getElementById('lanc-multi-label').textContent = '📦 Nº Caixas × und/cx (opcional)';
+      document.getElementById('lanc-pct').placeholder = 'Nº Caixas';
+      document.getElementById('lanc-fator').placeholder = 'und/cx (ex: ' + p.qtd_por_pct + ')';
+      document.getElementById('lanc-fator').value = '';
+    } else {
+      info.style.display = 'none';
+      document.getElementById('lanc-fator').value = '';
+      document.getElementById('lanc-multi-label').textContent = '✖️ Multiplicador (opcional)';
+      document.getElementById('lanc-pct').placeholder = 'Quantidade';
+      document.getElementById('lanc-fator').placeholder = 'Fator';
+    }
+  };
+}
+
+// ── SALVAR PRODUTO ──
+async function salvarProduto() {
+  const id = document.getElementById('prod-id').value;
+  const dados = {
+    codigo: document.getElementById('prod-codigo').value.trim(),
+    nome: document.getElementById('prod-nome').value.trim(),
+    categoria: document.getElementById('prod-cat').value,
+    unidade: document.getElementById('prod-unidade').value,
+    estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
+    qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
+  };
+  if (!dados.codigo || !dados.nome) { showToast('Preencha código e nome!', 'error'); return; }
+
+  if (id) {
+    await supa('PATCH', `produtos?id=eq.${id}`, dados);
+    showToast('✅ Produto atualizado!', 'success');
+  } else {
+    const existe = await supa('GET', 'produtos', null, `codigo=eq.${dados.codigo}&select=id`);
+    if (existe && existe.length > 0) {
+      await supa('PATCH', `produtos?codigo=eq.${dados.codigo}`, dados);
+      showToast('✅ Produto atualizado!', 'success');
+    } else {
+      dados.estoque = 0;
+      await supa('POST', 'produtos', dados);
+      showToast('✅ Produto cadastrado!', 'success');
+    }
+  }
+  limparFormProduto();
+  carregarProdutos();
+}
+
+function mostrarFormProduto() {
+  document.getElementById('form-produto').style.display = 'block';
+  document.getElementById('btn-novo-produto').style.display = 'none';
+}
+
+function limparFormProduto() {
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('form-produto').style.display = 'none';
+  document.getElementById('btn-novo-produto').style.display = 'block';
+}
+
+function editarProduto(cod) {
+  const p = getProduto(cod);
+  if (!p) return;
+  document.getElementById('prod-id').value = p.id || '';
+  document.getElementById('prod-codigo').value = p.codigo;
+  document.getElementById('prod-nome').value = p.nome;
+  document.getElementById('prod-cat').value = p.categoria;
+  document.getElementById('prod-unidade').value = p.unidade;
+  document.getElementById('prod-min').value = p.estoque_min || '';
+  document.getElementById('prod-pct').value = p.qtd_por_pct || '';
+  mostrarFormProduto();
+  showTab('produtos');
+  showToast('Editando: ' + p.nome, '');
+}
+
+function limparFormProduto() {
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function zerarEstoqueProduto(cod) {
+  const p = getProduto(cod);
+  if (!confirm('Zerar estoque de "' + p.nome + '"?')) return;
+  await supa('PATCH', `produtos?codigo=eq.${cod}`, { estoque: 0 });
+  produtosCache[cod].estoque = 0;
+  renderEstoque();
+  renderProdutos();
+  showToast('✅ Estoque zerado!', 'success');
+}
+
+// ── LANÇAMENTO ──
+async function confirmarLancamento() {
+  const operadorCampo = document.getElementById('lanc-operador').value.trim();
+  if (!operadorCampo) {
+    showToast('EI! Coloca seu nome antes de lançar, mano! Campo 1️⃣ lá em cima! 👆', 'error');
+    document.getElementById('lanc-operador').focus();
+    return;
+  }
+  const cod = document.getElementById('lanc-produto').value;
+  const tipo = document.getElementById('lanc-tipo').value;
+  const qtd = parseFloat(document.getElementById('lanc-qtd').value);
+
+  if (!cod) { showToast('Eita! Seleciona o produto primeiro, mano!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade aí, irmão!', 'error'); return; }
+
+  const p = getProduto(cod);
+  if (!p) { showToast('Produto não encontrado! Tenta recarregar a página.', 'error'); return; }
+  const est = parseFloat(p.estoque) || 0;
+
+  try {
+    const ok = await supa('POST', 'movimentacoes', {
+      codigo: p.codigo,
+      nome: p.nome,
+      tipo,
+      qtd,
+      unidade: p.unidade,
+      colaborador: operadorCampo,
+      obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
+      estoque_anterior: est,
+      novo_estoque: tipo === 'contagem' ? qtd : est + qtd,
+      status: 'pendente',
+      unidade_loja: UNIDADE_LOJA
+    });
+    if (ok === false) {
+      showToast('Erro ao salvar! Verifica a conexão.', 'error'); return;
+    }
+    document.getElementById('lanc-qtd').value = '';
+    document.getElementById('lanc-pct').value = '';
+    document.getElementById('lanc-fator') && (document.getElementById('lanc-fator').value = '');
+    document.getElementById('lanc-total').textContent = '—';
+    beep();
+    const msgs_lancado = [
+    '✅ LANÇADO! Pode continuar tio! Confere nos PENDENTES quando terminar 🤙',
+    '✅ FOI! Registrado! Mais um pro pendente irmão! 🔥',
+    '✅ DENTRO! Lançamento salvo! Segue o baile! 💨',
+    '✅ ANOTADO! Não esquece de confirmar nos PENDENTES hein! 👊',
+  ];
+  showToast(msgs_lancado[Math.floor(Math.random() * msgs_lancado.length)], 'success');
+    await carregarPendentes();
+    // Ir para aba pendentes
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-pendentes').classList.add('active');
+    const tabPend = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.includes('PENDENTES'));
+    if (tabPend) tabPend.classList.add('active');
+  } catch(e) {
+    showToast('Erro ao lançar: ' + e.message, 'error');
+  }
+}
+
+// ── HISTÓRICO ──
+async function carregarHistorico() {
+  const data = document.getElementById('hist-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-historico');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const movs = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
+
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nada confirmado nessa data, mano. Dia tranquilo 😎</p>';
+    return;
+  }
+
+  el.innerHTML = movs.map(m => {
+    const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const tipoCls = m.tipo === 'contagem' ? 'hist-contagem' : 'hist-entrada';
+    const tipoLabel = m.tipo === 'contagem' ? '📊 Contagem' : '📥 Entrada';
+    return `<div class="hist-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span class="hist-tipo ${tipoCls}">${tipoLabel}</span>
+          <span style="font-size:0.72rem;color:#aaa;margin-left:6px;">${hora}</span>
+        </div>
+        <div style="font-weight:700;color:#00e5ff;">${fmtQ(m.qtd, m.unidade)}</div>
+      </div>
+      <div style="font-size:0.85rem;font-weight:600;margin-top:3px;">${m.nome}</div>
+      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador} · confirmado por ${m.confirmado_por || '?'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function zerarHistorico(modo) {
+  if (modo === 'tudo') {
+    if (!confirm('Apagar TODO o histórico de movimentações? O estoque atual não muda.')) return;
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=neq.00000000-0000-0000-0000-000000000000`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  } else {
+    const data = document.getElementById('hist-zerar-data').value;
+    if (!data) { showToast('Selecione uma data!', 'error'); return; }
+    if (!confirm(`Apagar histórico de ${data.split('-').reverse().join('/')}?`)) return;
+    const inicio = data + 'T00:00:00';
+    const fim = data + 'T23:59:59';
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?created_at=gte.${inicio}&created_at=lte.${fim}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico do dia zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  }
+}
+
+function selecionarTipo(tipo) {
+  document.getElementById('lanc-tipo').value = tipo;
+  document.getElementById('btn-tipo-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-tipo-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-red' : 'btn-gray');
+}
+
+// ── LISTA DE PEDIDOS POR CAIXA ──
+function gerarListaPedidos() {
+  const el = document.getElementById('pedidos-resultado');
+  const checks = document.querySelectorAll('#rel-cat-checks input[type=checkbox]');
+  const catsSel = Array.from(checks).filter(c => c.checked).map(c => c.value);
+
+  const produtos = Object.values(produtosCache).filter(p =>
+    (catsSel.length === 0 || catsSel.includes(p.categoria))
+  );
+
+  const pedidos = [];
+
+  produtos.forEach(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const media = parseFloat(p.estoque_min) || 0;
+    const maximo = parseFloat(p.estoque_max) || 0;
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+
+    if (media === 0) return; // sem média configurada, ignora
+    if (est >= media) return; // acima da média, não precisa pedir
+
+    const precisar = maximo > 0 ? maximo - est : media - est;
+    if (precisar <= 0) return;
+
+    let caixas = null;
+    let qtdPedir = precisar;
+
+    if (pct > 0) {
+      caixas = Math.ceil(precisar / pct);
+      qtdPedir = caixas * pct;
+    }
+
+    pedidos.push({ p, est, media, maximo, pct, precisar, caixas, qtdPedir });
+  });
+
+  if (!pedidos.length) {
+    el.innerHTML = '<div class="card"><p style="color:#2e7d32;text-align:center;font-weight:700;">✅ Nada pra pedir! Estoque ok em todos os produtos.</p></div>';
+    return;
+  }
+
+  let html = `<div style="background:#b71c1c;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    🛒 ${pedidos.length} produto(s) para pedir
+  </div>`;
+
+  pedidos.forEach(({ p, est, media, maximo, pct, caixas, qtdPedir }) {
+    const labelCx = p.unidade === 'kg' ? 'PCT' : 'CX';
+    const cxInfo = pct > 0
+      ? `<span style="background:#1565c0;color:#fff;font-size:0.72rem;padding:2px 8px;border-radius:8px;">${caixas} ${labelCx} × ${fmtQ(pct, p.unidade)} = ${fmtQ(qtdPedir, p.unidade)}</span>`
+      : `<span style="background:#555;color:#fff;font-size:0.72rem;padding:2px 8px;border-radius:8px;">Pedir ${fmtQ(qtdPedir, p.unidade)} (sem cx configurada)</span>`;
+
+    html += `<div style="background:#fff;border-left:5px solid #b71c1c;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-weight:800;font-size:0.97rem;color:#000;">${p.nome}</div>
+        <div style="font-weight:700;color:#b71c1c;font-size:1.1rem;">${caixas ? caixas + ' ' + labelCx : fmtQ(qtdPedir, p.unidade)}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+        ${cxInfo}
+        <span style="background:#f5f5f5;color:#333;font-size:0.72rem;padding:2px 8px;border-radius:8px;">Atual: ${fmtQ(est, p.unidade)}</span>
+        <span style="background:#e8f5e9;color:#333;font-size:0.72rem;padding:2px 8px;border-radius:8px;">Média: ${fmtQ(media, p.unidade)}</span>
+        ${maximo > 0 ? `<span style="background:#fff3e0;color:#333;font-size:0.72rem;padding:2px 8px;border-radius:8px;">Máx: ${fmtQ(maximo, p.unidade)}</span>` : ''}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+  window._ultimosPedidos = pedidos;
+}
+
+function compartilharPedidosWhats() {
+  if (!window._ultimosPedidos || !window._ultimosPedidos.length) {
+    gerarListaPedidos();
+    if (!window._ultimosPedidos || !window._ultimosPedidos.length) return;
+  }
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  let texto = `🛒 *Pedido — ${hoje}*
+
+`;
+  window._ultimosPedidos.forEach(({ p, caixas, pct }) => {
+    const labelCx = p.unidade === 'kg' ? 'pct' : 'cx';
+    if (caixas && pct > 0) {
+      texto += `• *${p.nome}* — ${caixas} ${labelCx}
+`;
+    } else {
+      texto += `• *${p.nome}* — ${fmtQ(p.precisar, p.unidade)}
+`;
+    }
+  });
+  window.open('https://wa.me/?text=' + encodeURIComponent(texto));
+}
+
+// ── RELATÓRIO DE ENTRADAS SEM CONTAGEM ──
+async function gerarRelatorioEntradas() {
+  const data = document.getElementById('entrada-data').value;
+  if (!data) { showToast('Seleciona a data aí, mano!', 'error'); return; }
+
+  const el = document.getElementById('entradas-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim    = data + 'T23:59:59';
+
+  const movs = await supa('GET', 'movimentacoes', null,
+    `tipo=eq.entrada&status=eq.confirmado&unidade_loja=eq.${UNIDADE_LOJA}&created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+
+  const [ano, mes, dia] = data.split('-');
+
+  if (!movs || !movs.length) {
+    el.innerHTML = '<div class="card"><p style="color:#888;text-align:center;">Nenhuma entrada registrada nesta data.</p></div>';
+    return;
+  }
+
+  let html = `<div style="background:#1565c0;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    📥 Entradas do dia ${dia}/${mes}/${ano} · ${movs.length} registro(s)
+  </div>`;
+
+  movs.forEach(m => {
+    const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    const dataFmt = new Date(m.created_at).toLocaleDateString('pt-BR');
+    html += `
+    <div style="background:#0a1a2a;border:1px solid #1565c0;border-radius:10px;padding:14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:0.95rem;font-weight:700;color:#f0f0f0;">${m.nome}</span>
+        <span style="font-weight:700;color:#00e5ff;font-size:1rem;">${fmtQ(m.qtd, m.unidade)}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+        <span style="background:#1565c0;color:#fff;font-size:0.75rem;padding:2px 8px;border-radius:12px;">📅 ${dataFmt} às ${hora}</span>
+        <span style="background:#ff9800;color:#000;font-family:'Bebas Neue',cursive;font-size:0.8rem;padding:2px 10px;border-radius:12px;">👷 ${m.colaborador}</span>
+      </div>
+      <div style="font-size:0.8rem;color:#90a4ae;">
+        📝 <em>${m.obs || 'Entrada de estoque'}</em>
+      </div>
+      <div style="font-size:0.75rem;color:#546e7a;margin-top:4px;">
+        Est. anterior: ${fmtQ(m.estoque_anterior, m.unidade)} → Novo: ${fmtQ(m.novo_estoque, m.unidade)}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function selecionarCat(cat) {
+  const checks = document.querySelectorAll('#rel-cat-checks input[type=checkbox]');
+  checks.forEach(c => { c.checked = (c.value === cat); });
+  gerarRelatorio();
+}
+
+// ── RELATÓRIO ──
+async function gerarRelatorio() {
+  const data = document.getElementById('rel-data').value;
+  if (!data) { showToast('Selecione uma data!', 'error'); return; }
+  const checks = document.querySelectorAll('#rel-cat-checks input[type=checkbox]');
+  const catsSel = Array.from(checks).filter(c => c.checked).map(c => c.value);
+
+  const el = document.getElementById('relatorio-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const hoje = dataHoje();
+  const eHoje = data === hoje;
+
+  // Filtrar produtos pela categoria
+  const produtos = Object.values(produtosCache).filter(p => catsSel.length === 0 || catsSel.includes(p.categoria));
+
+  // Buscar movimentações do período completo (dia anterior + dia atual)
+  const diaAnterior = new Date(data);
+  diaAnterior.setDate(diaAnterior.getDate() - 1);
+  const diaAntStr = diaAnterior.getFullYear()+'-'+String(diaAnterior.getMonth()+1).padStart(2,'0')+'-'+String(diaAnterior.getDate()).padStart(2,'0');
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const inicioAnt = diaAntStr + 'T00:00:00';
+  const fimAnt = diaAntStr + 'T23:59:59';
+
+  // Movimentações do dia selecionado
+  const movsHoje = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+
+  // Movimentações do dia anterior
+  const movsAnt = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
+
+  let resultado = {};
+  produtos.forEach(p => {
+    resultado[p.codigo] = {
+      nome: p.nome, unidade: p.unidade, categoria: p.categoria,
+      estoque_min: p.estoque_min || 0,
+      estoque_max: p.estoque_max || 0,
+      entradas: [],      // lista de entradas do dia {qtd, hora, colaborador}
+      contagem: null,
+      entrada_atual: 0,  // soma das entradas (para consumo)
+      consumo: null,
+      estoque_atual: eHoje ? parseFloat(p.estoque) || 0 : null
+    };
+  });
+
+  // Processar movimentações do dia atual
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      if (m.tipo === 'contagem') {
+        resultado[m.codigo].contagem = m.novo_estoque;
+      } else if (m.tipo === 'entrada') {
+        resultado[m.codigo].entrada_atual += m.qtd;
+        resultado[m.codigo].entradas.push({
+          qtd: m.qtd,
+          hora: new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
+          colaborador: m.colaborador || '—'
+        });
+      }
+    });
+  }
+
+  // Calcular consumo
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      const r = resultado[m.codigo];
+      if (m.tipo === 'contagem' && m.estoque_anterior !== null) {
+        r.consumo = (m.estoque_anterior || 0) - m.qtd + r.entrada_atual;
+        if (r.consumo < 0) r.consumo = 0;
+      }
+    });
+  }
+
+  const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
+  window._ultimoRelatorio = itens;
+  window._ultimoRelCat = catsSel.join(', ');
+
+  if (!itens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let html = `<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    📅 ${dia}/${mes}/${ano} · ${catsSel.length ? catsSel.join(', ') : 'Todas'}
+  </div>`;
+
+  itens.forEach(p => {
+    const semCont = p.contagem === null;
+    const estAtual = p.estoque_atual !== null ? p.estoque_atual : (p.contagem !== null ? p.contagem : null);
+    const media = parseFloat(p.estoque_min) || 0;
+    const maximo = parseFloat(p.estoque_max) || 0;
+
+    // Status
+    const abaixoMedia = media > 0 && estAtual !== null && estAtual < media;
+    const acimaMáximo = maximo > 0 && estAtual !== null && estAtual >= maximo;
+    const corBorda = estAtual === null ? '#555' : estAtual === 0 ? '#b71c1c' : abaixoMedia ? '#e65100' : acimaMáximo ? '#f9a825' : '#2e7d32';
+
+    let badgeAlerta = '';
+    if (abaixoMedia) badgeAlerta = '<span style="background:#ff1744;color:#fff;padding:2px 7px;border-radius:8px;font-size:0.68rem;font-weight:700;margin-left:6px;">🔴 ABAIXO DA MÉDIA</span>';
+    else if (acimaMáximo) badgeAlerta = '<span style="background:#ff9800;color:#000;padding:2px 7px;border-radius:8px;font-size:0.68rem;font-weight:700;margin-left:6px;">🟠 ESTOQUE MÁXIMO</span>';
+
+    // Valores das 3 colunas
+    // entradas detalhadas geradas no template
+    const contagemDia = semCont ? '<span style="color:#888;font-style:italic;">Não realizado</span>' : `<b style="color:${corBorda}">${fmtQ(p.contagem, p.unidade)}</b>`;
+    const estoqueAtual = estAtual !== null ? `<b style="color:${corBorda}">${fmtQ(estAtual, p.unidade)}</b>` : '<span style="color:#888;">—</span>';
+
+    html += `<div style="background:#fff;border-left:5px solid ${corBorda};border-radius:10px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+      <div style="font-weight:800;font-size:0.97rem;color:#000;margin-bottom:8px;">${p.nome}
+        <span style="font-size:0.68rem;color:#777;font-weight:500;margin-left:4px;">${p.categoria}</span>${badgeAlerta}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;">
+        <div style="background:#e3f2fd;border-radius:8px;padding:8px 4px;">
+          <div style="font-size:0.68rem;color:#555;font-weight:700;margin-bottom:4px;">📥 ENTRADAS</div>
+          ${p.entradas.length === 0
+            ? '<div style="color:#888;font-size:0.78rem;">—</div>'
+            : p.entradas.map(e => `<div style="font-size:0.82rem;font-weight:700;color:#1565c0;">${fmtQ(e.qtd, p.unidade)}</div><div style="font-size:0.65rem;color:#777;">${e.hora} · ${e.colaborador}</div>`).join('<div style="border-top:1px solid #b3d4f7;margin:3px 0;"></div>')
+          }
+        </div>
+        <div style="background:#f3e5f5;border-radius:8px;padding:8px 4px;">
+          <div style="font-size:0.68rem;color:#555;font-weight:700;margin-bottom:3px;">📊 CONTAGEM</div>
+          <div style="font-size:0.85rem;font-weight:700;">${contagemDia}</div>
+        </div>
+        <div style="background:#e8f5e9;border-radius:8px;padding:8px 4px;">
+          <div style="font-size:0.68rem;color:#555;font-weight:700;margin-bottom:3px;">📦 ESTOQUE</div>
+          <div style="font-size:0.9rem;font-weight:700;">${estoqueAtual}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+
+// ── ENVIO RÁPIDO WHATSAPP POR CATEGORIA ──
+async function enviarCatWhats(cat) {
+  const data = document.getElementById('rel-rapido-data').value;
+  if (!data) { showToast('Selecione uma data!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  const inicio = data + 'T00:00:00';
+  const fim    = data + 'T23:59:59';
+  const diaAnt = new Date(data);
+  diaAnt.setDate(diaAnt.getDate() - 1);
+  const diaAntStr = diaAnt.toISOString().split('T')[0];
+  const inicioAnt = diaAntStr + 'T00:00:00';
+  const fimAnt    = diaAntStr + 'T23:59:59';
+
+  const produtos = Object.values(produtosCache).filter(p => p.categoria === cat);
+  if (!produtos.length) { showToast('Sem produtos nessa categoria!', 'error'); return; }
+
+  const movsHoje = await supa('GET','movimentacoes',null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+  const movsAnt  = await supa('GET','movimentacoes',null,
+    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
+
+  let texto = `📦 *Relatório ${cat} — Prensadão*\n📅 ${dia}/${mes}/${ano}\n\n`;
+  let pedido = `🛒 *Pedido ${cat} — ${dia}/${mes}/${ano}*\n\n`;
+  let temPedido = false;
+
+  produtos.forEach(p => {
+    const movH = movsHoje.filter(m => m.codigo === p.codigo);
+    const movA = movsAnt.filter(m => m.codigo === p.codigo);
+
+    const contH = movH.filter(m => m.tipo === 'contagem').pop();
+    const contA = movA.filter(m => m.tipo === 'contagem').pop();
+    const entH  = movH.filter(m => m.tipo === 'entrada').reduce((s,m) => s + m.quantidade, 0);
+
+    const estAtual   = contH ? contH.novo_estoque : p.estoque;
+    const estAnterior = contA ? contA.novo_estoque : null;
+
+    texto += `▪️ *${p.nome}*\n`;
+    if (estAnterior !== null) texto += `   Contagem ant.: ${fmtQ(estAnterior, p.unidade)}\n`;
+    if (entH > 0) texto += `   Entrada: +${fmtQ(entH, p.unidade)}\n`;
+    texto += `   Contagem hoje: ${contH ? fmtQ(estAtual, p.unidade) : '—'}\n`;
+
+    // Pedido sugerido
+    if (p.estoque_min > 0 && estAtual !== null) {
+      const qtdPedir = Math.max(0, p.estoque_min - estAtual);
+      if (qtdPedir > 0) {
+        pedido += `▪️ *${p.nome}*: pedir ${fmtQ(qtdPedir, p.unidade)}\n`;
+        temPedido = true;
+      }
+    }
+  });
+
+  texto += `\n_Gerado por Estoques Prensadão_`;
+  if (temPedido) texto += `\n\n${pedido}`;
+
+  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+}
+
+
+// ── CONTROLE DE PENDENTES NÃO CONFERIDOS ──
+let _lancadosSemConferir = 0;
+
+function contarPendentesNaoConferidos() {
+  _lancadosSemConferir++;
+  atualizarBadgePendentes();
+
+  if (_lancadosSemConferir >= 15) {
+    // Bloquear e forçar ir para pendentes
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-pendentes').classList.add('active');
+    const tabPend = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.includes('PENDENTES'));
+    if (tabPend) tabPend.classList.add('active');
+    setTimeout(() => {
+      const msgs_selliga = [
+    '🚨 Oh mano! Confira esse bagulho antes de continuar, não tá querendo fazer negrera né?! SE LIGA AE TIO ✋',
+    '🚨 PARA TUDO! 15 lançamentos sem conferir?! Cê tá de sacanagem né mano?! VAI LÁ CONFERIR! 😤',
+    '🚨 EI EI EI! Calma aí tio! Confere os pendentes primeiro antes de continuar! TMJ mas confere! 🤜🤛',
+    '🚨 TRAVADO! Muita coisa pendente irmão! Para e confere antes que complica! 🛑',
+    '🚨 15 SEM CONFERIR?! Respeita o sistema tio! Vai lá olhar os pendentes! 👀',
+  ];
+  showToast(msgs_selliga[Math.floor(Math.random() * msgs_selliga.length)], 'error');
+    }, 300);
+    _lancadosSemConferir = 0;
+  }
+}
+
+function atualizarBadgePendentes() {
+  const badge = document.getElementById('badge-pendentes');
+  if (badge && _lancadosSemConferir > 0) {
+    badge.textContent = _lancadosSemConferir;
+    badge.style.display = 'inline';
+  }
+}
+
+// Resetar contador quando entrar nos pendentes
+function irParaPendentes() {
+  _lancadosSemConferir = 0;
+  const badge = document.getElementById('badge-pendentes');
+  if (badge) badge.textContent = '';
+  carregarPendentes();
+}
+
+// ── COMPARTILHAR WHATSAPP ──
+function compartilharWhatsApp() {
+  const data = document.getElementById('rel-data').value;
+  const el = document.getElementById('relatorio-resultado');
+  if (!el.innerHTML || el.innerHTML.includes('Carregando') || el.innerHTML.includes('Selecione')) {
+    showToast('Gere o relatório primeiro!', 'error'); return;
+  }
+
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
+
+  itens.forEach(p => {
+    const semCont = p.contagem === null;
+    texto += `▪️ *${p.nome}*\n`;
+    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
+    if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
+    if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
+    texto += '\n';
+  });
+
+  texto += `\n_Gerado por Estoques Prensadão Boqueirão_`;
+  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+}
+
+// ── EXPORTAR CSV ──
+function exportarCSV() {
+  const data = document.getElementById('rel-data').value;
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let csv = 'Produto;Unidade;Estoque;Entrada;Consumo\n';
+  itens.forEach(p => {
+    const est = p.contagem !== null ? p.contagem : '';
+    const ent = p.entradas > 0 ? p.entradas : '';
+    const con = p.consumo > 0 ? p.consumo : '';
+    csv += `"${p.nome}";${p.unidade};${est};${ent};${con}\n`;
+  });
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `estoque_prensadao_${dia}-${mes}-${ano}.csv`;
+  link.click();
+  showToast('✅ Planilha baixada!', 'success');
+}
+
+// ── BEEP ──
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 1200;
+    o.type = 'square';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+// ── SCANNER ──
+let cameraStream = null;
+let barcodeDetector = null;
+let scanLoop = null;
+
+function interpretarEAN(cod) {
+  if (cod.length === 13 && cod.startsWith('2')) {
+    const codProd = cod.substring(1, 7);
+    const pesoRaw = cod.substring(7, 12);
+    const peso = parseInt(pesoRaw, 10) / 1000;
+    return { codProd, peso };
+  }
+  return null;
+}
+
+function buscarPorCodigo() {
+  const cod = document.getElementById('scan-input').value.trim();
+  if (!cod) return;
+  document.getElementById('scan-input').value = '';
+
+  // EAN com peso embutido → lança direto no pendente
+  const ean = interpretarEAN(cod);
+  if (ean && ean.peso > 0) {
+    let p = getProduto(ean.codProd);
+    if (!p) p = getProduto(ean.codProd + '_' + UNIDADE_LOJA);
+    if (p) {
+      beep();
+      showToast('⚡ ' + p.nome + ' — ' + ean.peso.toFixed(3) + ' kg → pendente!', 'success');
+      lancarDireto(p, ean.peso);
+      return;
+    }
+  }
+
+  // Busca normal
+  let p = getProduto(cod);
+  if (!p) p = getProduto(cod.replace(/^0+/, ''));
+
+  if (p) {
+    beep();
+    if (p.unidade === 'und') {
+      // und → lança +1 direto
+      lancarAutoUnd(p);
+    } else {
+      // kg sem peso no código → seleciona e pede peso manual
+      const sel = document.getElementById('lanc-produto');
+      sel.value = p.codigo;
+      sel.dispatchEvent(new Event('change'));
+      document.getElementById('lanc-qtd').value = '';
+      document.getElementById('lanc-qtd').focus();
+      showToast('✅ ' + p.nome + ' — digite o peso!', 'success');
+    }
+  } else {
+    const msgs_maedina = [
+    'Oh! Irmão só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 🔮',
+    'EI EI EI! Esse código não existe não mano! Para pro chefe cadastrar antes! 😤',
+    'QUE CÓDIGO É ESSE?! Não tô reconhecendo não tio, chama o chefe! 🤷',
+    'HEIN?! Nunca vi esse bagulho na vida! Cadastra primeiro parceiro! 😂',
+    'NÃO TÔ ACHANDO ISSO NÃO IRMÃO! Fala pro chefe colocar no sistema! 🔍',
+  ];
+  showToast(msgs_maedina[Math.floor(Math.random() * msgs_maedina.length)], 'error');
+  }
+}
+
+// Lança direto no pendente sem confirmação manual
+async function lancarDireto(p, qtd) {
+  const operador = document.getElementById('lanc-operador').value.trim();
+  if (!operador) {
+    showToast('EI! Coloca seu nome antes de lançar, mano! Campo 1️⃣ lá em cima! 👆', 'error');
+    document.getElementById('lanc-operador').focus();
+    return;
+  }
+  const tipo = document.getElementById('lanc-tipo').value;
+  const est = parseFloat(p.estoque) || 0;
+  try {
+    const ok = await supa('POST', 'movimentacoes', {
+      codigo: p.codigo,
+      nome: p.nome,
+      tipo,
+      qtd,
+      unidade: p.unidade,
+      colaborador: operador,
+      obs: tipo === 'contagem' ? 'Contagem via leitor' : 'Entrada via leitor',
+      estoque_anterior: est,
+      novo_estoque: tipo === 'contagem' ? qtd : est + qtd,
+      status: 'pendente',
+      unidade_loja: UNIDADE_LOJA
+    });
+    if (ok === false) { showToast('Erro ao salvar!', 'error'); return; }
+    await carregarPendentes();
+    contarPendentesNaoConferidos();
+  } catch(e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// Acumulador para leituras rápidas de und
+let _scanAcum = {};
+let _scanTimer2 = null;
+
+async function lancarAutoUnd(p) {
+  // Acumular leituras do mesmo produto em 2 segundos
+  if (!_scanAcum[p.codigo]) _scanAcum[p.codigo] = { produto: p, qtd: 0 };
+  _scanAcum[p.codigo].qtd += 1;
+
+  const qtdAtual = _scanAcum[p.codigo].qtd;
+  showToast('📦 ' + p.nome + ' — ' + qtdAtual + ' und (lendo...)', 'success');
+
+  clearTimeout(_scanTimer2);
+  _scanTimer2 = setTimeout(async () => {
+    // Lançar tudo acumulado
+    for (const cod in _scanAcum) {
+      const item = _scanAcum[cod];
+      const prod = item.produto;
+      const qtd = item.qtd;
+      const est = parseFloat(prod.estoque) || 0;
+      const tipo = document.getElementById('lanc-tipo').value;
+
+      try {
+        await supa('POST', 'movimentacoes', {
+          codigo: prod.codigo,
+          nome: prod.nome,
+          tipo,
+          qtd,
+          unidade: prod.unidade,
+          colaborador: document.getElementById('lanc-operador').value.trim() || usuarioLogado.usuario,
+          obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
+          estoque_anterior: est,
+          novo_estoque: tipo === 'contagem' ? qtd : est + qtd,
+          status: 'pendente',
+          unidade_loja: UNIDADE_LOJA
+        });
+      } catch(e) {
+        showToast('Erro ao lançar ' + prod.nome, 'error');
+      }
+    }
+
+    const total = Object.values(_scanAcum).reduce((s, i) => s + i.qtd, 0);
+    const nomes = Object.values(_scanAcum).map(i => i.produto.nome + ' ×' + i.qtd).join(', ');
+    _scanAcum = {};
+    showToast('✅ Lançado: ' + nomes, 'success');
+    await carregarPendentes();
+    // Atualizar badge
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-pendentes').classList.add('active');
+    const tabPend = Array.from(document.querySelectorAll('.tab')).find(t => t.textContent.includes('PENDENTES'));
+    if (tabPend) tabPend.classList.add('active');
+
+  }, 2000); // Aguarda 2s sem leitura para lançar
+}
+
+async function abrirCamera() {
+  const area = document.getElementById('camera-area');
+  const video = document.getElementById('camera-video');
+
+  if (!('BarcodeDetector' in window)) {
+    showToast('Câmera não suportada neste navegador. Use o campo de texto.', 'error');
+    return;
+  }
+
+  if (cameraStream) {
+    // Câmera já aberta, só garante visível
+    area.style.display = 'block';
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+    video.srcObject = cameraStream;
+    barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
+    area.style.display = 'block';
+    const msgs_camera = [
+    '📷 Câmera ON! Toca na tela pra ler o código, tio!',
+    '📷 Pronto irmão! Aponta pro código e TOCA! 🎯',
+    '📷 Câmera aberta! É só tocar mano, fácil demais! 🤙',
+  ];
+  showToast(msgs_camera[Math.floor(Math.random() * msgs_camera.length)], 'success');
+  } catch(e) {
+    showToast('Erro ao acessar câmera', 'error');
+  }
+}
+
+// Lê apenas quando o usuário toca na tela
+async function scanToque() {
+  if (!cameraStream || !barcodeDetector) return;
+  const video = document.getElementById('camera-video');
+
+  // Flash visual
+  const flash = document.getElementById('scan-flash');
+  flash.style.display = 'block';
+  setTimeout(() => flash.style.display = 'none', 150);
+
+  try {
+    const barcodes = await barcodeDetector.detect(video);
+    if (barcodes.length > 0) {
+      const cod = barcodes[0].rawValue;
+      document.getElementById('scan-input').value = cod;
+      buscarPorCodigo();
+    } else {
+      const msgs_nenhum = [
+    'Nenhum código encontrado mano! Aponta melhor e toca de novo! 🎯',
+    'Não pegou não irmão! Aproxima mais e tenta! 📷',
+    'Ó, não leu não tio! Deixa o código na frente e toca de novo! 🔍',
+  ];
+  showToast(msgs_nenhum[Math.floor(Math.random() * msgs_nenhum.length)], 'error');
+    }
+  } catch(e) {
+    showToast('Erro na leitura. Tenta de novo!', 'error');
+  }
+}
+
+function fecharCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  if (scanLoop) { clearInterval(scanLoop); scanLoop = null; }
+  document.getElementById('camera-area').style.display = 'none';
+}
+
+
+// ── PENDENTES ──
+async function carregarPendentes() {
+  const el = document.getElementById('lista-pendentes');
+  if (!el) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
+  const movs = await supa('GET', 'movimentacoes', null,
+    `status=eq.pendente&unidade_loja=eq.${UNIDADE_LOJA}&order=created_at.asc&select=*`);
+
+  const badge = document.getElementById('badge-pendentes');
+  if (badge) badge.textContent = movs && movs.length ? movs.length : '';
+
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Tudo confirmado, mano! Nada pendente 🤙</p>';
+    return;
+  }
+
+  el.innerHTML = movs.map(m => {
+    const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const tipoLabel = m.tipo === 'contagem' ? '📊 Contagem' : '📥 Entrada';
+    return `<div class="hist-item" style="border-left:4px solid #ff9800;padding:12px;background:#1a1400;border-radius:4px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:0.78rem;font-weight:700;color:#ff9800;">${tipoLabel}</span>
+          <span style="font-size:0.7rem;color:#888;">${hora}</span>
+        </div>
+        <div style="font-weight:700;color:#ff9800;font-size:1rem;">${fmtQ(m.qtd, m.unidade)}</div>
+      </div>
+      <div style="font-size:0.95rem;font-weight:700;margin:2px 0 6px;color:#f0f0f0;">${m.nome}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="background:#ff9800;color:#000;font-family:'Bebas Neue',cursive;font-size:0.85rem;padding:2px 10px;border-radius:20px;letter-spacing:1px;">👷 ${m.colaborador}</span>
+      </div>
+      <div style="font-size:0.75rem;color:#555;">Est. anterior: ${fmtQ(m.estoque_anterior, m.unidade)} → Novo: ${fmtQ(m.novo_estoque, m.unidade)}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="confirmarPendente('${m.id}','${m.codigo}',${m.novo_estoque},'${m.nome}')" style="flex:1;padding:10px;background:#00e5ff;color:#000;border:none;border-radius:4px;font-weight:700;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">✅ CONFIRMAR</button>
+        <button onclick="rejeitarPendente('${m.id}','${m.nome}')" style="flex:1;padding:10px;background:#1a1a1a;color:#ff1744;border:1px solid #ff1744;border-radius:4px;font-weight:700;cursor:pointer;">❌ Rejeitar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function confirmarTodos() {
+  const pendentes = document.querySelectorAll('[data-pendente-id]');
+  if (!pendentes.length) { showToast('Nada pendente!', 'error'); return; }
+  if (!confirm('Vai confirmar TODOS os ' + pendentes.length + ' lançamentos? Deu uma olhada em todos? 👀')) return;
+
+  // Buscar todos os pendentes do banco
+  const movs = await supa('GET', 'movimentacoes', null,
+    `status=eq.pendente&unidade_loja=eq.${UNIDADE_LOJA}&order=created_at.asc&select=*`);
+
+  let count = 0;
+  for (const m of movs) {
+    await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${m.codigo}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estoque: m.novo_estoque })
+    });
+    await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${m.id}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString() })
+    });
+    const chave = Object.keys(produtosCache).find(k => k === m.codigo);
+    if (chave) produtosCache[chave].estoque = m.novo_estoque;
+    count++;
+  }
+
+  renderEstoque();
+  beep();
+  const msgs_confirm = [
+    'SÓ AGRADEÇE IRMÃO 🙏🔥',
+    'TAMO JUNTO MANO! Estoque atualizado! 💪✅',
+    'É O BRABO! Confirmado na hora! 🤙',
+    'MANDOU BEM DEMAIS! Tá no estoque! 👊💥',
+    'ISSO É QUE É! Irmão sabe o que faz! 🫡',
+    'SALVO! Tmj irmão 🤜🤛',
+    'PERFEITO! Você é o cara! 🔥🔥',
+  ];
+  showToast(msgs_confirm[Math.floor(Math.random() * msgs_confirm.length)], 'success');
+  _lancadosSemConferir = 0;
+  carregarPendentes();
+}
+
+async function confirmarPendente(id, codigo, novoEst, nome) {
+  const isOperador = usuarioLogado.perfil === 'operador';
+  if (isOperador) {
+    if (!confirm('Ei, irmão! Já deu uma boa olhada nisso aí? Tem certeza que tá certo esse bagulho? 👀')) return;
+  }
+  // Atualiza estoque
+  await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codigo}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ estoque: novoEst })
+  });
+  // Marca como confirmado
+  await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString() })
+  });
+  // Atualiza cache
+  const chave = Object.keys(produtosCache).find(k => k === codigo || k.startsWith(codigo.split('_')[0]));
+  if (chave) produtosCache[chave].estoque = novoEst;
+  renderEstoque();
+  beep();
+  const msgs_confirm = [
+    'SÓ AGRADEÇE IRMÃO 🙏🔥',
+    'TAMO JUNTO MANO! Estoque atualizado! 💪✅',
+    'É O BRABO! Confirmado na hora! 🤙',
+    'MANDOU BEM DEMAIS! Tá no estoque! 👊💥',
+    'ISSO É QUE É! Irmão sabe o que faz! 🫡',
+    'SALVO! Tmj irmão 🤜🤛',
+    'PERFEITO! Você é o cara! 🔥🔥',
+  ];
+  showToast(msgs_confirm[Math.floor(Math.random() * msgs_confirm.length)], 'success');
+  carregarPendentes();
+}
+
+async function rejeitarPendente(id, nome) {
+  if (!confirm('Vai rejeitar "' + nome + '"? Isso some do histórico.')) return;
+  await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+  });
+  const msgs_rejeite = [
+    'POHA PARABÉNS! Tmj irmão 🤜🤛👏👏 Erro deletado!',
+    'É ISSO AÍ MANO! Limpou o erro igual profissional 🔥✅',
+    'SALVO! Você é o cara! Tmj irmão 🤜🤛',
+    'DELETOU NA HORA! Sem dó nem piedade, respeito! 👊💥',
+    'ISSO É QUE É RESPONSABILIDADE IRMÃO! 🫡🔥 Apagado!',
+  ];
+  showToast(msgs_rejeite[Math.floor(Math.random() * msgs_rejeite.length)], 'error');
+  carregarPendentes();
+}
+</script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🏪 Estoques Prensadão Boqueirão</h1>
+    <p>Acessa aí, parceiro 🔥</p>
+    <label>Usuário</label>
+    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
+    <label>Senha</label>
+    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>🏪 Prensadão BOQUEIRÃO</h1>
+      <span id="topbar-usuario"></span>
+    </div>
+    <button onclick="sair()">Saí fora</button>
+  </div>
+
+  <div class="tabs" id="tabs-bar">
+    <div class="tab active" onclick="showTab('estoque',this)">📦 TRAMPO</div>
+    <div class="tab" onclick="showTab('lancar',this)">➕ LANÇAR</div>
+    <div class="tab" onclick="showTab('historico',this)">📋 ROLO</div>
+    <div class="tab" onclick="showTab('pendentes',this);irParaPendentes()">⏳ PENDENTES <span id="badge-pendentes" style="background:#ff9800;color:#000;border-radius:10px;padding:1px 6px;font-size:0.72rem;margin-left:2px;"></span></div>
+    <div class="tab adm-only" onclick="showTab('relatorio',this)">📊 EXTRATO</div>
+    <div class="tab adm-only" onclick="showTab('produtos',this)">⚙️ BASE</div>
+  </div>
+
+  <!-- ESTOQUE -->
+  <div class="screen active" id="tab-estoque">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Produtos</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-baixo" style="color:#ff9800">0</div><div class="stat-label">Estoque baixo</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
+      <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
+        <option value="">Todas</option>
+        <option>Bebidas</option><option>Bruto</option><option>Processado</option><option>Embalagens</option><option>Limpeza</option>
+      </select>
+    </div>
+    <div id="lista-estoque"></div>
+  </div>
+
+  <!-- LANÇAR -->
+  <div class="screen" id="tab-lancar">
+    <div class="card">
+      <h3>➕ Novo Lançamento</h3>
+
+      <!-- PASSO 0: Quem tá fazendo -->
+      <label id="label-lanc-operador" style="font-size:0.95rem;font-weight:700;color:#37474f;">1️⃣ Quem tá fazendo?</label>
+      <input type="text" id="lanc-operador" placeholder="Seu nome aqui, mano! Obrigatório 👇"
+        style="margin:8px 0 16px;border:2px solid #ff9800;background:#1a0f00;color:#ff9800;font-weight:700;"
+        oninput="document.getElementById('lanc-operador').style.borderColor=this.value.trim()?'#00e676':'#ff9800'" />
+
+      <!-- PASSO 1: Tipo -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Tipo de lançamento</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button id="btn-tipo-entrada" onclick="selecionarTipo('entrada')" class="btn btn-red" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
+        <button id="btn-tipo-contagem" onclick="selecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
+      </div>
+      <input type="hidden" id="lanc-tipo" value="entrada" />
+
+      <!-- PASSO 2: Produto -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Produto</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
+        <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" 
+          onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();buscarPorCodigo();}"
+          oninput="clearTimeout(window._scanTimer);window._scanTimer=setTimeout(()=>{if(document.getElementById('scan-input').value.trim().length>=6)buscarPorCodigo();},300);" />
+        <button onclick="abrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+      </div>
+      <div id="camera-area" style="display:none;margin-bottom:10px;position:relative;">
+        <video id="camera-video" style="width:100%;border-radius:10px;max-height:260px;display:block;" autoplay playsinline muted></video>
+        <!-- Overlay de toque -->
+        <div id="scan-overlay" onclick="scanToque()" style="
+          position:absolute;inset:0;
+          display:flex;flex-direction:column;
+          align-items:center;justify-content:center;
+          background:rgba(0,0,0,0.35);
+          border-radius:10px;cursor:pointer;
+          user-select:none;">
+          <div style="font-size:3rem;">📷</div>
+          <div style="font-family:'Boogaloo',cursive;color:#fff;font-size:1.5rem;margin-top:6px;letter-spacing:1px;">TOCA PRA LER</div>
+          <div id="scan-flash" style="display:none;position:absolute;inset:0;background:rgba(255,255,255,0.5);border-radius:10px;"></div>
+        </div>
+        <button onclick="fecharCamera()" class="btn btn-gray" style="margin-top:6px;width:100%;">✖ Fechar câmera</button>
+      </div>
+      <select id="lanc-produto" style="margin-bottom:6px;">
+        <option value="">-- Selecione --</option>
+      </select>
+      <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
+
+      <!-- PASSO 3: Quantidade -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 10px;">
+        <label id="lanc-multi-label" style="font-size:0.82rem;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="lanc-pct" placeholder="Quantidade" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">×</span>
+          <input type="number" id="lanc-fator" placeholder="Fator" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">=</span>
+          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
+        </div>
+      </div>
+      <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
+      <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="screen" id="tab-historico">
+    <div class="card">
+      <h3>📋 Histórico de Movimentações</h3>
+      <input type="date" id="hist-data" onchange="carregarHistorico()" />
+      <div id="lista-historico"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data</p></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO (ADM) -->
+  <div class="screen adm-only" id="tab-relatorio">
+    <div class="card">
+      <h3>📊 Relatório de Estoque</h3>
+      <label>Qual data, irmão?</label>
+      <input type="date" id="rel-data" />
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin-bottom:6px;display:block;">Categorias</label>
+      <div id="rel-cat-checks" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+        
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" value="Bebidas" checked onchange="gerarRelatorio()" style="width:18px;height:18px;accent-color:#00e5ff;cursor:pointer;">
+          Bebidas
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" value="Bruto" checked onchange="gerarRelatorio()" style="width:18px;height:18px;accent-color:#00e5ff;cursor:pointer;">
+          Bruto
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" value="Processado" checked onchange="gerarRelatorio()" style="width:18px;height:18px;accent-color:#00e5ff;cursor:pointer;">
+          Processado
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" value="Embalagens" checked onchange="gerarRelatorio()" style="width:18px;height:18px;accent-color:#00e5ff;cursor:pointer;">
+          Embalagens
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a1a;border-radius:8px;cursor:pointer;font-size:0.9rem;">
+          <input type="checkbox" value="Limpeza" checked onchange="gerarRelatorio()" style="width:18px;height:18px;accent-color:#00e5ff;cursor:pointer;">
+          Limpeza
+        </label>
+      </div>
+      <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-green" onclick="compartilharWhatsApp()" style="flex:1;">📱 WhatsApp</button>
+        <button class="btn btn-blue" onclick="exportarCSV()" style="flex:1;">📊 Planilha CSV</button>
+      </div>
+    </div>
+    <div id="relatorio-resultado"></div>
+
+    <!-- LISTA DE PEDIDOS POR CAIXA -->
+    <div class="card" style="margin-top:8px;">
+      <h3>🛒 Lista de Pedidos</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo da média — calcula quantas caixas/pacotes pedir para atingir o estoque máximo.</p>
+      <button class="btn btn-red" onclick="gerarListaPedidos()" style="width:100%;">📋 Gerar Lista de Pedidos</button>
+      <button class="btn btn-green" onclick="compartilharPedidosWhats()" style="width:100%;margin-top:6px;">📱 Enviar por WhatsApp</button>
+    </div>
+    <div id="pedidos-resultado"></div>
+
+    <!-- ENTRADAS SEM CONTAGEM -->
+    <div class="card" style="margin-top:8px;">
+      <h3>📥 Entradas Registradas</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Entradas feitas sem contagem de estoque, com observação e data.</p>
+      <label>Data</label>
+      <input type="date" id="entrada-data" style="margin-bottom:10px;" />
+      <button class="btn btn-red" onclick="gerarRelatorioEntradas()">🔍 Ver Entradas</button>
+    </div>
+    <div id="entradas-resultado"></div>
+
+    <!-- RELATÓRIO RÁPIDO POR CATEGORIA -->
+    <div class="card" style="margin-top:8px;">
+      <h3>📱 Envio Rápido WhatsApp</h3>
+      <label>Data do relatório</label>
+      <input type="date" id="rel-rapido-data" style="margin-bottom:10px;" />
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-red" onclick="enviarCatWhats('Bebidas')" style="flex:1;">🥤 Bebidas</button>
+        <button class="btn btn-blue" onclick="enviarCatWhats('Embalagens')" style="flex:1;">📦 Embalagens</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PRODUTOS (ADM) -->
+  <div class="screen adm-only" id="tab-produtos">
+    <div class="card">
+      <h3>➕ Novo Produto</h3>
+      <button class="btn btn-red" onclick="mostrarFormProduto()" id="btn-novo-produto">+ Cadastrar novo produto</button>
+      <div id="form-produto" style="display:none;margin-top:10px;">
+        <input type="hidden" id="prod-id" />
+        <label>Código (EAN/barras)</label>
+        <input type="text" id="prod-codigo" placeholder="Ex: 7894900015119" />
+        <label>Nome</label>
+        <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
+        <label>Categoria</label>
+        <select id="prod-cat">
+            <option>Bebidas</option><option>Bruto</option><option>Processado</option><option>Embalagens</option><option>Limpeza</option>
+          </select>
+        <label>Unidade</label>
+        <select id="prod-unidade">
+          <option>un</option><option>kg</option><option>g</option>
+          <option>L</option><option>ml</option><option>cx</option><option>pct</option>
+        </select>
+        <label>Estoque mínimo</label>
+        <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
+        <label>Qtd por PCT em kg (opcional)</label>
+        <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
+        <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
+        <button class="btn btn-gray" onclick="limparFormProduto()">✖ Cancelar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📦 Produtos Cadastrados</h3>
+      <input type="text" id="busca-prod" placeholder="🔍 Buscar..." oninput="renderProdutos()" />
+      <div id="lista-produtos"></div>
+    </div>
+    <div class="card">
+      <h3>🗑️ Zerar Histórico</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Apaga todas as movimentações do banco. O estoque atual não é alterado.</p>
+      <input type="date" id="hist-zerar-data" style="margin-bottom:8px;" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data selecionada</button>
+        <button class="btn btn-red" style="flex:1;background:#b71c1c;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDENTES -->
+  <div class="screen" id="tab-pendentes">
+    <div class="card">
+      <h3>⏳ AGUARDANDO CONFIRMAÇÃO</h3>
+      <p style="font-size:0.82rem;color:#555;margin-bottom:10px;">Revisa aí os lançamentos antes de confirmar no estoque, mano!</p>
+      <button class="btn btn-red" onclick="carregarPendentes()">🔄 ATUALIZAR</button>
+    </div>
+    <div id="lista-pendentes"></div>
+  </div>
+</div>
+
+<!-- MODAL MOVIMENTAÇÃO -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
+  <div class="modal-box">
+    <h2 id="modal-nome"></h2>
+    <p id="modal-info"></p>
+    <label>Quanto tem, parceiro?</label>
+    <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="font-size:1.4rem;text-align:center;" />
+    <div id="modal-unidade" style="font-size:0.8rem;color:#888;margin:-4px 0 10px;"></div>
+    <button class="btn btn-green" onclick="confirmarModal()">✅ Confirmar</button>
+    <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+</body>
+</html>
