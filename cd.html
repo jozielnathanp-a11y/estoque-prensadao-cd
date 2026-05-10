@@ -245,6 +245,17 @@
     <div id="relatorio-resultado"></div>
   </div>
 
+
+  <!-- ABA EMBALAGENS -->
+  <div class="screen adm-only" id="tab-embalagens">
+    <div class="card">
+      <h3>📦 Relatório de Embalagens</h3>
+      <button class="btn btn-red" onclick="gerarRelatorioEmbalagens()">📊 Ver Estoque</button>
+      <button class="btn btn-green" onclick="pedidoEmbalagens()" style="margin-top:4px;">📱 Enviar pelo WhatsApp o que precisa</button>
+    </div>
+    <div id="embalagens-resultado"></div>
+  </div>
+
   <!-- PRODUTOS (ADM) -->
   <div class="screen adm-only" id="tab-produtos">
     <div class="card">
@@ -902,6 +913,43 @@ function fecharCamera() {
   if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
   if (scanLoop) { clearInterval(scanLoop); scanLoop = null; }
   document.getElementById('camera-area').style.display = 'none';
+}
+
+
+// Relatorio Embalagens
+async function gerarRelatorioEmbalagens() {
+  const el = document.getElementById('embalagens-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  const prods = Object.values(produtosCache).filter(p => p.categoria === 'Embalagem');
+  if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;">Nenhuma embalagem cadastrada</p>'; return; }
+  window._ultimoEmbalagens = prods;
+  let html = '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
+    + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">PRECISA</span></div>';
+  prods.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const precisa = Math.max(0, min - est);
+    const cor = est === 0 ? '#b71c1c' : precisa > 0 ? '#ff9800' : '#2e7d32';
+    const precisaTxt = precisa > 0 ? fmtQ(precisa, p.unidade) : '<span style="color:#2e7d32;">OK</span>';
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid ' + cor + ';padding:8px 10px;margin-bottom:2px;align-items:center;">'
+      + '<span style="font-weight:700;font-size:0.85rem;">' + p.nome + '</span>'
+      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</span>'
+      + '<span style="text-align:center;font-size:0.82rem;">' + precisaTxt + '</span>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function pedidoEmbalagens() {
+  const prods = window._ultimoEmbalagens || Object.values(produtosCache).filter(p => p.categoria === 'Embalagem');
+  const pedidos = prods.filter(p => (parseFloat(p.estoque)||0) < (parseFloat(p.estoque_min)||0));
+  if (!pedidos.length) { showToast('Embalagens em dia!', 'success'); return; }
+  let txt = '*Pedido Embalagens - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
+  pedidos.forEach(p => {
+    const precisa = (parseFloat(p.estoque_min)||0) - (parseFloat(p.estoque)||0);
+    txt += p.nome + ': ' + fmtQ(precisa, p.unidade) + '\n';
+  });
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
 }
 
 // Init
