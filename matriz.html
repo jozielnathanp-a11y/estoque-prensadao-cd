@@ -237,12 +237,22 @@
     <div class="card">
       <h3>⚙️ Definir Estoque Mínimo</h3>
       <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Define quanto cada unidade precisa ter de cada produto</p>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="cd">🏭 CD</option>
           <option value="centro">🏪 Centro</option>
           <option value="delivery">🚗 Delivery</option>
           <option value="boqueiraw">🏪 Boqueirão</option>
+        </select>
+        <select id="min-categoria" onchange="renderMinimos()" style="margin:0;flex:1;">
+          <option value="">📦 Todas categorias</option>
+          <option value="Bebidas">🍺 Bebidas</option>
+          <option value="Embalagens">📦 Embalagens</option>
+          <option value="Embalagem">📦 Embalagem</option>
+          <option value="Processado">🥩 Processado</option>
+          <option value="Bruto">🌿 Bruto</option>
+          <option value="Limpeza">🧹 Limpeza</option>
+          <option value="Temperos">🧂 Temperos</option>
         </select>
         <input type="text" id="busca-minimos" placeholder="🔍 Buscar..." oninput="renderMinimos()" style="margin:0;flex:1;" />
       </div>
@@ -627,7 +637,8 @@ function renderPedidos() {
 function renderMinimos() {
   const u = document.getElementById('min-unidade').value;
   const busca = (document.getElementById('busca-minimos').value || '').toLowerCase();
-  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca))).sort((a,b) => a.nome.localeCompare(b.nome));
+  const cat = document.getElementById('min-categoria').value;
+  const prods = todosEstoques.filter(p => p.unidade_loja === u && (!busca || p.nome.toLowerCase().includes(busca)) && (!cat || p.categoria === cat)).sort((a,b) => a.nome.localeCompare(b.nome));
   const el = document.getElementById('lista-minimos');
   if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregue o estoque primeiro</p>'; return; }
 
