@@ -1266,27 +1266,26 @@ async function gerarPedidoAlimentos() {
     let nPct = 0;
     let motivo = '';
 
-    if (min > 0 && max > 0) {
-      // Tem mínimo e máximo: só pede se estoque < mínimo
-      if (est < min) {
-        // Pede pra chegar na média (min+max)/2
-        const alvo = (min + max) / 2;
-        const falta = alvo - est;
+    const media = (min + max) / 2;
+    if (media > 0 && pct > 0) {
+      // Tem média definida: pede se estoque < média, alvo = média
+      if (est < media) {
+        const falta = media - est;
         nPct = Math.ceil(falta / pct);
-        motivo = 'abaixo do mínimo';
+        motivo = est === 0 ? 'zerado' : 'abaixo da média (' + fmtQ(media, p.unidade) + ')';
       } else {
-        motivo = 'ok';
+        motivo = 'ok (acima da média)';
       }
     } else if (pct > 0) {
-      // Sem mínimo/máximo: só pede se estoque < 40% do PCT
+      // Sem média: pede se estoque < 40% do PCT
       if (est < limite40) {
-        nPct = 1; // pede 1 PCT como padrão
-        motivo = est === 0 ? 'zerado' : 'abaixo de 40%';
+        nPct = 1;
+        motivo = est === 0 ? 'zerado' : 'abaixo de 40% do PCT';
       } else {
         motivo = 'ok (≥40% do PCT)';
       }
     } else {
-      motivo = 'sem PCT';
+      motivo = 'sem PCT cadastrado';
     }
 
     return { p, est, pct, min, max, nPct, motivo };
