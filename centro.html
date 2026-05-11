@@ -1240,41 +1240,96 @@ async function compartilharBebidas() {
 async function gerarPedidoAlimentos() {
   const cat = document.getElementById('rel-cat-sel').value;
   const el = document.getElementById('pedido-alimentos-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Carregando...</p>';
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Calculando...</p>';
 
+  const hoje = dataHoje();
+  const [ano, mes, dia] = hoje.split('-');
+
+  // Filtrar produtos da categoria
   const prods = Object.values(produtosCache)
     .filter(p => cat === 'Todos' || p.categoria === cat)
     .sort((a,b) => a.nome.localeCompare(b.nome));
 
   if (!prods.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto nessa categoria, mano</p>';
+    el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto nessa categoria</p>';
     return;
   }
 
-  const hoje = dataHoje();
-  const [ano, mes, dia] = hoje.split('-');
+  // Calcular sugestão de pedido por produto
+  const itens = prods.map(p => {
+    const est   = parseFloat(p.estoque)     || 0;
+    const pct   = parseFloat(p.qtd_por_pct) || 0;
+    const min   = parseFloat(p.estoque_min) || 0;
+    const max   = parseFloat(p.estoque_max) || 0;
+    const limite40 = pct * 0.4; // 40% do PCT
 
-  let html = '<div style="background:#1a1200;border:2px solid #f9a825;border-radius:10px;padding:12px;margin-top:10px;">';
-  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:#f9a825;letter-spacing:1px;margin-bottom:4px;">🛒 PEDIDO — ' + dia + '/' + mes + '/' + ano + '</div>';
-  html += '<div style="font-size:0.78rem;color:#aaa;margin-bottom:12px;">Digite a quantidade a pedir. Deixe 0 pra não pedir.</div>';
+    let nPct = 0;
+    let motivo = '';
 
-  prods.forEach((p, i) => {
-    const est = parseFloat(p.estoque) || 0;
-    const pct = parseFloat(p.qtd_por_pct) || 0;
-    const min = parseFloat(p.estoque_min) || 0;
-    const cor = est === 0 ? '#b71c1c' : (min > 0 && est < min) ? '#ff9800' : '#666';
-    html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #2a2a2a;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.85rem;">' + p.nome + '</div>'
-      + '<div style="font-size:0.72rem;color:' + cor + ';">Estoque: ' + fmtQ(est, p.unidade) + (pct > 0 ? ' · ' + fmtQ(pct, p.unidade) + '/PCT' : '') + '</div>'
-      + '</div>'
-      + '<input type="number" id="ped-qtd-' + i + '" data-nome="' + p.nome + '" data-unidade="' + p.unidade + '" data-pct="' + pct + '" placeholder="0" step="0.001" min="0" style="width:75px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
-      + '</div>';
+    if (min > 0 && max > 0) {
+      // Tem mínimo e máximo: só pede se estoque < mínimo
+      if (est < min) {
+        // Pede pra chegar na média (min+max)/2
+        const alvo = (min + max) / 2;
+        const falta = alvo - est;
+        nPct = Math.ceil(falta / pct);
+        motivo = 'abaixo do mínimo';
+      } else {
+        motivo = 'ok';
+      }
+    } else if (pct > 0) {
+      // Sem mínimo/máximo: só pede se estoque < 40% do PCT
+      if (est < limite40) {
+        nPct = 1; // pede 1 PCT como padrão
+        motivo = est === 0 ? 'zerado' : 'abaixo de 40%';
+      } else {
+        motivo = 'ok (≥40% do PCT)';
+      }
+    } else {
+      motivo = 'sem PCT';
+    }
+
+    return { p, est, pct, min, max, nPct, motivo };
   });
 
-  html += '<button onclick="enviarPedidoAlimentos(' + prods.length + ')" class="btn btn-green" style="width:100%;margin-top:12px;">📱 GERAR E ENVIAR WHATSAPP</button>';
-  html += '</div>';
+  const precisam = itens.filter(x => x.nPct > 0);
+  const ok       = itens.filter(x => x.nPct === 0);
 
+  let html = '<div style="background:#0a0a0a;border:2px solid #f9a825;border-radius:10px;padding:12px;margin-top:10px;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:#f9a825;letter-spacing:1px;margin-bottom:8px;">🛒 PEDIDO — ' + dia + '/' + mes + '/' + ano + '</div>';
+
+  if (precisam.length === 0) {
+    html += '<div style="text-align:center;color:#2e7d32;font-weight:700;padding:12px;">✅ Estoque em dia! Nada pra pedir.</div>';
+  } else {
+    html += '<div style="font-size:0.75rem;color:#aaa;margin-bottom:10px;">Ajuste a quantidade se precisar 👇</div>';
+    precisam.forEach((x, i) => {
+      const { p, est, pct, nPct, motivo } = x;
+      const corEst = motivo === 'zerado' ? '#b71c1c' : '#ff9800';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1e1e1e;">'
+        + '<div style="flex:1;">'
+        + '<div style="font-weight:700;font-size:0.88rem;">' + p.nome + '</div>'
+        + '<div style="font-size:0.72rem;color:' + corEst + ';">Estoque: ' + fmtQ(est, p.unidade) + ' · PCT: ' + fmtQ(pct, p.unidade) + ' · ' + motivo + '</div>'
+        + '</div>'
+        + '<div style="text-align:center;">'
+        + '<div style="font-size:0.65rem;color:#aaa;margin-bottom:2px;">PCT</div>'
+        + '<input type="number" id="ped-qtd-' + i + '" data-nome="' + p.nome + '" data-unidade="' + p.unidade + '" data-pct="' + pct + '" value="' + nPct + '" step="1" min="0" style="width:65px;margin:0;text-align:center;font-size:1rem;padding:6px;font-weight:700;" />'
+        + '</div>'
+        + '</div>';
+    });
+    html += '<button onclick="enviarPedidoAlimentos(' + precisam.length + ')" class="btn btn-green" style="width:100%;margin-top:12px;">📱 ENVIAR NO WHATSAPP</button>';
+  }
+
+  // Mostrar os que estão ok (colapsado)
+  if (ok.length > 0) {
+    html += '<details style="margin-top:10px;">';
+    html += '<summary style="font-size:0.78rem;color:#666;cursor:pointer;">✅ ' + ok.length + ' produto(s) em dia (sem necessidade de pedido)</summary>';
+    ok.forEach(x => {
+      html += '<div style="font-size:0.78rem;color:#555;padding:4px 0;">' + x.p.nome + ' — ' + fmtQ(x.est, x.p.unidade) + ' · ' + x.motivo + '</div>';
+    });
+    html += '</details>';
+  }
+
+  html += '</div>';
   el.innerHTML = html;
 }
 
@@ -1290,23 +1345,23 @@ function enviarPedidoAlimentos(total) {
   for (let i = 0; i < total; i++) {
     const input = document.getElementById('ped-qtd-' + i);
     if (!input) continue;
-    const qtd = parseFloat(input.value) || 0;
-    if (qtd <= 0) continue;
+    const nPct = parseInt(input.value) || 0;
+    if (nPct <= 0) continue;
     const nome = input.dataset.nome;
     const unidade = input.dataset.unidade;
     const pct = parseFloat(input.dataset.pct) || 0;
+    const total_kg = pct > 0 ? (nPct * pct) : nPct;
     let linha = '';
-    if (pct > 0 && unidade === 'kg') {
-      const nPct = Math.ceil(qtd / pct);
-      linha = '• ' + nome + ': ' + nPct + ' PCT (' + qtd + ' kg)';
+    if (unidade === 'un') {
+      linha = '• ' + nome + ': ' + nPct + ' PCT (' + total_kg + ' un)';
     } else {
-      linha = '• ' + nome + ': ' + qtd + (unidade !== 'un' ? ' ' + unidade : ' un');
+      linha = '• ' + nome + ': ' + nPct + ' PCT (' + total_kg.toFixed(3).replace(/\.?0+$/, '') + ' kg)';
     }
     txtWpp += linha + '\n';
     temPedido = true;
   }
 
-  if (!temPedido) { showToast('Coloca a quantidade de pelo menos um produto! 😤', 'error'); return; }
+  if (!temPedido) { showToast('Ajusta as quantidades antes de enviar! 😤', 'error'); return; }
   txtWpp += '\n_Enviado pelo sistema Prensadão_ 🍔';
   window.open('https://wa.me/?text=' + encodeURIComponent(txtWpp), '_blank');
 }
