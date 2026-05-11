@@ -722,9 +722,12 @@ function trocarNomeOperador() {
 }
 
 
-// Origem padrão por categoria
+// Origem: Bruto/Processado sempre CD (fixo). Bebidas/Embalagens: usuário escolhe.
 function origemPadrao(categoria) {
   return (categoria === 'Bruto' || categoria === 'Processado') ? 'cd' : 'fornecedor';
+}
+function origemFixa(categoria) {
+  return (categoria === 'Bruto' || categoria === 'Processado');
 }
 
 // ── PENDENTES ──
