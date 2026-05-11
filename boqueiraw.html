@@ -176,16 +176,7 @@
 
   <!-- LANÇAR -->
   <div class="screen" id="tab-lancar">
-      <!-- PENDENTES -->
-  <div class="card" id="card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
-      <button class="btn btn-red" onclick="confirmarTodosPendentes()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
-    </div>
-    <div id="lista-pendentes"></div>
-  </div>
-
-  <div class="card">
+    <div class="card">
       <h3>➕ Novo Lançamento</h3>
 
       <!-- PASSO 1: Tipo -->
@@ -226,6 +217,15 @@
       <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
       <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
     </div>
+  </div>
+
+  <!-- PENDENTES -->
+  <div class="card" id="card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
+      <button class="btn btn-red" onclick="confirmarTodosPendentes()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
+    </div>
+    <div id="lista-pendentes"></div>
   </div>
 
   <!-- HISTÓRICO -->
