@@ -176,7 +176,21 @@
 
   <!-- LANÇAR -->
   <div class="screen" id="tab-lancar">
-    <div class="card">
+      <!-- NOME OPERADOR -->
+  <div class="card" id="card-nome-operador" style="border:2px solid #f9a825;">
+    <h3 style="color:#f9a825;">👤 Quem tá no corre?</h3>
+    <p style="font-size:0.82rem;color:#aaa;margin-bottom:10px;">Coloca seu nome antes de começar</p>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="input-nome-operador" placeholder="Seu nome aqui, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter') confirmarNomeOperador()" />
+      <button onclick="confirmarNomeOperador()" class="btn btn-red" style="margin:0;padding:10px 16px;">✅ Bora</button>
+    </div>
+  </div>
+  <div id="card-nome-confirmado" style="display:none;background:#111;border:1px solid #2e7d32;border-radius:4px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;">
+    <span style="font-size:0.88rem;color:#2e7d32;font-weight:700;">👤 <span id="label-nome-operador"></span></span>
+    <button onclick="trocarNomeOperador()" style="background:none;border:none;color:#888;font-size:0.75rem;cursor:pointer;text-decoration:underline;">Trocar</button>
+  </div>
+
+  <div class="card">
       <h3>➕ Novo Lançamento</h3>
 
       <!-- PASSO 1: Tipo -->
@@ -663,6 +677,32 @@ async function zerarEstoqueProduto(cod) {
   showToast('✅ Estoque zerado!', 'success');
 }
 
+// ── NOME OPERADOR ──
+let nomeOperador = '';
+
+function confirmarNomeOperador() {
+  const nome = document.getElementById('input-nome-operador').value.trim();
+  if (!nome) {
+    showToast('EI! Coloca seu nome aí mano, não sou adivinho não! 😤', 'error');
+    document.getElementById('input-nome-operador').focus();
+    return;
+  }
+  nomeOperador = nome;
+  document.getElementById('card-nome-operador').style.display = 'none';
+  const confirmado = document.getElementById('card-nome-confirmado');
+  confirmado.style.display = 'flex';
+  document.getElementById('label-nome-operador').textContent = nome;
+  showToast('👊 Bora ' + nome + '!', 'success');
+}
+
+function trocarNomeOperador() {
+  nomeOperador = '';
+  document.getElementById('card-nome-operador').style.display = 'block';
+  document.getElementById('card-nome-confirmado').style.display = 'none';
+  document.getElementById('input-nome-operador').value = '';
+  setTimeout(() => document.getElementById('input-nome-operador').focus(), 100);
+}
+
 // ── PENDENTES ──
 let pendentes = [];
 
@@ -678,7 +718,7 @@ function adicionarPendente(p, tipo, qtd) {
     document.getElementById('modal-limite').style.display = 'flex';
     return;
   }
-  pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade });
+  pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, operador: nomeOperador });
   if (pendentes.length === 15) {
     document.getElementById('modal-limite').style.display = 'flex';
   } else {
@@ -742,7 +782,7 @@ async function confirmarTodosPendentes() {
       await supa('POST', 'movimentacoes', {
         codigo: item.codigo, nome: item.nome, tipo: item.tipo,
         qtd: item.qtd, unidade: item.unidade,
-        colaborador: usuarioLogado.usuario,
+        colaborador: nomeOperador || usuarioLogado.usuario,
         obs: item.tipo === 'contagem' ? 'Contagem' : 'Entrada',
         unidade_loja: UNIDADE_LOJA,
         estoque_anterior: est,
@@ -762,6 +802,12 @@ async function confirmarTodosPendentes() {
 
 // ── LANÇAMENTO ──
 async function confirmarLancamento() {
+  if (!nomeOperador) {
+    showToast('PARA AÍ IRMÃO! Coloca seu nome primeiro, tá maluco?! 😤', 'error');
+    document.getElementById('card-nome-operador').style.display = 'block';
+    document.getElementById('input-nome-operador').focus();
+    return;
+  }
   const cod = document.getElementById('lanc-produto').value;
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
@@ -998,6 +1044,12 @@ function buscarPorCodigo() {
   const p = getProduto(cod);
 
   if (p) {
+    if (!nomeOperador) {
+      showToast('SEGURA AÍ! Coloca seu nome antes de sair escaneando, mano! 😤', 'error');
+      document.getElementById('card-nome-operador').style.display = 'block';
+      document.getElementById('input-nome-operador').focus();
+      return;
+    }
     const sel = document.getElementById('lanc-produto');
     sel.value = p.codigo;
     sel.dispatchEvent(new Event('change'));
