@@ -1101,21 +1101,12 @@ function buscarPorCodigo() {
         setTimeout(() => document.getElementById('modal-kg-peso').focus(), 100);
       }
     } else {
-      // Produto por unidade: usa qtd_por_pct como padrão
+      // Unidade (bebida/embalagem): lança direto com qtd_por_pct
       const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
-      document.getElementById('lanc-qtd').value = pctPadrao;
-      if (pctPadrao > 1) {
-        document.getElementById('lanc-pct').value = '1';
-        document.getElementById('lanc-fator').value = pctPadrao;
-        document.getElementById('lanc-total').textContent = pctPadrao;
-        showToast('✅ ' + p.nome + ' — 1 PCT = ' + pctPadrao + ' un', 'success');
-      } else {
-        document.getElementById('lanc-pct').value = '';
-        document.getElementById('lanc-fator').value = '';
-        document.getElementById('lanc-total').textContent = '—';
-        showToast('✅ ' + p.nome, 'success');
-      }
-      document.getElementById('lanc-qtd').focus();
+      adicionarPendente(p, tipo, pctPadrao);
+      document.getElementById('scan-input').value = '';
+      document.getElementById('lanc-produto').value = '';
+      document.getElementById('lanc-info').style.display = 'none';
     }
   } else {
     showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
