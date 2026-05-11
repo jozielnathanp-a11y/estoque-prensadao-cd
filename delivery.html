@@ -468,13 +468,12 @@ async function carregarProdutos() {
 }
 
 function extrairPesoEtiqueta(cod) {
-  // Etiqueta interna: 12 digitos, PPPPPP = produto, PPPPPP = peso em gramas
-  // Ex: 000100002087 -> produto 000100, peso 002087g = 2.087 kg
-  if (cod && cod.length >= 12) {
-    const pesoGramas = parseInt(cod.substring(6, 12), 10);
-    if (!isNaN(pesoGramas) && pesoGramas > 0) return pesoGramas / 1000;
-  }
-  // EAN-13 padrao (começa com 2): digitos 7-12 = peso
+  // Formato: 2 PPPPPP PPPPP C (13 digitos)
+  // digitos 1    = prefixo 2
+  // digitos 2-7  = codigo produto (6 dig)
+  // digitos 8-12 = peso em gramas (5 dig)
+  // digito  13   = verificador (ignorar)
+  // Ex: 2001900002086 -> produto=001900, peso=00208g = 0.208 kg
   if (cod && cod.length === 13 && cod[0] === '2') {
     const pesoGramas = parseInt(cod.substring(7, 12), 10);
     if (!isNaN(pesoGramas) && pesoGramas > 0) return pesoGramas / 1000;
@@ -488,9 +487,9 @@ function getProduto(cod) {
   // Busca direta pelo codigo sem sufixo _loja
   const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
   if (match) return produtosCache[match];
-  // Busca por prefixo de 6 digitos (etiqueta interna de peso)
-  if (cod && cod.length >= 6) {
-    const prefixo = cod.substring(0, 6);
+  // Busca por prefixo EAN-13 peso variavel: digitos 2-7 = codigo produto
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const prefixo = cod.substring(1, 7);
     const matchKg = chaves.find(k => {
       const codSemLoja = k.replace('_' + UNIDADE_LOJA, '');
       return codSemLoja.substring(0, 6) === prefixo;
