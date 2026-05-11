@@ -1148,12 +1148,25 @@ function buscarPorCodigo() {
         setTimeout(() => document.getElementById('modal-kg-peso').focus(), 100);
       }
     } else {
-      // Unidade (bebida/embalagem): lança direto com qtd_por_pct
-      const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
-      adicionarPendente(p, tipo, pctPadrao);
-      document.getElementById('scan-input').value = '';
-      document.getElementById('lanc-produto').value = '';
-      document.getElementById('lanc-info').style.display = 'none';
+      // Unidade: se tem qtd_por_pct abre modal pra escolher quantos PCT
+      const pctFator = parseFloat(p.qtd_por_pct) || 0;
+      if (pctFator > 1) {
+        document.getElementById('modal-pct-nome').textContent = '📦 ' + p.nome;
+        document.getElementById('modal-pct-info').textContent = '1 PCT = ' + pctFator + ' un';
+        document.getElementById('modal-pct-codigo').value = p.codigo;
+        document.getElementById('modal-pct-tipo').value = tipo;
+        document.getElementById('modal-pct-fator').value = pctFator;
+        document.getElementById('modal-pct-qtd').value = '1';
+        document.getElementById('modal-pct-total').textContent = 'Total: ' + pctFator + ' un';
+        document.getElementById('modal-pct').style.display = 'flex';
+        setTimeout(() => document.getElementById('modal-pct-qtd').select(), 100);
+      } else {
+        // Sem PCT definido: lança 1 direto
+        adicionarPendente(p, tipo, 1);
+        document.getElementById('scan-input').value = '';
+        document.getElementById('lanc-produto').value = '';
+        document.getElementById('lanc-info').style.display = 'none';
+      }
     }
   } else {
     showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
