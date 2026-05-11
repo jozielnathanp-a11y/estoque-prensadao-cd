@@ -714,11 +714,7 @@ function renderPendentesCd() {
     const cor = item.tipo === 'contagem' ? '#607d8b' : '#2e7d32';
     const icone = item.tipo === 'contagem' ? '📊' : '📥';
 
-    const origemBtns = item.tipo === 'entrada' ?
-      '<div style="display:flex;gap:4px;margin-top:4px;">'
-      + '<button onclick="toggleOrigemCd(' + i + ', \'cd\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='cd'?'#1565c0':'#222') + ';color:' + (item.origem==='cd'?'#fff':'#888') + ';">📦 CD</button>'
-      + '<button onclick="toggleOrigemCd(' + i + ', \'fornecedor\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='fornecedor'?'#2e7d32':'#222') + ';color:' + (item.origem==='fornecedor'?'#fff':'#888') + ';">🚚 Fornecedor</button>'
-      + '</div>' : '';
+    const origemBtns = '';
 
     return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
       + '<div style="flex:1;">'
