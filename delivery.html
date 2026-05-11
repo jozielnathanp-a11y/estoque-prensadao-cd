@@ -831,7 +831,7 @@ async function confirmarTodosPendentes() {
         const cdProd = cdRes[0];
         const cdEst = parseFloat(cdProd.estoque) || 0;
         const cdNovo = cdEst - item.qtd;
-        await supa('PATCH', 'produtos?codigo=eq.' + cdProd.codigo + '&unidade_loja=eq.cd', { estoque: cdNovo });
+        await supa('PATCH', 'produtos', { estoque: cdNovo }, 'codigo=eq.' + cdProd.codigo + '&unidade_loja=eq.cd');
         await supa('POST', 'movimentacoes', {
           codigo: cdProd.codigo, nome: item.nome, tipo: 'saida',
           qtd: item.qtd, unidade: item.unidade,
