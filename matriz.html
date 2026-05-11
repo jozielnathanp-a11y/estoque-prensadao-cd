@@ -109,7 +109,6 @@
     <div class="tab" onclick="showTab('contagens')">📊 CONTAGENS</div>
     <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
-    <div class="tab" onclick="showTab('auditoria')">🔍 AUDITORIA</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -208,35 +207,7 @@
   </div>
 
   <!-- MÍNIMOS -->
-  <!-- AUDITORIA -->
-  <div class="screen" id="tab-auditoria">
-    <div class="card">
-      <h3>🔍 Auditoria do Sistema</h3>
-      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Histórico completo de ações — quem fez, o quê, quando e em qual unidade.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <input type="date" id="aud-data" style="margin:0;flex:1;" onchange="carregarAuditoria()" />
-        <select id="aud-unidade" onchange="carregarAuditoria()" style="margin:0;flex:1;">
-          <option value="">Todas unidades</option>
-          <option value="cd">🏭 CD</option>
-          <option value="centro">🏪 Centro</option>
-          <option value="delivery">🚗 Delivery</option>
-          <option value="boqueiraw">🏪 Boqueirão</option>
-        </select>
-        <select id="aud-acao" onchange="renderAuditoria()" style="margin:0;flex:1;">
-          <option value="">Todas ações</option>
-          <option value="LOGIN">Login</option>
-          <option value="LOGOUT">Logout</option>
-          <option value="LANCAMENTO">Lançamento</option>
-          <option value="CONFIRMACAO">Confirmação</option>
-          <option value="REJEICAO">Rejeição</option>
-          <option value="CADASTRO_PRODUTO">Cadastro Produto</option>
-          <option value="ZERAR_ESTOQUE">Zerar Estoque</option>
-          <option value="CONFIRMACAO_TODOS">Confirmar Todos</option>
-        </select>
-      </div>
-    </div>
-    <div id="lista-auditoria"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data para ver o histórico</p></div>
-  </div>
+
 
   <div class="screen" id="tab-minimos">
     <div class="card">
@@ -354,7 +325,6 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
   if (name === 'entradas') carregarEntradas();
   if (name === 'contagens') carregarContagens();
-  if (name === 'auditoria') { document.getElementById('aud-data').value = new Date().toISOString().slice(0,10); carregarAuditoria(); }
   if (name === 'pedidos') carregarPedidos();
   if (name === 'minimos') renderMinimos();
 }
