@@ -753,6 +753,193 @@ async function salvarLimites(codigo, unidade) {
 }
 
 document.getElementById('login-usuario').focus();
+
+// ── LANÇAMENTO MATRIZ ──
+let mtzPendentes = [];
+let mtzProdutosCache = {};
+let mtzCameraStream = null;
+let mtzScanLoop = null;
+let mtzBarcodeDetector = null;
+
+async function mtzCarregarProdutos() {
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const sel = document.getElementById('mtz-lanc-produto');
+  if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
+  const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
+  mtzProdutosCache = {};
+  if (Array.isArray(lista)) lista.forEach(p => mtzProdutosCache[p.codigo] = p);
+  sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
+    lista.map(p => '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>').join('');
+  sel.onchange = () => {
+    const p = mtzProdutosCache[sel.value];
+    const info = document.getElementById('mtz-lanc-info');
+    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
+      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
+      info.style.display = 'block';
+    } else { info.style.display = 'none'; }
+  };
+}
+
+function mtzSelecionarTipo(tipo) {
+  document.getElementById('mtz-lanc-tipo').value = tipo;
+  document.getElementById('mtz-btn-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-gold' : 'btn-gray');
+  document.getElementById('mtz-btn-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-gold' : 'btn-gray');
+}
+
+function mtzPendentes_push(p, tipo, qtd, u) {
+  const idx = mtzPendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo && x.unidade_loja === u);
+  if (idx >= 0) {
+    mtzPendentes[idx].qtd = parseFloat((mtzPendentes[idx].qtd + qtd).toFixed(3));
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(mtzPendentes[idx].qtd, p.unidade), 'success');
+  } else {
+    mtzPendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, unidade_loja: u });
+    showToast('➕ ' + p.nome + ' — ' + fmtQ(qtd, p.unidade), 'success');
+  }
+  document.getElementById('mtz-lanc-qtd').value = '';
+  document.getElementById('mtz-scan-input').value = '';
+  mtzRenderPendentes();
+}
+
+function mtzAdicionarPendente() {
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const cod = document.getElementById('mtz-lanc-produto').value;
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
+  if (!u) { showToast('Selecione a unidade!', 'error'); return; }
+  if (!cod) { showToast('Selecione o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  const p = mtzProdutosCache[cod];
+  mtzPendentes_push(p, tipo, qtd, u);
+}
+
+function mtzRenderPendentes() {
+  const el = document.getElementById('mtz-lista-pendentes');
+  const card = document.getElementById('mtz-card-pendentes');
+  const badge = document.getElementById('mtz-badge-pendentes');
+  badge.textContent = mtzPendentes.length;
+  card.style.display = mtzPendentes.length > 0 ? 'block' : 'none';
+  if (!mtzPendentes.length) { el.innerHTML = ''; return; }
+  const labels = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
+  el.innerHTML = mtzPendentes.map((item, i) => {
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+    const cor = item.tipo === 'contagem' ? '#1565c0' : '#2e7d32';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (labels[item.unidade_loja]||item.unidade_loja) + ' · ' + (item.tipo==='contagem'?'Contagem':'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
+      + '</div>'
+      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="mtzEditarPendente(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="mtzRemoverPendente(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+function mtzEditarPendente(i, val) {
+  const qtd = parseFloat(val);
+  if (qtd > 0) { mtzPendentes[i].qtd = qtd; }
+}
+
+function mtzRemoverPendente(i) {
+  const nome = mtzPendentes[i].nome;
+  mtzPendentes.splice(i, 1);
+  mtzRenderPendentes();
+  showToast('🗑️ ' + nome + ' removido', 'error');
+}
+
+async function mtzConfirmarTodos() {
+  if (!mtzPendentes.length) return;
+  const btn = document.querySelector('[onclick="mtzConfirmarTodos()"]');
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+  for (const item of mtzPendentes) {
+    const lista = await supa('GET', 'produtos', null, 'codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja + '&select=estoque');
+    if (!lista || !lista.length) continue;
+    const est = parseFloat(lista[0].estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    await fetch(SUPA_URL + '/rest/v1/produtos?codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja, opts);
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem Chefão' : 'Entrada Chefão',
+      unidade_loja: item.unidade_loja,
+      estoque_anterior: est, novo_estoque: novoEst
+    });
+  }
+  mtzPendentes = [];
+  mtzRenderPendentes();
+  todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+  renderEstoque();
+  showToast('✅ Todos confirmados!', 'success');
+  btn.textContent = '✅ CONFIRMAR TUDO';
+  btn.disabled = false;
+}
+
+function mtzBuscarPorCodigo() {
+  const cod = document.getElementById('mtz-scan-input').value.trim();
+  if (!cod) return;
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  let produto = null;
+  let pesoKg = null;
+  if (cod.length === 13 && cod[0] === '2') {
+    const prefixo = cod.substring(1, 7);
+    pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
+    produto = Object.values(mtzProdutosCache).find(p => {
+      const codSemLoja = p.codigo.replace('_' + u, '');
+      return codSemLoja.substring(0, 6) === prefixo;
+    });
+  } else {
+    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u];
+  }
+  if (produto) {
+    document.getElementById('mtz-lanc-produto').value = produto.codigo;
+    document.getElementById('mtz-scan-input').value = '';
+    beep();
+    if (pesoKg && produto.unidade === 'kg') {
+      mtzPendentes_push(produto, tipo, pesoKg, u);
+    } else {
+      document.getElementById('mtz-lanc-qtd').focus();
+      showToast('✅ ' + produto.nome, 'success');
+    }
+  } else {
+    showToast('Produto não encontrado! Cadastra esse aí 😤', 'error');
+  }
+}
+
+async function mtzAbrirCamera() {
+  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada. Use o campo de texto.', 'error'); return; }
+  try {
+    mtzCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const video = document.getElementById('mtz-camera-video');
+    video.srcObject = mtzCameraStream;
+    document.getElementById('mtz-camera-area').style.display = 'block';
+    mtzBarcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
+    mtzScanLoop = setInterval(async () => {
+      try {
+        const barcodes = await mtzBarcodeDetector.detect(video);
+        if (barcodes.length > 0) {
+          const cod = barcodes[0].rawValue;
+          mtzFecharCamera();
+          document.getElementById('mtz-scan-input').value = cod;
+          mtzBuscarPorCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) { showToast('Erro ao acessar câmera', 'error'); }
+}
+
+function mtzFecharCamera() {
+  if (mtzScanLoop) { clearInterval(mtzScanLoop); mtzScanLoop = null; }
+  if (mtzCameraStream) { mtzCameraStream.getTracks().forEach(t => t.stop()); mtzCameraStream = null; }
+  document.getElementById('mtz-camera-area').style.display = 'none';
+}
 </script>
 </body>
 </html>
