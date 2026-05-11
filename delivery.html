@@ -467,12 +467,40 @@ async function carregarProdutos() {
   }
 }
 
+function extrairPesoEAN(cod) {
+  // EAN-13 de peso variável: começa com 2, tem 13 dígitos
+  // Formato: 2 PPPPP KKKKK C (produto 5 dig, peso 5 dig em gramas)
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const pesoGramas = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoGramas) && pesoGramas > 0) {
+      return pesoGramas / 1000; // retorna em kg
+    }
+  }
+  return null;
+}
+
+function getPrefixoEAN(cod) {
+  // Retorna os 7 primeiros dígitos para buscar o produto no cache
+  if (cod && cod.length === 13 && cod[0] === '2') return cod.substring(0, 7);
+  return null;
+}
+
 function getProduto(cod) {
   if (produtosCache[cod]) return produtosCache[cod];
   // buscar pelo sufixo da unidade (código do scanner sem _loja)
   const chaves = Object.keys(produtosCache);
   const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
-  return match ? produtosCache[match] : null;
+  if (match) return produtosCache[match];
+  // buscar por prefixo EAN peso variável
+  const prefixo = getPrefixoEAN(cod);
+  if (prefixo) {
+    const matchKg = chaves.find(k => {
+      const codBase = produtosCache[k].codigo_barras || '';
+      return codBase.startsWith(prefixo) || k.startsWith(prefixo);
+    });
+    if (matchKg) return produtosCache[matchKg];
+  }
+  return null;
 }
 
 function atualizarStats() {
@@ -966,18 +994,56 @@ let scanLoop = null;
 function buscarPorCodigo() {
   const cod = document.getElementById('scan-input').value.trim();
   if (!cod) return;
+  const tipo = document.getElementById('lanc-tipo').value;
   const p = getProduto(cod);
+
   if (p) {
     const sel = document.getElementById('lanc-produto');
-    sel.value = cod;
+    sel.value = p.codigo;
     sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
-    document.getElementById('lanc-qtd').focus();
     beep();
-    showToast('✅ ' + p.nome, 'success');
+
+    // Produto em kg: verificar se tem peso no código de barras
+    if (p.unidade === 'kg') {
+      const pesoNoCode = extrairPesoEAN(cod);
+
+      if (tipo === 'entrada' && pesoNoCode) {
+        // Entrada: lança o peso do código direto, sem perguntar
+        document.getElementById('lanc-qtd').value = pesoNoCode.toFixed(3);
+        showToast('⚖️ ' + p.nome + ' — ' + pesoNoCode.toFixed(3) + ' kg (do código)', 'success');
+      } else {
+        // Contagem: abre modal para confirmar/editar o peso
+        const pesoSugerido = pesoNoCode ? pesoNoCode.toFixed(3) : '';
+        document.getElementById('modal-kg-nome').textContent = p.nome;
+        document.getElementById('modal-kg-peso').value = pesoSugerido;
+        document.getElementById('modal-kg-cod').value = p.codigo;
+        if (pesoNoCode) {
+          document.getElementById('modal-kg-info').textContent = '⚖️ Peso no código: ' + pesoNoCode.toFixed(3) + ' kg';
+        } else {
+          document.getElementById('modal-kg-info').textContent = 'Digite o peso real do produto';
+        }
+        document.getElementById('modal-kg').style.display = 'flex';
+        setTimeout(() => document.getElementById('modal-kg-peso').focus(), 100);
+      }
+    } else {
+      // Produto por unidade: normal
+      document.getElementById('lanc-qtd').focus();
+      showToast('✅ ' + p.nome, 'success');
+    }
   } else {
     showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
   }
+}
+
+function confirmarPesoKg() {
+  const peso = parseFloat(document.getElementById('modal-kg-peso').value);
+  const cod = document.getElementById('modal-kg-cod').value;
+  if (!peso || peso <= 0) { showToast('Informe o peso!', 'error'); return; }
+  document.getElementById('lanc-qtd').value = peso.toFixed(3);
+  document.getElementById('modal-kg').style.display = 'none';
+  const p = getProduto(cod);
+  showToast('⚖️ ' + (p ? p.nome : '') + ' — ' + peso.toFixed(3) + ' kg', 'success');
 }
 
 async function abrirCamera() {
