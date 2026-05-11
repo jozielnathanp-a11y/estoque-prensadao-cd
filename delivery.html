@@ -824,9 +824,11 @@ async function confirmarTodosPendentes() {
     // Se origem CD e é entrada: descontar do CD também
     if (item.tipo === 'entrada' && item.origem === 'cd') {
       // Pega prefixo de 6 dígitos para achar o produto no CD
-      const codBase = item.codigo.replace('_' + UNIDADE_LOJA, '');
-      const prefixo6 = codBase.substring(0, 6);
+      const codBase = item.codigo.replace('_' + UNIDADE_LOJA, '').replace(/^0+/, '').padStart(6, '0');
+      const prefixo6 = item.codigo.replace('_' + UNIDADE_LOJA, '').substring(0, 6);
+      console.log('[CD] item.codigo:', item.codigo, '| codBase:', codBase, '| prefixo6:', prefixo6);
       const cdRes = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
+      console.log('[CD] cdRes:', cdRes);
       if (Array.isArray(cdRes) && cdRes.length) {
         const cdProd = cdRes[0];
         const cdEst = parseFloat(cdProd.estoque) || 0;
