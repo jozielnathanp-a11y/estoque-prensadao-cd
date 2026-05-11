@@ -176,7 +176,16 @@
 
   <!-- LANÇAR -->
   <div class="screen" id="tab-lancar">
-    <div class="card">
+      <!-- PENDENTES -->
+  <div class="card" id="card-pendentes" style="display:none;border:2px solid #f9a825;margin-bottom:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 style="margin:0;color:#f9a825;">⏳ Pendentes <span id="badge-pendentes" style="background:#f9a825;color:#000;border-radius:10px;padding:1px 8px;font-size:0.85rem;margin-left:4px;">0</span></h3>
+      <button class="btn btn-red" onclick="confirmarTodosPendentes()" style="margin:0;padding:8px 16px;font-size:0.9rem;">✅ CONFIRMAR TUDO</button>
+    </div>
+    <div id="lista-pendentes"></div>
+  </div>
+
+  <div class="card">
       <h3>➕ Novo Lançamento</h3>
 
       <!-- PASSO 1: Tipo -->
@@ -626,57 +635,109 @@ async function zerarEstoqueProduto(cod) {
   showToast('✅ Estoque zerado!', 'success');
 }
 
+// ── PENDENTES ──
+let pendentes = [];
+
+function adicionarPendente(p, tipo, qtd) {
+  const idx = pendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
+  if (idx >= 0) {
+    pendentes[idx].qtd = qtd;
+    showToast('🔄 ' + p.nome + ' atualizado nos pendentes', '');
+  } else {
+    pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade });
+    showToast('➕ ' + p.nome + ' adicionado', 'success');
+  }
+  renderPendentes();
+}
+
+function renderPendentes() {
+  const el = document.getElementById('lista-pendentes');
+  const card = document.getElementById('card-pendentes');
+  const badge = document.getElementById('badge-pendentes');
+  badge.textContent = pendentes.length;
+  card.style.display = pendentes.length > 0 ? 'block' : 'none';
+  if (!pendentes.length) { el.innerHTML = ''; return; }
+  el.innerHTML = pendentes.map((item, i) => {
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+    const cor = item.tipo === 'contagem' ? '#1565c0' : '#2e7d32';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
+      + '</div>'
+      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="editarPendente(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="removerPendente(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;font-size:1rem;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+function editarPendente(i, val) {
+  const qtd = parseFloat(val);
+  if (qtd > 0) { pendentes[i].qtd = qtd; showToast('✏️ Quantidade atualizada', ''); }
+}
+
+function removerPendente(i) {
+  const nome = pendentes[i].nome;
+  pendentes.splice(i, 1);
+  renderPendentes();
+  showToast('🗑️ ' + nome + ' removido', 'error');
+}
+
+async function confirmarTodosPendentes() {
+  if (!pendentes.length) return;
+  const btn = document.querySelector('[onclick="confirmarTodosPendentes()"]');
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+  for (const item of pendentes) {
+    const p = getProduto(item.codigo);
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(SUPA_URL + '/rest/v1/produtos?codigo=eq.' + item.codigo + '&unidade_loja=eq.' + UNIDADE_LOJA, opts);
+    const res = await r.json();
+    if (Array.isArray(res) && res.length) {
+      produtosCache[item.codigo].estoque = res[0].estoque;
+      await supa('POST', 'movimentacoes', {
+        codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+        qtd: item.qtd, unidade: item.unidade,
+        colaborador: usuarioLogado.usuario,
+        obs: item.tipo === 'contagem' ? 'Contagem' : 'Entrada',
+        unidade_loja: UNIDADE_LOJA,
+        estoque_anterior: est,
+        novo_estoque: novoEst
+      });
+    }
+  }
+  pendentes = [];
+  renderPendentes();
+  renderEstoque();
+  popularSelectProdutos();
+  beep();
+  showToast('✅ Todos confirmados!', 'success');
+  btn.textContent = '✅ CONFIRMAR TUDO';
+  btn.disabled = false;
+}
+
 // ── LANÇAMENTO ──
 async function confirmarLancamento() {
   const cod = document.getElementById('lanc-produto').value;
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
-
   if (!cod) { showToast('Selecione um produto!', 'error'); return; }
   if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
-
   const p = getProduto(cod);
-  const est = parseFloat(p.estoque) || 0;
-  const novoEst = tipo === 'contagem' ? qtd : est + qtd;
-
-  // Salvar no Supabase com return=representation para confirmar
-  const opts = {
-    method: 'PATCH',
-    headers: {
-      'apikey': SUPA_ANON,
-      'Authorization': 'Bearer ' + SUPA_ANON,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({ estoque: novoEst })
-  };
-  const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cod}&unidade_loja=eq.delivery`, opts);
-  const res = await r.json();
-
-  if (!Array.isArray(res) || !res.length) {
-    showToast('Erro ao salvar! Tente novamente.', 'error');
-    return;
-  }
-
-  await supa('POST', 'movimentacoes', {
-    codigo: cod, nome: p.nome, tipo,
-    qtd, unidade: p.unidade,
-    colaborador: usuarioLogado.usuario,
-    obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
-    unidade_loja: 'delivery',
-    estoque_anterior: est,
-    novo_estoque: novoEst
-  });
-
-  // Atualizar cache local com o valor confirmado pelo servidor
-  produtosCache[cod].estoque = res[0].estoque;
-  renderEstoque();
-  popularSelectProdutos();
+  adicionarPendente(p, tipo, qtd);
   document.getElementById('lanc-qtd').value = '';
   document.getElementById('lanc-pct').value = '';
   document.getElementById('lanc-total').textContent = '—';
-  beep();
-  showToast('✅ ' + p.nome + ' — ' + fmtQ(res[0].estoque, p.unidade), 'success');
+  document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-info').style.display = 'none';
 }
 
 // ── HISTÓRICO ──
