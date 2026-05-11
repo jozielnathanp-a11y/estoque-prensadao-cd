@@ -126,13 +126,13 @@
 <div id="login-screen">
   <div class="login-box">
     <h1>🏪 Estoques Prensadão CD</h1>
-    <p>Faça login para continuar</p>
-    <label>Usuário</label>
-    <input type="text" id="login-usuario" placeholder="Ex: Prensadão CD" autocomplete="username" />
-    <label>Senha</label>
+    <p>Bora se identificar, mano 👊</p>
+    <label>Qual é o seu nome, parceiro?</label>
+    <input type="text" id="login-usuario" placeholder="Seu usuário aqui, chefe..." autocomplete="username" />
+    <label>Senha, sangue</label>
     <input type="password" id="login-senha" placeholder="••••" autocomplete="current-password" />
-    <button onclick="fazerLogin()">Entrar</button>
-    <div id="login-erro">Usuário ou senha incorretos</div>
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <div id="login-erro">Errou feio, mano! Confere o usuário e a senha 🤨</div>
   </div>
 </div>
 
@@ -161,7 +161,7 @@
       <div class="stat-card"><div class="stat-num" id="stat-baixo" style="color:#ff9800">0</div><div class="stat-label">Estoque baixo</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." style="margin:0;" oninput="renderEstoque()" />
+      <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">Todas</option>
         <option>Bruto</option><option>Processado</option>
@@ -186,7 +186,7 @@
       <!-- PASSO 2: Produto -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
-        <input type="text" id="scan-input" placeholder="Digite ou escaneie o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
+        <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
         <button onclick="abrirCamera()" style="background:#607d8b;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="camera-area" style="display:none;margin-bottom:10px;">
@@ -438,7 +438,7 @@ async function carregarProdutos() {
     renderProdutos();
     atualizarStats();
   } catch(e) {
-    showToast('Erro ao carregar produtos', 'error');
+    showToast('Eita! Deu pau ao carregar os produtos 😤', 'error');
   }
 }
 
@@ -568,7 +568,7 @@ async function salvarProduto() {
     estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
     qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
   };
-  if (!dados.codigo || !dados.nome) { showToast('Preencha código e nome!', 'error'); return; }
+  if (!dados.codigo || !dados.nome) { showToast('Para aí! Coloca o código e o nome primeiro, mano 😤', 'error'); return; }
 
   if (id) {
     await supa('PATCH', `produtos?id=eq.${id}`, dados);
@@ -620,7 +620,7 @@ function limparFormProduto() {
 
 async function zerarEstoqueProduto(cod) {
   const p = getProduto(cod);
-  if (!confirm('Zerar estoque de "' + p.nome + '"?')) return;
+  if (!confirm('Vai zerar o estoque de ' + p.nome + '? Tem certeza, mano? 🤔')) return;
   await supa('PATCH', `produtos?codigo=eq.${cod}`, { estoque: 0 });
   produtosCache[cod].estoque = 0;
   renderEstoque();
@@ -634,8 +634,8 @@ async function confirmarLancamento() {
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
 
-  if (!cod) { showToast('Selecione um produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  if (!cod) { showToast('Calma aí! Seleciona o produto primeiro, mano 😤', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Ô irmão, quanto é? Coloca a quantidade aí! 😤', 'error'); return; }
 
   const p = getProduto(cod);
   const est = parseFloat(p.estoque) || 0;
@@ -656,7 +656,7 @@ async function confirmarLancamento() {
   const res = await r.json();
 
   if (!Array.isArray(res) || !res.length) {
-    showToast('Erro ao salvar! Tente novamente.', 'error');
+    showToast('Deu ruim aqui, tenta de novo mano! 😤', 'error');
     return;
   }
 
@@ -718,7 +718,7 @@ async function carregarHistorico() {
 
 async function zerarHistorico(modo) {
   if (modo === 'tudo') {
-    if (!confirm('Apagar TODO o histórico de movimentações? O estoque atual não muda.')) return;
+    if (!confirm('VAI APAGAR TODO O HISTÓRICO? Isso não volta atrás, mano! 😱')) return;
     const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=neq.00000000-0000-0000-0000-000000000000`, {
       method: 'DELETE',
       headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
@@ -726,7 +726,7 @@ async function zerarHistorico(modo) {
     showToast(r.ok ? '✅ Histórico zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
   } else {
     const data = document.getElementById('hist-zerar-data').value;
-    if (!data) { showToast('Selecione uma data!', 'error'); return; }
+    if (!data) { showToast('Qual data, irmão? Seleciona aí! 📅', 'error'); return; }
     if (!confirm(`Apagar histórico de ${data.split('-').reverse().join('/')}?`)) return;
     const inicio = data + 'T00:00:00';
     const fim = data + 'T23:59:59';
@@ -930,7 +930,7 @@ function buscarPorCodigo() {
       document.getElementById('lanc-qtd').focus();
     }
   } else {
-    showToast('Produto não encontrado: ' + cod, 'error');
+    showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
   }
 }
 
@@ -962,7 +962,7 @@ async function abrirCamera() {
       } catch(e) {}
     }, 500);
   } catch(e) {
-    showToast('Erro ao acessar câmera', 'error');
+    showToast('Eita! Câmera não abriu, tenta pelo campo de texto mano 📷', 'error');
   }
 }
 
