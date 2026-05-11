@@ -447,6 +447,7 @@ function sair() {
 
 // ── TABS ──
 function showTab(name) {
+  if (name === 'lancamento') iniciarNomeOperador();
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -675,6 +676,21 @@ async function zerarEstoqueProduto(cod) {
 
 // ── NOME OPERADOR ──
 let nomeOperador = '';
+
+function iniciarNomeOperador() {
+  if (usuarioLogado.perfil === 'adm') {
+    // ADM: usa o nome do login direto, sem pedir
+    nomeOperador = usuarioLogado.usuario;
+    document.getElementById('card-nome-operador').style.display = 'none';
+    document.getElementById('card-nome-confirmado').style.display = 'none';
+  } else {
+    // Operador: mostra card para digitar o nome
+    nomeOperador = '';
+    document.getElementById('card-nome-operador').style.display = 'block';
+    document.getElementById('card-nome-confirmado').style.display = 'none';
+    setTimeout(() => document.getElementById('input-nome-operador').focus(), 300);
+  }
+}
 
 function confirmarNomeOperador() {
   const nome = document.getElementById('input-nome-operador').value.trim();
