@@ -727,16 +727,22 @@ function adicionarPendente(p, tipo, qtd) {
     return;
   }
   if (pendentes.length >= 15) {
-    document.getElementById('modal-limite').style.display = 'flex';
+    mostrarAviso15();
     return;
   }
   pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, operador: nomeOperador });
   if (pendentes.length === 15) {
-    document.getElementById('modal-limite').style.display = 'flex';
+    mostrarAviso15();
   } else {
     showToast('➕ ' + p.nome + ' adicionado', 'success');
   }
   renderPendentes();
+}
+
+function mostrarAviso15() {
+  const el = document.getElementById('modal-limite');
+  el.style.display = 'flex';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
 function renderPendentes() {
@@ -1272,7 +1278,7 @@ document.getElementById('login-usuario').focus();
       <div style="font-size:3rem;margin-bottom:10px;">🛑</div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:#f9a825;letter-spacing:2px;line-height:1.2;margin-bottom:12px;">DAEE IRMÃO<br>BORA DA UM VISU</div>
       <div style="font-size:1.3rem;color:#f0f0f0;margin-bottom:24px;font-weight:700;">PRA CONTINUAR<br>O CORRE 🔥</div>
-      <button onclick="document.getElementById('modal-limite').style.display='none'" class="btn btn-red" style="width:100%;font-size:1.1rem;padding:14px;">👊 BORA LÁ</button>
+      <div style="font-size:0.82rem;color:#aaa;margin-top:8px;">Fechando em 4 segundos...</div>
     </div>
   </div>
 
