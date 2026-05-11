@@ -182,10 +182,10 @@
       </div>
       <input type="hidden" id="mtz-lanc-tipo" value="entrada" />
 
-      <!-- Produto -->
-      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Produto</label>
+      <!-- Scan -->
+      <label style="font-size:0.95rem;font-weight:700;">3️⃣ Escaneia ou digita o código</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
-        <input type="text" id="mtz-scan-input" placeholder="Digita ou escaneia o código..." style="margin:0;flex:1;" />
+        <input type="text" id="mtz-scan-input" placeholder="Bora! Escaneia o código, chefão..." style="margin:0;flex:1;" />
         <button onclick="mtzBuscarPorCodigo()" style="background:#2e7d32;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
         <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
@@ -193,15 +193,17 @@
         <video id="mtz-camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="mtzFecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
-      <select id="mtz-lanc-produto" style="margin-bottom:6px;">
-        <option value="">-- Selecione a unidade primeiro --</option>
-      </select>
-      <div id="mtz-lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
 
-      <!-- Quantidade -->
-      <label style="font-size:0.95rem;font-weight:700;">4️⃣ Quantidade</label>
-      <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin-bottom:10px;" />
-      <button class="btn btn-gold" onclick="mtzAdicionarPendente()">➕ ADICIONAR</button>
+      <!-- Produto não-kg: aparece só quando necessário -->
+      <div id="mtz-manual-area" style="display:none;">
+        <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:6px;"></div>
+        <label style="font-size:0.9rem;font-weight:700;">Quantidade</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" />
+          <button class="btn btn-gold" onclick="mtzConfirmarManual()" style="margin:0;padding:12px 16px;">➕ ADD</button>
+        </div>
+      </div>
+      <input type="hidden" id="mtz-lanc-produto-cod" />
     </div>
   </div>
 
@@ -895,7 +897,7 @@ async function mtzBuscarPorCodigo() {
   const u = document.getElementById('mtz-lanc-unidade').value;
   if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
 
-  // Carregar produtos se cache vazio
+  // Carregar cache se vazio
   if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos();
 
   const tipo = document.getElementById('mtz-lanc-tipo').value;
@@ -906,11 +908,8 @@ async function mtzBuscarPorCodigo() {
     // EAN-13 peso variavel: pos 1-6 = produto, pos 7-11 = peso
     const prefixo = cod.substring(1, 7);
     pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
-    produto = Object.values(mtzProdutosCache).find(p => {
-      const codSemLoja = p.codigo.replace('_' + u, '');
-      return codSemLoja.substring(0, 6) === prefixo;
-    });
-    // fallback: buscar no banco pelo prefixo
+    produto = Object.values(mtzProdutosCache).find(p =>
+      p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
     if (!produto) {
       const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*');
       if (Array.isArray(res)) {
@@ -919,33 +918,45 @@ async function mtzBuscarPorCodigo() {
       }
     }
   } else {
-    // Código direto
-    produto = mtzProdutosCache[cod]
-      || mtzProdutosCache[cod + '_' + u]
+    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u]
       || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + u, '') === cod);
-    // fallback banco
     if (!produto) {
       const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + u + '&select=*');
-      if (Array.isArray(res) && res.length) {
-        produto = res[0];
-        mtzProdutosCache[produto.codigo] = produto;
-      }
+      if (Array.isArray(res) && res.length) { produto = res[0]; mtzProdutosCache[produto.codigo] = produto; }
     }
   }
 
+  document.getElementById('mtz-scan-input').value = '';
+
   if (produto) {
-    document.getElementById('mtz-lanc-produto').value = produto.codigo;
-    document.getElementById('mtz-scan-input').value = '';
     beep();
     if (pesoKg && produto.unidade === 'kg') {
+      // Kg com peso no código: lança direto
       mtzPendentes_push(produto, tipo, pesoKg, u);
     } else {
-      document.getElementById('mtz-lanc-qtd').focus();
-      showToast('✅ ' + produto.nome, 'success');
+      // Produto por unidade ou kg sem peso: mostra campo de quantidade
+      document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
+      document.getElementById('mtz-lanc-nome').textContent = '📦 ' + produto.nome + (produto.unidade === 'kg' ? ' (kg)' : '');
+      document.getElementById('mtz-lanc-qtd').value = '';
+      document.getElementById('mtz-manual-area').style.display = 'block';
+      setTimeout(() => document.getElementById('mtz-lanc-qtd').focus(), 100);
+      showToast('✅ ' + produto.nome + ' — informe a quantidade', '');
     }
   } else {
-    showToast('Produto não encontrado! Verifica se está cadastrado nessa unidade 😤', 'error');
+    showToast('Produto não encontrado nessa unidade! Verifica o cadastro 😤', 'error');
   }
+}
+
+function mtzConfirmarManual() {
+  const cod = document.getElementById('mtz-lanc-produto-cod').value;
+  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
+  const u = document.getElementById('mtz-lanc-unidade').value;
+  const tipo = document.getElementById('mtz-lanc-tipo').value;
+  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  const p = mtzProdutosCache[cod];
+  mtzPendentes_push(p, tipo, qtd, u);
+  document.getElementById('mtz-manual-area').style.display = 'none';
+  document.getElementById('mtz-lanc-qtd').value = '';
 }
 
 async function mtzAbrirCamera() {
