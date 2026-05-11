@@ -880,24 +880,50 @@ async function mtzConfirmarTodos() {
   btn.disabled = false;
 }
 
-function mtzBuscarPorCodigo() {
+async function mtzBuscarPorCodigo() {
   const cod = document.getElementById('mtz-scan-input').value.trim();
   if (!cod) return;
   const u = document.getElementById('mtz-lanc-unidade').value;
   if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
+
+  // Carregar produtos se cache vazio
+  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos();
+
   const tipo = document.getElementById('mtz-lanc-tipo').value;
   let produto = null;
   let pesoKg = null;
+
   if (cod.length === 13 && cod[0] === '2') {
+    // EAN-13 peso variavel: pos 1-6 = produto, pos 7-11 = peso
     const prefixo = cod.substring(1, 7);
     pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
     produto = Object.values(mtzProdutosCache).find(p => {
       const codSemLoja = p.codigo.replace('_' + u, '');
       return codSemLoja.substring(0, 6) === prefixo;
     });
+    // fallback: buscar no banco pelo prefixo
+    if (!produto) {
+      const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*');
+      if (Array.isArray(res)) {
+        produto = res.find(p => p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
+        if (produto) mtzProdutosCache[produto.codigo] = produto;
+      }
+    }
   } else {
-    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u];
+    // Código direto
+    produto = mtzProdutosCache[cod]
+      || mtzProdutosCache[cod + '_' + u]
+      || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + u, '') === cod);
+    // fallback banco
+    if (!produto) {
+      const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + u + '&select=*');
+      if (Array.isArray(res) && res.length) {
+        produto = res[0];
+        mtzProdutosCache[produto.codigo] = produto;
+      }
+    }
   }
+
   if (produto) {
     document.getElementById('mtz-lanc-produto').value = produto.codigo;
     document.getElementById('mtz-scan-input').value = '';
@@ -909,7 +935,7 @@ function mtzBuscarPorCodigo() {
       showToast('✅ ' + produto.nome, 'success');
     }
   } else {
-    showToast('Produto não encontrado! Cadastra esse aí 😤', 'error');
+    showToast('Produto não encontrado! Verifica se está cadastrado nessa unidade 😤', 'error');
   }
 }
 
