@@ -1233,6 +1233,80 @@ async function compartilharBebidas() {
   window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
 }
 
+async function gerarPedidoAlimentos() {
+  const cat = document.getElementById('rel-cat-sel').value;
+  const el = document.getElementById('pedido-alimentos-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Carregando...</p>';
+
+  const prods = Object.values(produtosCache)
+    .filter(p => cat === 'Todos' || p.categoria === cat)
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+
+  if (!prods.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto nessa categoria, mano</p>';
+    return;
+  }
+
+  const hoje = dataHoje();
+  const [ano, mes, dia] = hoje.split('-');
+
+  let html = '<div style="background:#1a1200;border:2px solid #f9a825;border-radius:10px;padding:12px;margin-top:10px;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;color:#f9a825;letter-spacing:1px;margin-bottom:4px;">🛒 PEDIDO — ' + dia + '/' + mes + '/' + ano + '</div>';
+  html += '<div style="font-size:0.78rem;color:#aaa;margin-bottom:12px;">Digite a quantidade a pedir. Deixe 0 pra não pedir.</div>';
+
+  prods.forEach((p, i) => {
+    const est = parseFloat(p.estoque) || 0;
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const cor = est === 0 ? '#b71c1c' : (min > 0 && est < min) ? '#ff9800' : '#666';
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #2a2a2a;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.85rem;">' + p.nome + '</div>'
+      + '<div style="font-size:0.72rem;color:' + cor + ';">Estoque: ' + fmtQ(est, p.unidade) + (pct > 0 ? ' · ' + fmtQ(pct, p.unidade) + '/PCT' : '') + '</div>'
+      + '</div>'
+      + '<input type="number" id="ped-qtd-' + i + '" data-nome="' + p.nome + '" data-unidade="' + p.unidade + '" data-pct="' + pct + '" placeholder="0" step="0.001" min="0" style="width:75px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '</div>';
+  });
+
+  html += '<button onclick="enviarPedidoAlimentos(' + prods.length + ')" class="btn btn-green" style="width:100%;margin-top:12px;">📱 GERAR E ENVIAR WHATSAPP</button>';
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+function enviarPedidoAlimentos(total) {
+  const hoje = dataHoje();
+  const [ano, mes, dia] = hoje.split('-');
+  const cat = document.getElementById('rel-cat-sel').value;
+
+  let txtWpp = '*🛒 Pedido ' + (cat === 'Todos' ? 'Geral' : cat) + ' — ' + UNIDADE_LOJA.toUpperCase() + '*\n';
+  txtWpp += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
+  let temPedido = false;
+
+  for (let i = 0; i < total; i++) {
+    const input = document.getElementById('ped-qtd-' + i);
+    if (!input) continue;
+    const qtd = parseFloat(input.value) || 0;
+    if (qtd <= 0) continue;
+    const nome = input.dataset.nome;
+    const unidade = input.dataset.unidade;
+    const pct = parseFloat(input.dataset.pct) || 0;
+    let linha = '';
+    if (pct > 0 && unidade === 'kg') {
+      const nPct = Math.ceil(qtd / pct);
+      linha = '• ' + nome + ': ' + nPct + ' PCT (' + qtd + ' kg)';
+    } else {
+      linha = '• ' + nome + ': ' + qtd + (unidade !== 'un' ? ' ' + unidade : ' un');
+    }
+    txtWpp += linha + '\n';
+    temPedido = true;
+  }
+
+  if (!temPedido) { showToast('Coloca a quantidade de pelo menos um produto! 😤', 'error'); return; }
+  txtWpp += '\n_Enviado pelo sistema Prensadão_ 🍔';
+  window.open('https://wa.me/?text=' + encodeURIComponent(txtWpp), '_blank');
+}
+
 async function pedidoBebidas() {
   const prods = window._ultimoBebidas || await supa('GET', 'produtos', null, 'categoria=eq.Bebidas&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*');
   const pedidos = prods.filter(p => (parseFloat(p.estoque)||0) <= (parseFloat(p.estoque_min)||0));
