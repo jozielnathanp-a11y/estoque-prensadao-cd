@@ -835,7 +835,7 @@ async function confirmarTodosPendentes() {
         await supa('POST', 'movimentacoes', {
           codigo: cdProd.codigo, nome: item.nome, tipo: 'saida',
           qtd: item.qtd, unidade: item.unidade,
-          colaborador: nomeOperador || usuarioLogado.usuario,
+          colaborador: UNIDADE_LOJA.toUpperCase(),
           obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (cdNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
           unidade_loja: 'cd',
           estoque_anterior: cdEst,
