@@ -196,7 +196,16 @@
 
       <!-- Produto não-kg: aparece só quando necessário -->
       <div id="mtz-manual-area" style="display:none;">
-        <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:6px;"></div>
+        <div id="mtz-lanc-nome" style="font-weight:700;color:#f9a825;margin-bottom:10px;font-size:1rem;"></div>
+        <!-- Multiplicador opcional -->
+        <label style="font-size:0.82rem;color:#aaa;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+          <input type="number" id="mtz-lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+          <span style="color:#888;font-weight:700;">×</span>
+          <input type="number" id="mtz-lanc-fator" placeholder="Un/PCT" step="0.001" min="0" oninput="mtzCalcMulti()" style="margin:0;flex:1;" />
+          <span style="color:#888;font-weight:700;">=</span>
+          <span id="mtz-lanc-total" style="font-weight:700;color:#f9a825;min-width:45px;text-align:right;">—</span>
+        </div>
         <label style="font-size:0.9rem;font-weight:700;">Quantidade</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input type="number" id="mtz-lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" />
@@ -933,17 +942,43 @@ async function mtzBuscarPorCodigo() {
     if (pesoKg && produto.unidade === 'kg') {
       // Kg com peso no código: lança direto
       mtzPendentes_push(produto, tipo, pesoKg, u);
-    } else {
-      // Produto por unidade ou kg sem peso: mostra campo de quantidade
+    } else if (produto.unidade !== 'kg') {
+      // Unidade (bebidas, embalagens): lança 1 direto, abre multiplicador se quiser mais
       document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
-      document.getElementById('mtz-lanc-nome').textContent = '📦 ' + produto.nome + (produto.unidade === 'kg' ? ' (kg)' : '');
+      document.getElementById('mtz-lanc-nome').textContent = '📦 ' + produto.nome;
+      document.getElementById('mtz-lanc-qtd').value = '1';
+      document.getElementById('mtz-lanc-pct').value = '';
+      document.getElementById('mtz-lanc-fator').value = '';
+      document.getElementById('mtz-lanc-total').textContent = '—';
+      document.getElementById('mtz-manual-area').style.display = 'block';
+      showToast('✅ ' + produto.nome + ' — ajuste se precisar de mais', '');
+    } else {
+      // Kg sem peso no código: abre campo para digitar
+      document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
+      document.getElementById('mtz-lanc-nome').textContent = '⚖️ ' + produto.nome + ' (kg)';
       document.getElementById('mtz-lanc-qtd').value = '';
+      document.getElementById('mtz-lanc-pct').value = '';
+      document.getElementById('mtz-lanc-fator').value = '';
+      document.getElementById('mtz-lanc-total').textContent = '—';
       document.getElementById('mtz-manual-area').style.display = 'block';
       setTimeout(() => document.getElementById('mtz-lanc-qtd').focus(), 100);
-      showToast('✅ ' + produto.nome + ' — informe a quantidade', '');
+      showToast('⚖️ ' + produto.nome + ' — informe o peso', '');
     }
   } else {
     showToast('Produto não encontrado nessa unidade! Verifica o cadastro 😤', 'error');
+  }
+}
+
+function mtzCalcMulti() {
+  const pct = parseFloat(document.getElementById('mtz-lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('mtz-lanc-fator').value) || 0;
+  const total = document.getElementById('mtz-lanc-total');
+  if (pct > 0 && fator > 0) {
+    const result = pct * fator;
+    total.textContent = result % 1 === 0 ? result : result.toFixed(3);
+    document.getElementById('mtz-lanc-qtd').value = result.toFixed(3);
+  } else {
+    total.textContent = '—';
   }
 }
 
@@ -957,6 +992,9 @@ function mtzConfirmarManual() {
   mtzPendentes_push(p, tipo, qtd, u);
   document.getElementById('mtz-manual-area').style.display = 'none';
   document.getElementById('mtz-lanc-qtd').value = '';
+  document.getElementById('mtz-lanc-pct').value = '';
+  document.getElementById('mtz-lanc-fator').value = '';
+  document.getElementById('mtz-lanc-total').textContent = '—';
 }
 
 async function mtzAbrirCamera() {
