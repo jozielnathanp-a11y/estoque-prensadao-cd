@@ -166,7 +166,7 @@
 
       <!-- Unidade -->
       <label style="font-size:0.95rem;font-weight:700;">1️⃣ Unidade</label>
-      <select id="mtz-lanc-unidade" onchange="mtzCarregarProdutos()" style="margin-bottom:16px;">
+      <select id="mtz-lanc-unidade" style="margin-bottom:16px;">
         <option value="">-- Selecione a unidade --</option>
         <option value="cd">🏭 CD</option>
         <option value="centro">🏪 Centro</option>
@@ -185,7 +185,8 @@
       <!-- Produto -->
       <label style="font-size:0.95rem;font-weight:700;">3️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
-        <input type="text" id="mtz-scan-input" placeholder="Digita ou escaneia o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){mtzBuscarPorCodigo();}" />
+        <input type="text" id="mtz-scan-input" placeholder="Digita ou escaneia o código..." style="margin:0;flex:1;" />
+        <button onclick="mtzBuscarPorCodigo()" style="background:#2e7d32;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
         <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="mtz-camera-area" style="display:none;margin-bottom:10px;">
@@ -753,6 +754,14 @@ async function salvarLimites(codigo, unidade) {
 }
 
 document.getElementById('login-usuario').focus();
+
+// Listeners do lançamento Matriz (após DOM carregado)
+document.addEventListener('DOMContentLoaded', function() {
+  const selUnidade = document.getElementById('mtz-lanc-unidade');
+  if (selUnidade) selUnidade.addEventListener('change', mtzCarregarProdutos);
+  const scanInput = document.getElementById('mtz-scan-input');
+  if (scanInput) scanInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') mtzBuscarPorCodigo(); });
+});
 
 // ── LANÇAMENTO MATRIZ ──
 let mtzPendentes = [];
