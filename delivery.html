@@ -177,7 +177,7 @@
   <!-- LANÇAR -->
   <div class="screen" id="tab-lancar">
       <!-- NOME OPERADOR -->
-  <div class="card" id="card-nome-operador" style="border:2px solid #f9a825;">
+  <div class="card" id="card-nome-operador" style="display:none;border:2px solid #f9a825;">
     <h3 style="color:#f9a825;">👤 Quem tá no corre?</h3>
     <p style="font-size:0.82rem;color:#aaa;margin-bottom:10px;">Coloca seu nome antes de começar</p>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -432,6 +432,7 @@ function iniciarApp() {
   }
 
   carregarProdutos();
+  iniciarNomeOperador();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
