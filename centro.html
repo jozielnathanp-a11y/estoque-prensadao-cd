@@ -1008,21 +1008,19 @@ function buscarPorCodigo() {
     if (p.unidade === 'kg') {
       const pesoNoCode = extrairPesoEAN(cod);
 
-      if (tipo === 'entrada' && pesoNoCode) {
-        // Entrada: lança o peso do código direto, sem perguntar
-        document.getElementById('lanc-qtd').value = pesoNoCode.toFixed(3);
-        showToast('⚖️ ' + p.nome + ' — ' + pesoNoCode.toFixed(3) + ' kg (do código)', 'success');
+      if (pesoNoCode) {
+        // Tem peso no código: lança direto no pendente (entrada e contagem)
+        adicionarPendente(p, tipo, pesoNoCode);
+        document.getElementById('scan-input').value = '';
+        document.getElementById('lanc-produto').value = '';
+        document.getElementById('lanc-info').style.display = 'none';
       } else {
-        // Contagem: abre modal para confirmar/editar o peso
-        const pesoSugerido = pesoNoCode ? pesoNoCode.toFixed(3) : '';
+        // Sem peso no código: abre modal para digitar o peso
         document.getElementById('modal-kg-nome').textContent = p.nome;
-        document.getElementById('modal-kg-peso').value = pesoSugerido;
+        document.getElementById('modal-kg-peso').value = '';
         document.getElementById('modal-kg-cod').value = p.codigo;
-        if (pesoNoCode) {
-          document.getElementById('modal-kg-info').textContent = '⚖️ Peso no código: ' + pesoNoCode.toFixed(3) + ' kg';
-        } else {
-          document.getElementById('modal-kg-info').textContent = 'Digite o peso real do produto';
-        }
+        document.getElementById('modal-kg-info').textContent = 'Digite o peso real do produto';
+        document.getElementById('modal-kg-tipo').value = tipo;
         document.getElementById('modal-kg').style.display = 'flex';
         setTimeout(() => document.getElementById('modal-kg-peso').focus(), 100);
       }
@@ -1039,11 +1037,14 @@ function buscarPorCodigo() {
 function confirmarPesoKg() {
   const peso = parseFloat(document.getElementById('modal-kg-peso').value);
   const cod = document.getElementById('modal-kg-cod').value;
+  const tipo = document.getElementById('modal-kg-tipo').value || 'contagem';
   if (!peso || peso <= 0) { showToast('Informe o peso!', 'error'); return; }
-  document.getElementById('lanc-qtd').value = peso.toFixed(3);
-  document.getElementById('modal-kg').style.display = 'none';
   const p = getProduto(cod);
-  showToast('⚖️ ' + (p ? p.nome : '') + ' — ' + peso.toFixed(3) + ' kg', 'success');
+  document.getElementById('modal-kg').style.display = 'none';
+  document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-info').style.display = 'none';
+  adicionarPendente(p, tipo, peso);
 }
 
 async function abrirCamera() {
