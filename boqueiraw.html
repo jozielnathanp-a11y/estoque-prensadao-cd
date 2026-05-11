@@ -182,7 +182,7 @@
     <p style="font-size:0.82rem;color:#aaa;margin-bottom:10px;">Coloca seu nome antes de começar</p>
     <div style="display:flex;gap:8px;align-items:center;">
       <input type="text" id="input-nome-operador" placeholder="Seu nome aqui, mano..." style="margin:0;flex:1;min-width:0;width:100%;font-size:1rem;padding:12px;" onkeydown="if(event.key==='Enter') confirmarNomeOperador()" />
-      <button onclick="confirmarNomeOperador()" style="margin:0;padding:10px 14px;white-space:nowrap;flex-shrink:0;font-size:0.85rem;background:#2979ff;color:#000;border:none;border-radius:8px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">✅ BORA</button>
+      <button onclick="confirmarNomeOperador()" style="margin:0;padding:10px 14px;white-space:nowrap;flex-shrink:0;font-size:0.85rem;background:#f9a825;color:#000;border:none;border-radius:8px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">✅ BORA</button>
     </div>
   </div>
   <div id="card-nome-confirmado" style="display:none;background:#111;border:1px solid #2e7d32;border-radius:4px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;justify-content:space-between;">
@@ -767,10 +767,10 @@ function renderPendentes() {
   if (!pendentes.length) { el.innerHTML = ''; return; }
   el.innerHTML = pendentes.map((item, i) => {
     const icone = item.tipo === 'contagem' ? '📊' : '📥';
-    const cor = item.tipo === 'contagem' ? '#1565c0' : '#2e7d32';
+    const cor = item.tipo === 'contagem' ? '#f57f17' : '#2e7d32';
     const origemLabel = item.tipo === 'contagem' ? '' :
       '<div style="display:flex;gap:4px;margin-top:4px;">'
-      + '<button onclick="toggleOrigem(' + i + ', \'cd\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='cd'?'#1565c0':'#222') + ';color:' + (item.origem==='cd'?'#fff':'#888') + ';">📦 CD</button>'
+      + '<button onclick="toggleOrigem(' + i + ', \'cd\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='cd'?'#f57f17':'#222') + ';color:' + (item.origem==='cd'?'#fff':'#888') + ';">📦 CD</button>'
       + '<button onclick="toggleOrigem(' + i + ', \'fornecedor\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='fornecedor'?'#2e7d32':'#222') + ';color:' + (item.origem==='fornecedor'?'#fff':'#888') + ';">🚚 Fornecedor</button>'
       + '</div>';
     return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
