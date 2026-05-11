@@ -666,7 +666,7 @@ async function carregarHistorico() {
   const inicio = data + 'T00:00:00';
   const fim = data + 'T23:59:59';
   const movs = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+    `created_at=gte.${inicio}&created_at=lte.${fim}&unidade_loja=eq.cd&order=created_at.desc&select=*`);
 
   if (!movs || !movs.length) {
     el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum lançamento nesta data</p>';
