@@ -827,21 +827,28 @@ async function confirmarTodosPendentes() {
       });
     // Se origem CD e é entrada: descontar do CD também
     if (item.tipo === 'entrada' && item.origem === 'cd') {
-      const cdRes = await supa('GET', 'produtos', null, 'codigo=like.' + item.codigo.split('_')[0] + '*&unidade_loja=eq.cd&select=codigo,estoque');
+      // Pega prefixo de 6 dígitos para achar o produto no CD
+      const codBase = item.codigo.replace('_' + UNIDADE_LOJA, '');
+      const prefixo6 = codBase.substring(0, 6);
+      const cdRes = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
       if (Array.isArray(cdRes) && cdRes.length) {
         const cdProd = cdRes[0];
         const cdEst = parseFloat(cdProd.estoque) || 0;
-        const cdNovo = cdEst - item.qtd; // pode ficar negativo
+        const cdNovo = cdEst - item.qtd;
         await supa('PATCH', 'produtos?codigo=eq.' + cdProd.codigo + '&unidade_loja=eq.cd', { estoque: cdNovo });
         await supa('POST', 'movimentacoes', {
           codigo: cdProd.codigo, nome: item.nome, tipo: 'saida',
           qtd: item.qtd, unidade: item.unidade,
           colaborador: nomeOperador || usuarioLogado.usuario,
-          obs: 'Saída para ' + UNIDADE_LOJA + (cdNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
+          obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (cdNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
           unidade_loja: 'cd',
           estoque_anterior: cdEst,
           novo_estoque: cdNovo
         });
+        // Atualizar cache local do CD se disponível
+        if (typeof produtosCache !== 'undefined' && produtosCache[cdProd.codigo]) {
+          produtosCache[cdProd.codigo].estoque = cdNovo;
+        }
       }
     }
     }
