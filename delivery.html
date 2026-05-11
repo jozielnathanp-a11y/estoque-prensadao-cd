@@ -467,36 +467,33 @@ async function carregarProdutos() {
   }
 }
 
-function extrairPesoEAN(cod) {
-  // EAN-13 de peso variável: começa com 2, tem 13 dígitos
-  // Formato: 2 PPPPP KKKKK C (produto 5 dig, peso 5 dig em gramas)
+function extrairPesoEtiqueta(cod) {
+  // Etiqueta interna: 12 digitos, PPPPPP = produto, PPPPPP = peso em gramas
+  // Ex: 000100002087 -> produto 000100, peso 002087g = 2.087 kg
+  if (cod && cod.length >= 12) {
+    const pesoGramas = parseInt(cod.substring(6, 12), 10);
+    if (!isNaN(pesoGramas) && pesoGramas > 0) return pesoGramas / 1000;
+  }
+  // EAN-13 padrao (começa com 2): digitos 7-12 = peso
   if (cod && cod.length === 13 && cod[0] === '2') {
     const pesoGramas = parseInt(cod.substring(7, 12), 10);
-    if (!isNaN(pesoGramas) && pesoGramas > 0) {
-      return pesoGramas / 1000; // retorna em kg
-    }
+    if (!isNaN(pesoGramas) && pesoGramas > 0) return pesoGramas / 1000;
   }
-  return null;
-}
-
-function getPrefixoEAN(cod) {
-  // Retorna os 7 primeiros dígitos para buscar o produto no cache
-  if (cod && cod.length === 13 && cod[0] === '2') return cod.substring(0, 7);
   return null;
 }
 
 function getProduto(cod) {
   if (produtosCache[cod]) return produtosCache[cod];
-  // buscar pelo sufixo da unidade (código do scanner sem _loja)
   const chaves = Object.keys(produtosCache);
+  // Busca direta pelo codigo sem sufixo _loja
   const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
   if (match) return produtosCache[match];
-  // buscar por prefixo EAN peso variável
-  const prefixo = getPrefixoEAN(cod);
-  if (prefixo) {
+  // Busca por prefixo de 6 digitos (etiqueta interna de peso)
+  if (cod && cod.length >= 6) {
+    const prefixo = cod.substring(0, 6);
     const matchKg = chaves.find(k => {
-      const codBase = produtosCache[k].codigo_barras || '';
-      return codBase.startsWith(prefixo) || k.startsWith(prefixo);
+      const codSemLoja = k.replace('_' + UNIDADE_LOJA, '');
+      return codSemLoja.substring(0, 6) === prefixo;
     });
     if (matchKg) return produtosCache[matchKg];
   }
