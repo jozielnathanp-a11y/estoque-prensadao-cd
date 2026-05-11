@@ -721,8 +721,8 @@ let pendentes = [];
 function adicionarPendente(p, tipo, qtd) {
   const idx = pendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
   if (idx >= 0) {
-    pendentes[idx].qtd = qtd;
-    showToast('🔄 ' + p.nome + ' atualizado nos pendentes', '');
+    pendentes[idx].qtd = parseFloat((pendentes[idx].qtd + qtd).toFixed(3));
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentes[idx].qtd, p.unidade), 'success');
     renderPendentes();
     return;
   }
