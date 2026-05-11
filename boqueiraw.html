@@ -647,8 +647,17 @@ function adicionarPendente(p, tipo, qtd) {
   if (idx >= 0) {
     pendentes[idx].qtd = qtd;
     showToast('🔄 ' + p.nome + ' atualizado nos pendentes', '');
+    renderPendentes();
+    return;
+  }
+  if (pendentes.length >= 15) {
+    document.getElementById('modal-limite').style.display = 'flex';
+    return;
+  }
+  pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade });
+  if (pendentes.length === 15) {
+    document.getElementById('modal-limite').style.display = 'flex';
   } else {
-    pendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade });
     showToast('➕ ' + p.nome + ' adicionado', 'success');
   }
   renderPendentes();
