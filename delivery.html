@@ -164,7 +164,11 @@
       <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
         <option value="">Todas</option>
-        <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
+        <option value="Bebidas">🍺 Bebidas</option>
+        <option value="Bruto">🌿 Bruto</option>
+        <option value="Embalagens">📦 Embalagens</option>
+        <option value="Limpeza">🧹 Limpeza</option>
+        <option value="Processado">🥩 Processado</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -281,7 +285,7 @@
         <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
         <label>Categoria</label>
         <select id="prod-cat">
-          <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
+          <option value="Bebidas">🍺 Bebidas</option><option value="Bruto">🌿 Bruto</option><option value="Embalagens">📦 Embalagens</option><option value="Limpeza">🧹 Limpeza</option><option value="Processado">🥩 Processado</option>
         </select>
         <label>Unidade</label>
         <select id="prod-unidade">
@@ -430,11 +434,22 @@ function showTab(name) {
 }
 
 // ── PRODUTOS ──
+
+function atualizarFiltrosCat() {
+  const cats = [...new Set(Object.values(produtosCache).map(p => p.categoria))].sort();
+  const emojis = { 'Bebidas': '🍺', 'Bruto': '🌿', 'Embalagens': '📦', 'Limpeza': '🧹', 'Processado': '🥩' };
+  const sel = document.getElementById('filtro-cat');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>' +
+    cats.map(c => `<option value="${c}" ${atual===c?'selected':''}>${emojis[c]||''} ${c}</option>`).join('');
+}
+
 async function carregarProdutos() {
   try {
     const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.delivery');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
+    atualizarFiltrosCat();
     renderEstoque();
     renderProdutos();
     atualizarStats();
