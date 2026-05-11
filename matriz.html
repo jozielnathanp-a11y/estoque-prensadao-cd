@@ -62,10 +62,11 @@
     .prod-row.zerado { border-left-color: #b71c1c; }
     .prod-row.baixo { border-left-color: #ff9800; }
 
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    @media (max-width: 400px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
     .stat-card { background: #161616; border-radius: 4px; padding: 12px; text-align: center; border: 1px solid #222; cursor: pointer; }
     .stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-    .stat-num { font-size: 1.3rem; font-weight: 700; }
+    .stat-num { font-size: 1.1rem; font-weight: 700; }
     .stat-label { font-size: 0.72rem; color: #888; margin-top: 2px; }
 
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999; pointer-events: none; max-width: 90%; }
