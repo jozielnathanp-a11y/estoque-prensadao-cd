@@ -997,37 +997,44 @@ function buscarPorCodigo() {
   const tipo = document.getElementById('lanc-tipo').value;
   const p = getProduto(cod);
   if (p) {
-    const sel = document.getElementById('lanc-produto');
-    sel.value = p.codigo;
-    sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
     beep();
-    // EAN-13 com peso: lança direto
+
     if (p.unidade === 'kg') {
       const pesoNoCode = extrairPesoEAN(cod);
       if (pesoNoCode) {
-        document.getElementById('lanc-qtd').value = pesoNoCode.toFixed(3);
-        showToast('⚖️ ' + p.nome + ' — ' + pesoNoCode.toFixed(3) + ' kg', 'success');
+        // EAN-13 com peso: vai direto pro pendente
+        adicionarPendenteCd_direto(p, tipo, pesoNoCode);
       } else {
+        // Sem peso no código: preenche select e aguarda digitação
+        const sel = document.getElementById('lanc-produto');
+        sel.value = p.codigo;
+        sel.dispatchEvent(new Event('change'));
         document.getElementById('lanc-qtd').focus();
         showToast('✅ ' + p.nome + ' — informe o peso', '');
       }
     } else {
-      // Unidade: lança com qtd_por_pct como padrão
+      // Unidade (bebida/embalagem): vai direto pro pendente com qtd_por_pct
       const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
-      document.getElementById('lanc-qtd').value = pctPadrao;
-      if (pctPadrao > 1) {
-        document.getElementById('lanc-pct').value = '1';
-        document.getElementById('lanc-fator').value = pctPadrao;
-        showToast('✅ ' + p.nome + ' — 1 PCT = ' + pctPadrao + ' un', 'success');
-      } else {
-        showToast('✅ ' + p.nome, 'success');
-      }
-      document.getElementById('lanc-qtd').focus();
+      adicionarPendenteCd_direto(p, tipo, pctPadrao);
     }
   } else {
     showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
   }
+}
+
+function adicionarPendenteCd_direto(p, tipo, qtd) {
+  const idx = pendentesCd.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
+  if (idx >= 0) {
+    pendentesCd[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentesCd[idx].qtd, p.unidade), 'success');
+  } else {
+    pendentesCd.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, categoria: p.categoria || '', origem: 'cd' });
+    showToast('✅ ' + p.nome + ' — ' + fmtQ(qtd, p.unidade), 'success');
+  }
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-info').style.display = 'none';
+  renderPendentesCd();
 }
 
 async function abrirCamera() {
