@@ -943,15 +943,16 @@ async function mtzBuscarPorCodigo() {
       // Kg com peso no código: lança direto
       mtzPendentes_push(produto, tipo, pesoKg, u);
     } else if (produto.unidade !== 'kg') {
-      // Unidade (bebidas, embalagens): lança 1 direto, abre multiplicador se quiser mais
+      // Unidade (bebidas, embalagens): usa qtd_por_pct como padrão se existir
+      const pctPadrao = parseFloat(produto.qtd_por_pct) || 1;
       document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
       document.getElementById('mtz-lanc-nome').textContent = '📦 ' + produto.nome;
-      document.getElementById('mtz-lanc-qtd').value = '1';
-      document.getElementById('mtz-lanc-pct').value = '';
-      document.getElementById('mtz-lanc-fator').value = '';
-      document.getElementById('mtz-lanc-total').textContent = '—';
+      document.getElementById('mtz-lanc-qtd').value = pctPadrao;
+      document.getElementById('mtz-lanc-pct').value = '1';
+      document.getElementById('mtz-lanc-fator').value = pctPadrao > 1 ? pctPadrao : '';
+      document.getElementById('mtz-lanc-total').textContent = pctPadrao > 1 ? pctPadrao : '—';
       document.getElementById('mtz-manual-area').style.display = 'block';
-      showToast('✅ ' + produto.nome + ' — ajuste se precisar de mais', '');
+      showToast('✅ ' + produto.nome + (pctPadrao > 1 ? ' — 1 PCT = ' + pctPadrao + ' un' : ''), 'success');
     } else {
       // Kg sem peso no código: abre campo para digitar
       document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
