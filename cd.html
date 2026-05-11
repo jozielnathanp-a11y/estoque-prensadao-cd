@@ -211,7 +211,15 @@
         </div>
       </div>
       <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
-      <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
+      <button class="btn btn-red" onclick="adicionarPendente_CD()">➕ ADICIONAR</button>
+
+      <!-- PENDENTES -->
+      <div id="pendentes-area" style="display:none;margin-top:16px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#607d8b;letter-spacing:1px;margin-bottom:8px;">📋 PENDENTES</div>
+        <div id="lista-pendentes"></div>
+        <button class="btn btn-green" onclick="confirmarTodosPendentes_CD()" style="width:100%;margin-top:8px;">✅ CONFIRMAR TUDO</button>
+        <button class="btn btn-gray" onclick="limparPendentes_CD()" style="width:100%;margin-top:6px;">🗑️ LIMPAR TUDO</button>
+      </div>
     </div>
   </div>
 
@@ -629,7 +637,14 @@ async function zerarEstoqueProduto(cod) {
 }
 
 // ── LANÇAMENTO ──
-async function confirmarLancamento() {
+// ── PENDENTES CD ──
+let pendentesCd = [];
+
+function origemPadrao_cd(categoria) {
+  return (categoria === 'Bruto' || categoria === 'Processado') ? 'cd' : 'fornecedor';
+}
+
+function adicionarPendente_CD() {
   const cod = document.getElementById('lanc-produto').value;
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
@@ -638,47 +653,132 @@ async function confirmarLancamento() {
   if (!qtd || qtd <= 0) { showToast('Ô irmão, quanto é? Coloca a quantidade aí! 😤', 'error'); return; }
 
   const p = getProduto(cod);
-  const est = parseFloat(p.estoque) || 0;
-  const novoEst = tipo === 'contagem' ? qtd : est + qtd;
+  if (!p) { showToast('Produto não encontrado 😤', 'error'); return; }
 
-  // Salvar no Supabase com return=representation para confirmar
-  const opts = {
-    method: 'PATCH',
-    headers: {
-      'apikey': SUPA_ANON,
-      'Authorization': 'Bearer ' + SUPA_ANON,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({ estoque: novoEst })
-  };
-  const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cod}&unidade_loja=eq.cd`, opts);
-  const res = await r.json();
+  // Soma se já existe
+  const idx = pendentesCd.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
+  if (idx >= 0) {
+    pendentesCd[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentesCd[idx].qtd, p.unidade), 'success');
+  } else {
+    const origem = origemPadrao_cd(p.categoria || '');
+    pendentesCd.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, categoria: p.categoria || '', origem });
+    showToast('➕ ' + p.nome + ' adicionado', 'success');
+  }
 
-  if (!Array.isArray(res) || !res.length) {
-    showToast('Deu ruim aqui, tenta de novo mano! 😤', 'error');
+  // Limpar campos
+  document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-qtd').value = '';
+  document.getElementById('lanc-pct').value = '';
+  document.getElementById('lanc-fator').value = '';
+  document.getElementById('lanc-total').textContent = '—';
+  document.getElementById('lanc-info').style.display = 'none';
+  beep();
+  renderPendentesCd();
+}
+
+function toggleOrigemCd(i, origem) {
+  pendentesCd[i].origem = origem;
+  renderPendentesCd();
+}
+
+function editarPendenteCd(i, val) {
+  pendentesCd[i].qtd = parseFloat(val) || 0;
+  renderPendentesCd();
+}
+
+function removerPendenteCd(i) {
+  pendentesCd.splice(i, 1);
+  renderPendentesCd();
+}
+
+function limparPendentes_CD() {
+  if (!confirm('Limpar todos os pendentes? 🗑️')) return;
+  pendentesCd = [];
+  renderPendentesCd();
+}
+
+function renderPendentesCd() {
+  const area = document.getElementById('pendentes-area');
+  const lista = document.getElementById('lista-pendentes');
+
+  if (!pendentesCd.length) {
+    area.style.display = 'none';
+    lista.innerHTML = '';
     return;
   }
 
-  await supa('POST', 'movimentacoes', {
-    codigo: cod, nome: p.nome, tipo,
-    qtd, unidade: p.unidade,
-    colaborador: usuarioLogado.usuario,
-    obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
-    unidade_loja: 'cd',
-    estoque_anterior: est,
-    novo_estoque: novoEst
-  });
+  area.style.display = 'block';
+  lista.innerHTML = pendentesCd.map((item, i) => {
+    const cor = item.tipo === 'contagem' ? '#607d8b' : '#2e7d32';
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
 
-  // Atualizar cache local com o valor confirmado pelo servidor
-  produtosCache[cod].estoque = res[0].estoque;
+    const origemBtns = item.tipo === 'entrada' ?
+      '<div style="display:flex;gap:4px;margin-top:4px;">'
+      + '<button onclick="toggleOrigemCd(' + i + ', \'cd\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='cd'?'#1565c0':'#222') + ';color:' + (item.origem==='cd'?'#fff':'#888') + ';">📦 CD</button>'
+      + '<button onclick="toggleOrigemCd(' + i + ', \'fornecedor\')" style="flex:1;padding:4px 6px;font-size:0.7rem;border:none;border-radius:6px;cursor:pointer;font-weight:700;background:' + (item.origem==='fornecedor'?'#2e7d32':'#222') + ';color:' + (item.origem==='fornecedor'?'#fff':'#888') + ';">🚚 Fornecedor</button>'
+      + '</div>' : '';
+
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
+      + origemBtns
+      + '</div>'
+      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="editarPendenteCd(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="removerPendenteCd(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;font-size:1rem;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function confirmarTodosPendentes_CD() {
+  if (!pendentesCd.length) return;
+  if (!confirm('Confirmar ' + pendentesCd.length + ' lançamento(s)?')) return;
+
+  let erros = 0;
+  for (const item of pendentesCd) {
+    const p = getProduto(item.codigo);
+    if (!p) { erros++; continue; }
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+
+    const opts = {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON,
+        'Content-Type': 'application/json', 'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${item.codigo}&unidade_loja=eq.cd`, opts);
+    const res = await r.json();
+    if (!Array.isArray(res) || !res.length) { erros++; continue; }
+
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem' : (item.origem === 'cd' ? 'Entrada (CD)' : 'Entrada (Fornecedor)'),
+      unidade_loja: 'cd',
+      estoque_anterior: est,
+      novo_estoque: novoEst
+    });
+
+    produtosCache[item.codigo].estoque = res[0].estoque;
+  }
+
+  pendentesCd = [];
+  renderPendentesCd();
   renderEstoque();
   popularSelectProdutos();
-  document.getElementById('lanc-qtd').value = '';
-  document.getElementById('lanc-pct').value = '';
-  document.getElementById('lanc-total').textContent = '—';
   beep();
-  showToast('✅ ' + p.nome + ' — ' + fmtQ(res[0].estoque, p.unidade), 'success');
+
+  if (erros > 0) {
+    showToast('⚠️ ' + erros + ' erro(s). Resto confirmado!', 'error');
+  } else {
+    showToast('✅ Tudo confirmado, mano! 💪', 'success');
+  }
 }
 
 // ── HISTÓRICO ──
