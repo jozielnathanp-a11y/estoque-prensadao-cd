@@ -184,6 +184,14 @@
 
       <!-- Produto -->
       <label style="font-size:0.95rem;font-weight:700;">3️⃣ Produto</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
+        <input type="text" id="mtz-scan-input" placeholder="Digita ou escaneia o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){mtzBuscarPorCodigo();}" />
+        <button onclick="mtzAbrirCamera()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+      </div>
+      <div id="mtz-camera-area" style="display:none;margin-bottom:10px;">
+        <video id="mtz-camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
+        <button onclick="mtzFecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
+      </div>
       <select id="mtz-lanc-produto" style="margin-bottom:6px;">
         <option value="">-- Selecione a unidade primeiro --</option>
       </select>
