@@ -441,7 +441,31 @@ async function carregarProdutos() {
   }
 }
 
-function getProduto(cod) { return produtosCache[cod] || null; }
+function extrairPesoEAN(cod) {
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const pesoRaw = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoRaw) && pesoRaw > 0) return pesoRaw / 1000;
+  }
+  return null;
+}
+
+function getProduto(cod) {
+  if (produtosCache[cod]) return produtosCache[cod];
+  const chaves = Object.keys(produtosCache);
+  // Busca direta sem sufixo _cd
+  const match = chaves.find(k => k === cod + '_cd' || k.replace('_cd','') === cod);
+  if (match) return produtosCache[match];
+  // EAN-13 peso variavel: pos 1-6 = codigo produto
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const prefixo = cod.substring(1, 7);
+    const matchKg = chaves.find(k => {
+      const codSemLoja = k.replace('_cd', '');
+      return codSemLoja.substring(0, 6) === prefixo;
+    });
+    if (matchKg) return produtosCache[matchKg];
+  }
+  return null;
+}
 
 function atualizarStats() {
   const lista = Object.values(produtosCache);
@@ -873,15 +897,37 @@ let scanLoop = null;
 function buscarPorCodigo() {
   const cod = document.getElementById('scan-input').value.trim();
   if (!cod) return;
+  const tipo = document.getElementById('lanc-tipo').value;
   const p = getProduto(cod);
   if (p) {
     const sel = document.getElementById('lanc-produto');
-    sel.value = cod;
+    sel.value = p.codigo;
     sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
-    document.getElementById('lanc-qtd').focus();
     beep();
-    showToast('✅ ' + p.nome, 'success');
+    // EAN-13 com peso: lança direto
+    if (p.unidade === 'kg') {
+      const pesoNoCode = extrairPesoEAN(cod);
+      if (pesoNoCode) {
+        document.getElementById('lanc-qtd').value = pesoNoCode.toFixed(3);
+        showToast('⚖️ ' + p.nome + ' — ' + pesoNoCode.toFixed(3) + ' kg', 'success');
+      } else {
+        document.getElementById('lanc-qtd').focus();
+        showToast('✅ ' + p.nome + ' — informe o peso', '');
+      }
+    } else {
+      // Unidade: lança com qtd_por_pct como padrão
+      const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
+      document.getElementById('lanc-qtd').value = pctPadrao;
+      if (pctPadrao > 1) {
+        document.getElementById('lanc-pct').value = '1';
+        document.getElementById('lanc-fator').value = pctPadrao;
+        showToast('✅ ' + p.nome + ' — 1 PCT = ' + pctPadrao + ' un', 'success');
+      } else {
+        showToast('✅ ' + p.nome, 'success');
+      }
+      document.getElementById('lanc-qtd').focus();
+    }
   } else {
     showToast('Produto não encontrado: ' + cod, 'error');
   }
