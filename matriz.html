@@ -285,9 +285,10 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <select id="min-unidade" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="cd">🏭 CD</option>
-          <option value="centro">🏪 Centro</option>
-          <option value="delivery">🚗 Delivery</option>
-          <option value="boqueiraw">🏪 Boqueirão</option>
+          <option value="almoxarifado">📦 Almoxarifado</option>
+          <option value="centro">🔵 Centro</option>
+          <option value="delivery">🔴 Delivery</option>
+          <option value="boqueiraw">🟡 Boqueirão</option>
         </select>
         <select id="min-categoria" onchange="renderMinimos()" style="margin:0;flex:1;">
           <option value="">📦 Todas categorias</option>
@@ -867,7 +868,7 @@ async function salvarLimites(codigo, unidade) {
   if (max > 0 && min > 0 && max < min) {
     showToast('❌ Máximo não pode ser menor que a média!', 'error'); return;
   }
-  const ok = await supa('PATCH', `produtos?codigo=eq.${codigo}&unidade_loja=eq.${unidade}`, '', { estoque_min: min, estoque_max: max });
+  const ok = await supa('PATCH', 'produtos', `codigo=eq.${codigo}&unidade_loja=eq.${unidade}`, { estoque_min: min, estoque_max: max });
   if (ok) {
     const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
     if (p) { p.estoque_min = min; p.estoque_max = max; }
