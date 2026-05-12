@@ -833,30 +833,25 @@ async function confirmarTodosPendentes() {
       });
     // Se origem CD e é entrada: descontar do CD também
     if (item.tipo === 'entrada' && item.origem === 'cd') {
-      // Pega prefixo de 6 dígitos para achar o produto no CD
-      const codBase = item.codigo.replace('_' + UNIDADE_LOJA, '').replace(/^0+/, '').padStart(6, '0');
       const prefixo6 = item.codigo.replace('_' + UNIDADE_LOJA, '').substring(0, 6);
-      console.log('[CD] item.codigo:', item.codigo, '| codBase:', codBase, '| prefixo6:', prefixo6);
-      const cdRes = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.cd&select=codigo,nome,estoque,unidade');
-      console.log('[CD] cdRes:', cdRes);
-      if (Array.isArray(cdRes) && cdRes.length) {
-        const cdProd = cdRes[0];
-        const cdEst = parseFloat(cdProd.estoque) || 0;
-        const cdNovo = cdEst - item.qtd;
-        await supa('PATCH', 'produtos', { estoque: cdNovo }, 'codigo=eq.' + cdProd.codigo + '&unidade_loja=eq.cd');
+      const isEmbalagem = (item.categoria || '').toLowerCase() === 'embalagens';
+      // Embalagens descontam do almoxarifado; Bruto/Processado descontam do CD
+      const origemUnidade = isEmbalagem ? 'almoxarifado' : 'cd';
+      const origemRes = await supa('GET', 'produtos', null, 'codigo=like.' + prefixo6 + '*&unidade_loja=eq.' + origemUnidade + '&select=codigo,nome,estoque,unidade');
+      if (Array.isArray(origemRes) && origemRes.length) {
+        const oProd = origemRes[0];
+        const oEst = parseFloat(oProd.estoque) || 0;
+        const oNovo = oEst - item.qtd;
+        await supa('PATCH', 'produtos', { estoque: oNovo }, 'codigo=eq.' + oProd.codigo + '&unidade_loja=eq.' + origemUnidade);
         await supa('POST', 'movimentacoes', {
-          codigo: cdProd.codigo, nome: item.nome, tipo: 'saida',
+          codigo: oProd.codigo, nome: item.nome, tipo: 'saida',
           qtd: item.qtd, unidade: item.unidade,
           colaborador: UNIDADE_LOJA.toUpperCase(),
-          obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (cdNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
-          unidade_loja: 'cd',
-          estoque_anterior: cdEst,
-          novo_estoque: cdNovo
+          obs: '📤 Saída → ' + UNIDADE_LOJA.toUpperCase() + (oNovo < 0 ? ' ⚠️ NEGATIVO' : ''),
+          unidade_loja: origemUnidade,
+          estoque_anterior: oEst,
+          novo_estoque: oNovo
         });
-        // Atualizar cache local do CD se disponível
-        if (typeof produtosCache !== 'undefined' && produtosCache[cdProd.codigo]) {
-          produtosCache[cdProd.codigo].estoque = cdNovo;
-        }
       }
     }
     }
