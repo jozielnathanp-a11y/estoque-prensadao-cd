@@ -110,6 +110,7 @@
     <div class="tab" onclick="showTab('contagens')">📊 CONTAGENS</div>
     <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
+    <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -384,6 +385,99 @@ document.getElementById('login-senha').addEventListener('keydown', e => { if (e.
 function sair() {
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+}
+
+let _histCdMovs = [];
+let _histCdFiltro = 'todos';
+
+async function carregarHistCD() {
+  const data = document.getElementById('hist-cd-data').value;
+  const el = document.getElementById('lista-hist-cd');
+  if (!data) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  _histCdMovs = await supa('GET', 'movimentacoes',
+    `tipo=eq.saida&unidade_loja=eq.cd&created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+
+  _histCdFiltro = 'todos';
+  document.querySelectorAll('[id^="hcd-btn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('hcd-btn-todos').className = 'btn btn-gold';
+  renderHistCD();
+}
+
+function filtrarHistCD(unidade) {
+  _histCdFiltro = unidade;
+  document.querySelectorAll('[id^="hcd-btn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('hcd-btn-' + unidade).className = 'btn btn-gold';
+  renderHistCD();
+}
+
+function renderHistCD() {
+  const el = document.getElementById('lista-hist-cd');
+  if (!_histCdMovs || !_histCdMovs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída nesta data</p>';
+    return;
+  }
+
+  const filtrado = _histCdFiltro === 'todos' ? _histCdMovs :
+    _histCdMovs.filter(m => (m.colaborador||'').toLowerCase() === _histCdFiltro);
+
+  if (!filtrado.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída para esta unidade</p>';
+    return;
+  }
+
+  // Agrupar por unidade destino
+  const grupos = {};
+  filtrado.forEach(m => {
+    const dest = (m.colaborador || 'desconhecido').toUpperCase();
+    if (!grupos[dest]) grupos[dest] = [];
+    grupos[dest].push(m);
+  });
+
+  const corDest = { 'CENTRO': '#1565c0', 'DELIVERY': '#c62828', 'BOQUEIRAW': '#f57f17' };
+
+  let html = '';
+  for (const [dest, movs] of Object.entries(grupos)) {
+    const cor = corDest[dest] || '#607d8b';
+    const totalItens = movs.length;
+    html += '<div style="margin-bottom:16px;">';
+    html += '<div style="background:' + cor + ';color:#fff;font-family:\'Bebas Neue\',sans-serif;font-size:1rem;letter-spacing:1px;padding:8px 12px;border-radius:8px 8px 0 0;">→ ' + dest + ' · ' + totalItens + ' item(s)</div>';
+
+    movs.forEach(m => {
+      const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+      const negativo = (m.novo_estoque || 0) < 0;
+      html += '<div style="background:#161616;border-left:3px solid ' + cor + ';padding:10px 12px;margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;">'
+        + '<div>'
+        + '<div style="font-weight:700;font-size:0.88rem;">' + m.nome + '</div>'
+        + '<div style="font-size:0.72rem;color:#555;">' + hora + (negativo ? ' · <span style="color:#ef5350;">⚠️ CD ficou negativo</span>' : '') + '</div>'
+        + '</div>'
+        + '<div style="font-weight:700;color:#ef5350;font-size:0.95rem;">−' + fmtQ(m.qtd, m.unidade) + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Totais por produto
+  const totais = {};
+  filtrado.forEach(m => {
+    if (!totais[m.nome]) totais[m.nome] = { qtd: 0, unidade: m.unidade };
+    totais[m.nome].qtd += parseFloat(m.qtd) || 0;
+  });
+
+  html += '<div style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:12px;margin-top:8px;">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:0.9rem;color:#b8860b;letter-spacing:1px;margin-bottom:8px;">📊 TOTAL DO DIA</div>';
+  Object.entries(totais).sort((a,b) => a[0].localeCompare(b[0])).forEach(([nome, v]) => {
+    html += '<div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:3px 0;border-bottom:1px solid #1a1a1a;">'
+      + '<span>' + nome + '</span>'
+      + '<span style="font-weight:700;color:#ef5350;">−' + fmtQ(v.qtd, v.unidade) + '</span>'
+      + '</div>';
+  });
+  html += '</div>';
+
+  el.innerHTML = html;
 }
 
 function showTab(name) {
