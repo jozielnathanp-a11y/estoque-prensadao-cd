@@ -149,6 +149,7 @@
   <div class="tabs" id="tabs-bar">
     <div class="tab active" onclick="showTab('estoque')">📦 Estoque</div>
     <div class="tab" onclick="showTab('lancar')">➕ Lançar</div>
+    <div class="tab" onclick="showTab('almox')">📦 Almoxarifado</div>
     <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
@@ -220,6 +221,41 @@
         <button class="btn btn-green" onclick="confirmarTodosPendentes_CD()" style="width:100%;margin-top:8px;">✅ CONFIRMAR TUDO</button>
         <button class="btn btn-gray" onclick="limparPendentes_CD()" style="width:100%;margin-top:6px;">🗑️ LIMPAR TUDO</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ALMOXARIFADO -->
+  <div class="screen" id="tab-almox">
+    <div class="card">
+      <h3>📦 Almoxarifado de Embalagens</h3>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:10px;">Estoque central de embalagens para todas as unidades</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="almox-tipo" style="margin:0;flex:1;">
+          <option value="entrada">📥 Entrada</option>
+          <option value="contagem">📊 Contagem</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="almox-scan" placeholder="Escaneia ou digita o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter') buscarAlmox()" />
+        <button onclick="buscarAlmox()" style="background:#607d8b;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
+      </div>
+      <select id="almox-produto" style="margin-bottom:8px;" onchange="selecionarAlmox()">
+        <option value="">-- Selecione o produto --</option>
+      </select>
+      <div id="almox-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin-bottom:8px;display:none;"></div>
+      <input type="number" id="almox-qtd" placeholder="Quantidade (PCT)" step="1" min="1" style="margin-bottom:8px;" />
+      <button class="btn btn-green" onclick="adicionarAlmoxPendente()">➕ ADICIONAR</button>
+      <div id="almox-pendentes-area" style="display:none;margin-top:12px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#607d8b;letter-spacing:1px;margin-bottom:8px;">📋 PENDENTES</div>
+        <div id="almox-lista-pendentes"></div>
+        <button class="btn btn-green" onclick="confirmarAlmox()" style="width:100%;margin-top:8px;">✅ CONFIRMAR TUDO</button>
+        <button class="btn btn-gray" onclick="limparAlmox()" style="width:100%;margin-top:6px;">🗑️ LIMPAR</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <h3>📊 Estoque Atual</h3>
+      <input type="text" id="almox-busca" placeholder="🔍 Buscar..." oninput="renderAlmox()" style="margin-bottom:8px;" />
+      <div id="almox-estoque"></div>
     </div>
   </div>
 
@@ -412,6 +448,7 @@ function iniciarApp() {
   }
 
   carregarProdutos();
+  carregarAlmox();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -433,6 +470,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'historico') carregarHistorico();
+  if (name === 'almox') { carregarAlmox(); }
   if (name === 'lancar') popularSelectProdutos();
 }
 
@@ -775,6 +813,150 @@ async function confirmarTodosPendentes_CD() {
   } else {
     showToast('✅ Tudo confirmado, mano! 💪', 'success');
   }
+}
+
+// ── ALMOXARIFADO ──
+let almoxCache = {};
+let almoxPendentes = [];
+
+async function carregarAlmox() {
+  const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&order=nome.asc&select=*');
+  if (Array.isArray(res)) {
+    almoxCache = {};
+    res.forEach(p => almoxCache[p.codigo] = p);
+    popularSelectAlmox();
+    renderAlmox();
+  }
+}
+
+function popularSelectAlmox() {
+  const sel = document.getElementById('almox-produto');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Selecione o produto --</option>';
+  Object.values(almoxCache).sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => {
+    sel.innerHTML += `<option value="${p.codigo}">${p.nome} — ${fmtQ(p.estoque, p.unidade)}</option>`;
+  });
+}
+
+function buscarAlmox() {
+  const cod = document.getElementById('almox-scan').value.trim();
+  if (!cod) return;
+  const chaves = Object.keys(almoxCache);
+  const match = chaves.find(k => k === cod + '_almoxarifado' || k.replace('_almoxarifado','') === cod
+    || k.replace('_almoxarifado','').substring(0,6) === cod.substring(0,6));
+  if (match) {
+    document.getElementById('almox-produto').value = match;
+    selecionarAlmox();
+    document.getElementById('almox-scan').value = '';
+    document.getElementById('almox-qtd').focus();
+  } else {
+    showToast('Embalagem não encontrada! 😤', 'error');
+  }
+}
+
+function selecionarAlmox() {
+  const cod = document.getElementById('almox-produto').value;
+  const p = almoxCache[cod];
+  const info = document.getElementById('almox-info');
+  if (p) {
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+    info.textContent = 'Estoque: ' + fmtQ(p.estoque, p.unidade) + (pct > 1 ? ' · 1 PCT = ' + pct + ' un' : '');
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function renderAlmox() {
+  const busca = (document.getElementById('almox-busca') ? document.getElementById('almox-busca').value : '').toLowerCase();
+  const el = document.getElementById('almox-estoque');
+  if (!el) return;
+  const prods = Object.values(almoxCache).filter(p => p.nome.toLowerCase().includes(busca));
+  if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto</p>'; return; }
+  el.innerHTML = prods.map(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+    const cor = est === 0 ? '#b71c1c' : '#2e7d32';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;background:#161616;border-left:4px solid ' + cor + ';border-radius:6px;padding:10px 12px;margin-bottom:6px;">'
+      + '<div><div style="font-weight:700;font-size:0.88rem;">' + p.nome + '</div>'
+      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '') + '</div>'
+      + '<div style="font-weight:700;color:' + cor + ';font-size:1rem;">' + fmtQ(est, p.unidade) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function adicionarAlmoxPendente() {
+  const cod = document.getElementById('almox-produto').value;
+  const tipo = document.getElementById('almox-tipo').value;
+  const qtdRaw = parseFloat(document.getElementById('almox-qtd').value);
+  if (!cod) { showToast('Seleciona a embalagem! 😤', 'error'); return; }
+  if (!qtdRaw || qtdRaw <= 0) { showToast('Coloca a quantidade! 😤', 'error'); return; }
+  const p = almoxCache[cod];
+  const pct = parseFloat(p.qtd_por_pct) || 1;
+  const qtd = tipo === 'contagem' ? qtdRaw : qtdRaw * pct;
+  const idx = almoxPendentes.findIndex(x => x.codigo === cod && x.tipo === tipo);
+  if (idx >= 0) {
+    almoxPendentes[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(almoxPendentes[idx].qtd, p.unidade), 'success');
+  } else {
+    almoxPendentes.push({ codigo: cod, nome: p.nome, tipo, qtd, unidade: p.unidade });
+    showToast('✅ ' + p.nome + ' adicionado', 'success');
+  }
+  document.getElementById('almox-qtd').value = '';
+  document.getElementById('almox-produto').value = '';
+  document.getElementById('almox-info').style.display = 'none';
+  beep();
+  renderAlmoxPendentes();
+}
+
+function renderAlmoxPendentes() {
+  const area = document.getElementById('almox-pendentes-area');
+  const lista = document.getElementById('almox-lista-pendentes');
+  if (!almoxPendentes.length) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  lista.innerHTML = almoxPendentes.map((item, i) => {
+    const cor = item.tipo === 'contagem' ? '#607d8b' : '#2e7d32';
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;"><div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div></div>'
+      + '<input type="number" value="' + item.qtd + '" step="1" min="1" onchange="almoxPendentes[' + i + '].qtd=parseFloat(this.value)||0;renderAlmoxPendentes()" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="almoxPendentes.splice(' + i + ',1);renderAlmoxPendentes()" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function confirmarAlmox() {
+  if (!almoxPendentes.length) return;
+  if (!confirm('Confirmar ' + almoxPendentes.length + ' lançamento(s) no almoxarifado?')) return;
+  for (const item of almoxPendentes) {
+    const p = almoxCache[item.codigo];
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+    await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + item.codigo + '&unidade_loja=eq.almoxarifado');
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem Almoxarifado' : 'Entrada Almoxarifado',
+      unidade_loja: 'almoxarifado',
+      estoque_anterior: est, novo_estoque: novoEst
+    });
+    almoxCache[item.codigo].estoque = novoEst;
+  }
+  almoxPendentes = [];
+  renderAlmoxPendentes();
+  renderAlmox();
+  popularSelectAlmox();
+  beep();
+  showToast('✅ Almoxarifado atualizado! 💪', 'success');
+}
+
+function limparAlmox() {
+  if (!confirm('Limpar pendentes do almoxarifado?')) return;
+  almoxPendentes = [];
+  renderAlmoxPendentes();
 }
 
 // ── HISTÓRICO ──
