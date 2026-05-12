@@ -629,7 +629,7 @@ function limparFormProduto() {
 async function zerarEstoqueProduto(cod) {
   const p = getProduto(cod);
   if (!confirm('Vai zerar o estoque de ' + p.nome + '? Tem certeza, mano? 🤔')) return;
-  await supa('PATCH', `produtos?codigo=eq.${cod}`, { estoque: 0 });
+  await supa('PATCH', 'produtos', { estoque: 0 }, `codigo=eq.${cod}&unidade_loja=eq.cd`);
   produtosCache[cod].estoque = 0;
   renderEstoque();
   renderProdutos();
