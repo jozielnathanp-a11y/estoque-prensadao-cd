@@ -111,6 +111,7 @@
     <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
     <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
+    <div class="tab" onclick="showTab('almox-chefao')">📦 ALMOXARIFADO</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -308,6 +309,22 @@
 </div>
 
   <!-- HISTÓRICO SAÍDAS CD -->
+  <!-- ALMOXARIFADO CHEFÃO -->
+  <div class="screen" id="tab-almox-chefao">
+    <div class="card">
+      <h3>📦 Almoxarifado de Embalagens</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gold" style="flex:1;margin:0;font-size:0.78rem;">📦 Todos</button>
+        <button onclick="filtrarAlmoxChefao('ok')" id="abtn-ok" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
+        <button onclick="filtrarAlmoxChefao('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
+        <button onclick="filtrarAlmoxChefao('zerado')" id="abtn-zerado" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
+      </div>
+      <input type="text" id="almox-chefao-busca" placeholder="🔍 Buscar embalagem..." oninput="renderAlmoxChefao()" style="margin:0;" />
+    </div>
+    <div id="almox-chefao-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
+    <div id="almox-chefao-lista"></div>
+  </div>
+
   <div class="screen" id="tab-hist-cd">
     <div class="card">
       <h3>📤 Saídas do CD para Unidades</h3>
@@ -407,6 +424,119 @@ function sair() {
 }
 
 let _histCdMovs = [];
+let _almoxChefaoFiltro = 'todos';
+
+async function carregarAlmoxChefao() {
+  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+  if (Array.isArray(res)) {
+    // Atualiza todosEstoques com almoxarifado
+    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado').concat(res);
+  }
+  renderAlmoxChefao();
+}
+
+function filtrarAlmoxChefao(filtro) {
+  _almoxChefaoFiltro = filtro;
+  document.querySelectorAll('[id^="abtn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('abtn-' + filtro).className = 'btn btn-gold';
+  renderAlmoxChefao();
+}
+
+function renderAlmoxChefao() {
+  const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
+  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado');
+
+  // Stats
+  const total = prods.length;
+  const zerados = prods.filter(p => (parseFloat(p.estoque)||0) === 0).length;
+  const comprar = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    return min > 0 && est <= min;
+  }).length;
+  const ok = total - zerados - comprar;
+
+  document.getElementById('almox-chefao-stats').innerHTML = `
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#f9a825;">${total}</div>
+      <div style="font-size:0.7rem;color:#888;">TOTAL</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#2e7d32;">${ok}</div>
+      <div style="font-size:0.7rem;color:#888;">OK</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#ff9800;">${comprar}</div>
+      <div style="font-size:0.7rem;color:#888;">COMPRAR</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#b71c1c;">${zerados}</div>
+      <div style="font-size:0.7rem;color:#888;">ZERADO</div>
+    </div>`;
+
+  let lista = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const buscarOk = !busca || p.nome.toLowerCase().includes(busca);
+    if (!buscarOk) return false;
+    if (_almoxChefaoFiltro === 'zerado') return est === 0;
+    if (_almoxChefaoFiltro === 'comprar') return min > 0 && est <= min && est > 0;
+    if (_almoxChefaoFiltro === 'ok') return est > 0 && !(min > 0 && est <= min);
+    return true;
+  });
+
+  const el = document.getElementById('almox-chefao-lista');
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+
+  // Ordenar: zerados primeiro, depois abaixo do min, depois ok
+  lista.sort((a,b) => {
+    const estA = parseFloat(a.estoque)||0, estB = parseFloat(b.estoque)||0;
+    const minA = parseFloat(a.estoque_min)||0, minB = parseFloat(b.estoque_min)||0;
+    const prioA = estA === 0 ? 0 : (minA > 0 && estA <= minA ? 1 : 2);
+    const prioB = estB === 0 ? 0 : (minB > 0 && estB <= minB ? 1 : 2);
+    return prioA - prioB || a.nome.localeCompare(b.nome);
+  });
+
+  el.innerHTML = lista.map(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const max = parseFloat(p.estoque_max)||0;
+    const zerado = est === 0;
+    const abaixo = min > 0 && est <= min;
+    const cor = zerado ? '#b71c1c' : abaixo ? '#ff9800' : '#2e7d32';
+    const badge = zerado
+      ? '<span style="background:#b71c1c;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🔴 ZERADO</span>'
+      : abaixo
+        ? '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🛒 COMPRAR</span>'
+        : '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">✅ OK</span>';
+
+    // Sugestão de compra: quanto falta para chegar no máximo (ou min*2 se não tiver max)
+    let sugestao = '';
+    if (zerado || abaixo) {
+      const meta = max > 0 ? max : (min > 0 ? min * 2 : 0);
+      if (meta > 0) {
+        const falta = meta - est;
+        sugestao = '<div style="font-size:0.72rem;color:#ff9800;margin-top:2px;">🛒 Comprar: <strong>' + fmtQ(falta, p.unidade) + '</strong></div>';
+      }
+    }
+
+    const pct = parseFloat(p.qtd_por_pct)||0;
+    return '<div style="background:#161616;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px;margin-bottom:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">' + p.nome + ' ' + badge + '</div>'
+      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '')
+      + sugestao
+      + '</div>'
+      + '<div style="text-align:right;margin-left:12px;">'
+      + '<div style="font-size:1.3rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</div>'
+      + (min > 0 ? '<div style="font-size:0.68rem;color:#555;">Mín: ' + fmtQ(min, p.unidade) + '</div>' : '')
+      + (max > 0 ? '<div style="font-size:0.68rem;color:#555;">Máx: ' + fmtQ(max, p.unidade) + '</div>' : '')
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
 let _histCdFiltro = 'todos';
 
 async function carregarHistCD() {
@@ -508,7 +638,6 @@ function showTab(name) {
   if (name === 'contagens') carregarContagens();
   if (name === 'pedidos') carregarPedidos();
   if (name === 'minimos') {
-    // Se almoxarifado ainda não está no todosEstoques, busca agora
     const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado');
     if (!temAlmox) {
       supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc').then(res => {
@@ -519,6 +648,7 @@ function showTab(name) {
       renderMinimos();
     }
   }
+  if (name === 'almox-chefao') carregarAlmoxChefao();
 }
 
 function filtrarUnidade(u) {
