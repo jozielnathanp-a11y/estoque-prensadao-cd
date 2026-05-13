@@ -507,7 +507,18 @@ function showTab(name) {
   if (name === 'entradas') carregarEntradas();
   if (name === 'contagens') carregarContagens();
   if (name === 'pedidos') carregarPedidos();
-  if (name === 'minimos') renderMinimos();
+  if (name === 'minimos') {
+    // Se almoxarifado ainda não está no todosEstoques, busca agora
+    const temAlmox = todosEstoques.some(p => p.unidade_loja === 'almoxarifado');
+    if (!temAlmox) {
+      supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc').then(res => {
+        if (Array.isArray(res)) todosEstoques = todosEstoques.concat(res);
+        renderMinimos();
+      });
+    } else {
+      renderMinimos();
+    }
+  }
 }
 
 function filtrarUnidade(u) {
