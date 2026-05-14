@@ -406,6 +406,8 @@
     <p id="modal-edit-info" style="font-size:0.78rem;color:#888;margin-bottom:12px;"></p>
     <label>Nome</label>
     <input type="text" id="modal-edit-nome" style="margin-bottom:8px;" />
+    <label>Código de Barras <span style="color:#555;font-size:0.75rem;">(base, sem sufixo da unidade)</span></label>
+    <input type="text" id="modal-edit-codigo" style="margin-bottom:8px;" />
     <label>Categoria</label>
     <select id="modal-edit-cat" style="margin-bottom:8px;">
       <option value="Bebidas">🥤 Bebidas</option>
@@ -985,12 +987,14 @@ function abrirEdicao(codigo, unidade) {
   _editUnidade = unidade;
   _editReplicar = true;
   document.getElementById('modal-edit-nome').value = p.nome;
+  const codBase = codigo.replace('_' + unidade, '');
+  document.getElementById('modal-edit-codigo').value = codBase;
   document.getElementById('modal-edit-cat').value = p.categoria;
   document.getElementById('modal-edit-unidade').value = p.unidade || 'und';
   document.getElementById('modal-edit-pct').value = p.qtd_por_pct || 0;
   // Quantas unidades têm este produto (pelo nome base do código)
-  const codBase = codigo.replace('_' + unidade, '');
-  const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase + '_') && x.unidade_loja !== unidade);
+  const codBase2 = codigo.replace('_' + unidade, '');
+  const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase2 + '_') && x.unidade_loja !== unidade);
   document.getElementById('modal-edit-info').textContent = `${p.nome} — ${UNIDADE_LABEL[unidade] || unidade}${outras.length ? ' · encontrado em mais ' + outras.length + ' unidade(s)' : ' · só nesta unidade'}`;
   setReplicar(outras.length > 0);
   document.getElementById('modal-edit-overlay').style.display = 'flex';
@@ -1006,23 +1010,30 @@ function fecharEdicao() { document.getElementById('modal-edit-overlay').style.di
 
 async function confirmarEdicao() {
   const nome = document.getElementById('modal-edit-nome').value.trim();
+  const novoCodBase = document.getElementById('modal-edit-codigo').value.trim();
   const categoria = document.getElementById('modal-edit-cat').value;
   const unidade = document.getElementById('modal-edit-unidade').value;
   const pct = parseFloat(document.getElementById('modal-edit-pct').value) || 0;
   if (!nome) { showToast('Nome não pode ser vazio!', 'error'); return; }
+  if (!novoCodBase) { showToast('Código não pode ser vazio!', 'error'); return; }
 
-  const payload = { nome, categoria, unidade, qtd_por_pct: pct };
-  const codBase = _editCodigo.replace('_' + _editUnidade, '');
+  const codBaseAtual = _editCodigo.replace('_' + _editUnidade, '');
+  const codMudou = novoCodBase !== codBaseAtual;
 
   // Unidades a atualizar
   let alvos = [{ codigo: _editCodigo, unidade_loja: _editUnidade }];
   if (_editReplicar) {
-    const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase + '_') && x.unidade_loja !== _editUnidade);
+    const outras = todosEstoques.filter(x => x.codigo.startsWith(codBaseAtual + '_') && x.unidade_loja !== _editUnidade);
     outras.forEach(x => alvos.push({ codigo: x.codigo, unidade_loja: x.unidade_loja }));
   }
 
   let ok = true;
   for (const alvo of alvos) {
+    const payload = { nome, categoria, unidade, qtd_por_pct: pct };
+    // Se o código mudou, atualizar também o código com sufixo da unidade
+    if (codMudou) {
+      payload.codigo = novoCodBase + '_' + alvo.unidade_loja;
+    }
     const r = await supa('PATCH', 'produtos', `codigo=eq.${alvo.codigo}&unidade_loja=eq.${alvo.unidade_loja}`, payload);
     if (!r) ok = false;
     // Atualizar cache local
@@ -1031,8 +1042,12 @@ async function confirmarEdicao() {
   }
 
   fecharEdicao();
+  // Recarregar tudo se mudou o código
+  if (codMudou) todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
   renderEstoque();
-  showToast(ok ? `✅ "${nome}" atualizado em ${alvos.length} unidade(s)!` : '⚠️ Salvo com erros', ok ? 'success' : 'error');
+  showToast(ok
+    ? `✅ "${nome}" atualizado em ${alvos.length} unidade(s)!${codMudou ? ' Código atualizado.' : ''}`
+    : '⚠️ Salvo com erros', ok ? 'success' : 'error');
 }
 
 // ── CORRIGIR ESTOQUE ──
