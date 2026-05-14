@@ -112,6 +112,7 @@
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
     <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
     <div class="tab" onclick="showTab('almox-chefao')">📦 ALMOXARIFADO</div>
+    <div class="tab" onclick="showTab('cadastro')">➕ CADASTRAR</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -310,6 +311,62 @@
 
   <!-- HISTÓRICO SAÍDAS CD -->
   <!-- ALMOXARIFADO CHEFÃO -->
+  <!-- CADASTRO DE PRODUTO -->
+  <div class="screen" id="tab-cadastro">
+    <div class="card">
+      <h3>➕ Cadastrar Novo Produto</h3>
+
+      <!-- Nome -->
+      <label style="margin-top:4px;">Nome do Produto</label>
+      <input type="text" id="cad-nome" placeholder="Ex: Coca Cola 2L" style="margin-bottom:12px;" />
+
+      <!-- Código de barras -->
+      <label>Código de Barras <span style="color:#555;font-size:0.75rem;">(opcional)</span></label>
+      <input type="text" id="cad-codigo" placeholder="Escaneia ou digita o código..." style="margin-bottom:12px;" />
+
+      <!-- Unidade de medida -->
+      <label>Unidade de Medida</label>
+      <select id="cad-unidade" style="margin-bottom:12px;">
+        <option value="und">und (unidade)</option>
+        <option value="kg">kg (peso)</option>
+        <option value="L">L (litro)</option>
+        <option value="pct">pct (pacote)</option>
+      </select>
+
+      <!-- PCT -->
+      <label>Quantidade por Pacote <span style="color:#555;font-size:0.75rem;">(se vendido em caixas/fardos)</span></label>
+      <input type="number" id="cad-pct" placeholder="Ex: 6, 12, 24... (deixe 0 se não se aplica)" min="0" step="1" style="margin-bottom:16px;" />
+
+      <hr style="border-color:#222;margin-bottom:16px;" />
+
+      <!-- Onde fica o estoque central -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">1. ONDE FICA O ESTOQUE CENTRAL?</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button id="cad-orig-cd" onclick="selecionarOrigem('cd')" class="btn btn-gold" style="flex:1;margin:0;">🏭 CD</button>
+        <button id="cad-orig-almox" onclick="selecionarOrigem('almoxarifado')" class="btn btn-gray" style="flex:1;margin:0;">📦 Almoxarifado</button>
+      </div>
+
+      <!-- Unidades que recebem -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">2. QUAIS UNIDADES RECEBEM ESTE ITEM?</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;">
+        <button id="cad-u-todas" onclick="toggleUnidade('todas')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">⭐ Todas</button>
+        <button id="cad-u-cd" onclick="toggleUnidade('cd')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🏭 CD</button>
+        <button id="cad-u-centro" onclick="toggleUnidade('centro')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🔵 Centro</button>
+        <button id="cad-u-delivery" onclick="toggleUnidade('delivery')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🔴 Delivery</button>
+        <button id="cad-u-boqueiraw" onclick="toggleUnidade('boqueiraw')" class="btn btn-gray" style="flex:1;min-width:80px;margin:0;font-size:0.78rem;">🟡 Boqueirão</button>
+      </div>
+
+      <!-- Categoria -->
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1px;color:#b8860b;">3. QUAL CATEGORIA?</label>
+      <div id="cad-cats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;"></div>
+
+      <!-- Resumo -->
+      <div id="cad-resumo" style="display:none;background:#0d0d0d;border:1px solid #333;border-radius:10px;padding:14px;margin-bottom:12px;font-size:0.84rem;line-height:1.8;"></div>
+
+      <button class="btn btn-green" onclick="cadastrarProduto()" style="width:100%;font-size:1rem;">✅ CADASTRAR PRODUTO</button>
+    </div>
+  </div>
+
   <div class="screen" id="tab-almox-chefao">
     <div class="card">
       <h3>📦 Almoxarifado de Embalagens</h3>
@@ -425,6 +482,145 @@ function sair() {
 
 let _histCdMovs = [];
 let _almoxChefaoFiltro = 'todos';
+
+// ── CADASTRO ──
+let _cadOrigem = 'cd';
+let _cadUnidades = new Set();
+let _cadCategoria = '';
+
+const CATEGORIAS_DISPONIVEIS = [
+  { id: 'Bebidas',    icon: '🥤' },
+  { id: 'Bruto',      icon: '🥩' },
+  { id: 'Embalagens', icon: '📦' },
+  { id: 'Limpeza',    icon: '🧹' },
+  { id: 'Processado', icon: '🍗' },
+];
+
+function initCadastro() {
+  // Renderizar botões de categoria
+  const el = document.getElementById('cad-cats');
+  el.innerHTML = CATEGORIAS_DISPONIVEIS.map(c =>
+    `<button id="cad-cat-${c.id}" onclick="selecionarCategoria('${c.id}')" class="btn btn-gray" style="flex:1;min-width:100px;margin:0;font-size:0.78rem;">${c.icon} ${c.id}</button>`
+  ).join('');
+  // Reset
+  _cadOrigem = 'cd';
+  _cadUnidades = new Set();
+  _cadCategoria = '';
+  document.getElementById('cad-nome').value = '';
+  document.getElementById('cad-codigo').value = '';
+  document.getElementById('cad-pct').value = '';
+  document.getElementById('cad-unidade').value = 'und';
+  document.getElementById('cad-resumo').style.display = 'none';
+  document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gray');
+  document.querySelectorAll('[id^="cad-cat-"]').forEach(b => b.className = 'btn btn-gray');
+  selecionarOrigem('cd');
+}
+
+function selecionarOrigem(origem) {
+  _cadOrigem = origem;
+  document.getElementById('cad-orig-cd').className = origem === 'cd' ? 'btn btn-gold' : 'btn btn-gray';
+  document.getElementById('cad-orig-almox').className = origem === 'almoxarifado' ? 'btn btn-gold' : 'btn btn-gray';
+  atualizarResumoCad();
+}
+
+function toggleUnidade(u) {
+  if (u === 'todas') {
+    if (_cadUnidades.has('todas')) {
+      _cadUnidades.clear();
+      document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gray');
+    } else {
+      _cadUnidades = new Set(['todas', 'cd', 'centro', 'delivery', 'boqueiraw']);
+      document.querySelectorAll('[id^="cad-u-"]').forEach(b => b.className = 'btn btn-gold');
+    }
+  } else {
+    _cadUnidades.delete('todas');
+    document.getElementById('cad-u-todas').className = 'btn btn-gray';
+    if (_cadUnidades.has(u)) {
+      _cadUnidades.delete(u);
+      document.getElementById('cad-u-' + u).className = 'btn btn-gray';
+    } else {
+      _cadUnidades.add(u);
+      document.getElementById('cad-u-' + u).className = 'btn btn-gold';
+      // Se todas selecionadas manualmente
+      if (['cd','centro','delivery','boqueiraw'].every(x => _cadUnidades.has(x))) {
+        _cadUnidades.add('todas');
+        document.getElementById('cad-u-todas').className = 'btn btn-gold';
+      }
+    }
+  }
+  atualizarResumoCad();
+}
+
+function selecionarCategoria(cat) {
+  _cadCategoria = cat;
+  document.querySelectorAll('[id^="cad-cat-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('cad-cat-' + cat).className = 'btn btn-gold';
+  atualizarResumoCad();
+}
+
+function atualizarResumoCad() {
+  const nome = document.getElementById('cad-nome').value.trim();
+  const el = document.getElementById('cad-resumo');
+  const unidSel = [..._cadUnidades].filter(u => u !== 'todas');
+  if (!nome && !_cadCategoria && !unidSel.length) { el.style.display = 'none'; return; }
+  const origemLabel = _cadOrigem === 'cd' ? '🏭 CD' : '📦 Almoxarifado';
+  const unidLabel = unidSel.length ? unidSel.map(u => u === 'boqueiraw' ? 'Boqueirão' : u.charAt(0).toUpperCase()+u.slice(1)).join(', ') : '—';
+  el.style.display = 'block';
+  el.innerHTML = `<strong>📋 RESUMO</strong><br>
+    <b>Nome:</b> ${nome || '—'}<br>
+    <b>Estoque central:</b> ${origemLabel}<br>
+    <b>Unidades:</b> ${unidLabel}<br>
+    <b>Categoria:</b> ${_cadCategoria || '—'}`;
+}
+
+async function cadastrarProduto() {
+  const nome = document.getElementById('cad-nome').value.trim();
+  const codigoBase = document.getElementById('cad-codigo').value.trim();
+  const unidade = document.getElementById('cad-unidade').value;
+  const pct = parseFloat(document.getElementById('cad-pct').value) || 0;
+  const unidSel = [..._cadUnidades].filter(u => u !== 'todas');
+
+  if (!nome) { showToast('Coloca o nome do produto! 😤', 'error'); return; }
+  if (!unidSel.length) { showToast('Seleciona pelo menos uma unidade! 😤', 'error'); return; }
+  if (!_cadCategoria) { showToast('Seleciona a categoria! 😤', 'error'); return; }
+
+  // Gerar código base único se não informado
+  const codBase = codigoBase || ('PROD' + Date.now().toString().slice(-6));
+
+  // Definir quais unidades criar (+ a de origem do estoque central se não estiver)
+  const todasUnidades = new Set(unidSel);
+  if (_cadOrigem === 'almoxarifado' && _cadCategoria === 'Embalagens') {
+    todasUnidades.add('almoxarifado'); // garantir criação no almoxarifado
+  } else {
+    todasUnidades.add(_cadOrigem); // garantir criação no CD
+  }
+
+  let criados = 0;
+  for (const u of todasUnidades) {
+    const prod = {
+      codigo: codBase + '_' + u,
+      nome,
+      categoria: _cadCategoria,
+      unidade,
+      estoque: 0,
+      estoque_min: 0,
+      estoque_max: 0,
+      qtd_por_pct: pct,
+      unidade_loja: u
+    };
+    const ok = await supa('POST', 'produtos', '', prod);
+    if (ok !== false) criados++;
+  }
+
+  if (criados > 0) {
+    showToast(`✅ "${nome}" cadastrado em ${criados} unidade(s)! 💪`, 'success');
+    // Recarregar todosEstoques
+    todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
+    initCadastro();
+  } else {
+    showToast('Erro ao cadastrar. Tenta de novo!', 'error');
+  }
+}
 
 async function carregarAlmoxChefao() {
   const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
@@ -649,6 +845,7 @@ function showTab(name) {
     }
   }
   if (name === 'almox-chefao') carregarAlmoxChefao();
+  if (name === 'cadastro') initCadastro();
 }
 
 function filtrarUnidade(u) {
