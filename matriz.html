@@ -399,6 +399,43 @@
 
 </div>
 
+<!-- MODAL EDITAR PRODUTO -->
+<div id="modal-edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1001;align-items:flex-end;justify-content:center;">
+  <div class="modal-box" style="max-height:85vh;overflow-y:auto;">
+    <h2 style="color:#1565c0;font-size:1.1rem;margin-bottom:4px;">🖊️ Editar Produto</h2>
+    <p id="modal-edit-info" style="font-size:0.78rem;color:#888;margin-bottom:12px;"></p>
+    <label>Nome</label>
+    <input type="text" id="modal-edit-nome" style="margin-bottom:8px;" />
+    <label>Categoria</label>
+    <select id="modal-edit-cat" style="margin-bottom:8px;">
+      <option value="Bebidas">🥤 Bebidas</option>
+      <option value="Bruto">🥩 Bruto</option>
+      <option value="Embalagens">📦 Embalagens</option>
+      <option value="Limpeza">🧹 Limpeza</option>
+      <option value="Processado">🍗 Processado</option>
+    </select>
+    <label>Unidade de Medida</label>
+    <select id="modal-edit-unidade" style="margin-bottom:8px;">
+      <option value="und">und</option>
+      <option value="kg">kg</option>
+      <option value="L">L</option>
+      <option value="pct">pct</option>
+    </select>
+    <label>Qtd por Pacote</label>
+    <input type="number" id="modal-edit-pct" min="0" step="1" style="margin-bottom:12px;" />
+    <div style="background:#0d0d0d;border:1px solid #1565c0;border-radius:10px;padding:12px;margin-bottom:12px;">
+      <label style="color:#1565c0;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;">REPLICAR EM TODAS AS UNIDADES?</label>
+      <p style="font-size:0.75rem;color:#888;margin:4px 0 10px;">Salva nome, categoria, unidade e PCT em todas as unidades que têm este produto.</p>
+      <div style="display:flex;gap:8px;">
+        <button id="edit-rep-sim" onclick="setReplicar(true)" class="btn btn-gold" style="flex:1;margin:0;font-size:0.82rem;">✅ Sim, replicar</button>
+        <button id="edit-rep-nao" onclick="setReplicar(false)" class="btn btn-gray" style="flex:1;margin:0;font-size:0.82rem;">❌ Só esta unidade</button>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="confirmarEdicao()" style="margin-bottom:8px;">💾 Salvar</button>
+    <button class="btn btn-gray" onclick="fecharEdicao()">Cancelar</button>
+  </div>
+</div>
+
 <!-- MODAL CORRIGIR ESTOQUE -->
 <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
   <div class="modal-box">
@@ -928,11 +965,74 @@ function renderEstoque() {
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="font-weight:700;color:#1a237e;text-align:right;">${fmtQ(est, p.unidade)}</div>
           <button onclick="abrirCorrecao('${p.codigo}','${u}')" style="background:#fff3e0;border:1px solid #f9a825;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">✏️</button>
+          <button onclick="abrirEdicao('${p.codigo}','${u}')" style="background:#e3f2fd;border:1px solid #1565c0;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:0.8rem;">🖊️</button>
         </div>
       </div>`;
     });
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+}
+
+// ── EDITAR PRODUTO ──
+let _editCodigo = '';
+let _editUnidade = '';
+let _editReplicar = true;
+
+function abrirEdicao(codigo, unidade) {
+  const p = todosEstoques.find(x => x.codigo === codigo && x.unidade_loja === unidade);
+  if (!p) return;
+  _editCodigo = codigo;
+  _editUnidade = unidade;
+  _editReplicar = true;
+  document.getElementById('modal-edit-nome').value = p.nome;
+  document.getElementById('modal-edit-cat').value = p.categoria;
+  document.getElementById('modal-edit-unidade').value = p.unidade || 'und';
+  document.getElementById('modal-edit-pct').value = p.qtd_por_pct || 0;
+  // Quantas unidades têm este produto (pelo nome base do código)
+  const codBase = codigo.replace('_' + unidade, '');
+  const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase + '_') && x.unidade_loja !== unidade);
+  document.getElementById('modal-edit-info').textContent = `${p.nome} — ${UNIDADE_LABEL[unidade] || unidade}${outras.length ? ' · encontrado em mais ' + outras.length + ' unidade(s)' : ' · só nesta unidade'}`;
+  setReplicar(outras.length > 0);
+  document.getElementById('modal-edit-overlay').style.display = 'flex';
+}
+
+function setReplicar(val) {
+  _editReplicar = val;
+  document.getElementById('edit-rep-sim').className = val ? 'btn btn-gold' : 'btn btn-gray';
+  document.getElementById('edit-rep-nao').className = !val ? 'btn btn-gold' : 'btn btn-gray';
+}
+
+function fecharEdicao() { document.getElementById('modal-edit-overlay').style.display = 'none'; }
+
+async function confirmarEdicao() {
+  const nome = document.getElementById('modal-edit-nome').value.trim();
+  const categoria = document.getElementById('modal-edit-cat').value;
+  const unidade = document.getElementById('modal-edit-unidade').value;
+  const pct = parseFloat(document.getElementById('modal-edit-pct').value) || 0;
+  if (!nome) { showToast('Nome não pode ser vazio!', 'error'); return; }
+
+  const payload = { nome, categoria, unidade, qtd_por_pct: pct };
+  const codBase = _editCodigo.replace('_' + _editUnidade, '');
+
+  // Unidades a atualizar
+  let alvos = [{ codigo: _editCodigo, unidade_loja: _editUnidade }];
+  if (_editReplicar) {
+    const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase + '_') && x.unidade_loja !== _editUnidade);
+    outras.forEach(x => alvos.push({ codigo: x.codigo, unidade_loja: x.unidade_loja }));
+  }
+
+  let ok = true;
+  for (const alvo of alvos) {
+    const r = await supa('PATCH', 'produtos', `codigo=eq.${alvo.codigo}&unidade_loja=eq.${alvo.unidade_loja}`, payload);
+    if (!r) ok = false;
+    // Atualizar cache local
+    const p = todosEstoques.find(x => x.codigo === alvo.codigo && x.unidade_loja === alvo.unidade_loja);
+    if (p) Object.assign(p, payload);
+  }
+
+  fecharEdicao();
+  renderEstoque();
+  showToast(ok ? `✅ "${nome}" atualizado em ${alvos.length} unidade(s)!` : '⚠️ Salvo com erros', ok ? 'success' : 'error');
 }
 
 // ── CORRIGIR ESTOQUE ──
