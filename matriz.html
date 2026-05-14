@@ -994,7 +994,7 @@ function abrirEdicao(codigo, unidade) {
   document.getElementById('modal-edit-pct').value = p.qtd_por_pct || 0;
   // Quantas unidades têm este produto (pelo nome base do código)
   const codBase2 = codigo.replace('_' + unidade, '');
-  const outras = todosEstoques.filter(x => x.codigo.startsWith(codBase2 + '_') && x.unidade_loja !== unidade);
+  const outras = todosEstoques.filter(x => x.nome === p.nome && x.unidade_loja !== unidade);
   document.getElementById('modal-edit-info').textContent = `${p.nome} — ${UNIDADE_LABEL[unidade] || unidade}${outras.length ? ' · encontrado em mais ' + outras.length + ' unidade(s)' : ' · só nesta unidade'}`;
   setReplicar(outras.length > 0);
   document.getElementById('modal-edit-overlay').style.display = 'flex';
@@ -1020,11 +1020,12 @@ async function confirmarEdicao() {
   const codBaseAtual = _editCodigo.replace('_' + _editUnidade, '');
   const codMudou = novoCodBase !== codBaseAtual;
 
-  // Unidades a atualizar
+  // Buscar todas as unidades que têm este produto pelo nome original
+  const nomeOriginal = todosEstoques.find(x => x.codigo === _editCodigo && x.unidade_loja === _editUnidade)?.nome;
   let alvos = [{ codigo: _editCodigo, unidade_loja: _editUnidade }];
-  if (_editReplicar) {
-    const outras = todosEstoques.filter(x => x.codigo.startsWith(codBaseAtual + '_') && x.unidade_loja !== _editUnidade);
-    outras.forEach(x => alvos.push({ codigo: x.codigo, unidade_loja: x.unidade_loja }));
+  if (_editReplicar && nomeOriginal) {
+    const outrasUnidades = todosEstoques.filter(x => x.nome === nomeOriginal && x.unidade_loja !== _editUnidade);
+    outrasUnidades.forEach(x => alvos.push({ codigo: x.codigo, unidade_loja: x.unidade_loja }));
   }
 
   let ok = true;
