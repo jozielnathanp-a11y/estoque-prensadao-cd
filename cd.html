@@ -227,21 +227,23 @@
         <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;"></span>
       </div>
       <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
+    <!-- PENDENTES -->
+    <div class="card" style="margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h4 style="margin:0;font-size:0.95rem;">⏳ Pendentes (<span id="lanc-count">0</span>/15)</h4>
+        <button onclick="limparLancamentos()" style="background:none;border:none;color:#888;font-size:0.78rem;cursor:pointer;">✖ Limpar</button>
+      </div>
+      <div id="lista-lancamentos-itens" style="min-height:40px;">
+        <p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>
+      </div>
+      <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
+    </div>
     </div>
   </div>
 
 
   <!-- LISTA DE LANÇAMENTOS (embaixo do form) -->
-  <div id="lista-lancamentos-wrap" style="margin-top:12px;display:none;">
-    <div class="card" style="padding:10px 12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="margin:0;font-size:0.95rem;">📋 Lançamentos (<span id="lanc-count">0</span>)</h3>
-        <button onclick="limparLancamentos()" style="background:none;border:none;color:#888;font-size:0.78rem;cursor:pointer;">✖ Limpar</button>
-      </div>
-      <div id="lista-lancamentos-itens"></div>
-      <button class="btn btn-green" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;">💾 SALVAR E ENVIAR AO ESTOQUE</button>
-    </div>
-  </div>
+  
 
   <!-- HISTÓRICO -->
   
@@ -1112,20 +1114,32 @@ function adicionarAoLote() {
 }
 
 function renderLancamentos() {
-  var wrap=document.getElementById('lista-lancamentos-wrap');
-  var el=document.getElementById('lista-lancamentos-itens');
-  var cnt=document.getElementById('lanc-count');
-  if(!_lancamentos.length){if(wrap)wrap.style.display='none';return;}
-  if(wrap)wrap.style.display='block';
-  if(cnt)cnt.textContent=_lancamentos.length;
-  if(!el)return;
-  el.innerHTML=_lancamentos.map(function(l,i){
-    var tl=l.tipo==='contagem'?'📊':'📥';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #222;">'
-      +'<div><span style="font-size:0.85rem;font-weight:700;">'+l.nome+'</span>'
-      +'<span style="font-size:0.75rem;color:#888;margin-left:6px;">'+tl+' '+l.qtd+' '+l.unidade+'</span></div>'
-      +'<button onclick="_lancamentos.splice('+i+',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">&#10006;</button>'
-      +'</div>';
+  var el   = document.getElementById('lista-lancamentos-itens');
+  var cnt  = document.getElementById('lanc-count');
+  var btn  = document.getElementById('btn-salvar-estoque');
+  if (!el) return;
+  if (cnt) cnt.textContent = _lancamentos.length;
+  if (!_lancamentos.length) {
+    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = 'block';
+  el.innerHTML = _lancamentos.map(function(l, i) {
+    var tl = l.tipo === 'contagem' ? '📊' : '📥';
+    var cat = l.categoria ? l.categoria.toLowerCase() : '';
+    var isEmb = cat === 'embalagem' || cat === 'embalagens';
+    var dest = l.tipo === 'entrada'
+      ? '<span style="font-size:0.68rem;margin-left:4px;color:' + (isEmb ? '#f9a825' : '#64b5f6') + ';">→ ' + (isEmb ? 'Almox' : 'CD') + '</span>'
+      : '';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e1e1e;">'
+      + '<div>'
+      + '<span style="font-size:0.88rem;font-weight:700;">' + l.nome + '</span>'
+      + '<span style="font-size:0.75rem;color:#888;margin-left:6px;">' + tl + ' ' + l.qtd + ' ' + l.unidade + '</span>'
+      + dest
+      + '</div>'
+      + '<button onclick="_lancamentos.splice(' + i + ',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">&#10006;</button>'
+      + '</div>';
   }).join('');
 }
 
@@ -1161,7 +1175,7 @@ async function salvarLancamentos() {
   renderEstoque();
   limparLancamentos();
   showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
-  carregarHistoricoRecente();
+  
   if (btn) btn.disabled = false;
 }
 
@@ -1381,36 +1395,6 @@ async function lancarAlmox() {
 // ── FIM ALMOXARIFADO ──
 
 
-// ── HISTÓRICO RECENTE ──
-async function carregarHistoricoRecente() {
-  var el = document.getElementById('historico-recente');
-  if (!el) return;
-  var movs = await supa('GET', 'movimentacoes', null,
-    'unidade_loja=eq.' + UNIDADE_LOJA + '&order=created_at.desc&limit=15&select=*');
-  if (!movs || !movs.length) {
-    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum lançamento ainda.</p>';
-    return;
-  }
-  var tipoIcon = { entrada: '📥', contagem: '📊', saida: '📤' };
-  el.innerHTML = movs.map(function(m) {
-    var dt = new Date(m.created_at);
-    var hora = dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    var dia  = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-    var icon = tipoIcon[m.tipo] || '•';
-    var cor  = m.tipo === 'entrada' ? '#81c784' : m.tipo === 'contagem' ? '#64b5f6' : '#ffb74d';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e1e1e;">'
-      + '<div style="flex:1;">'
-      + '<span style="font-size:0.82rem;font-weight:700;color:'+cor+';">'+icon+' '+m.nome+'</span>'
-      + '<span style="font-size:0.7rem;color:#555;margin-left:6px;">'+m.colaborador+'</span>'
-      + '</div>'
-      + '<div style="text-align:right;white-space:nowrap;">'
-      + '<div style="font-size:0.85rem;font-weight:700;color:'+cor+';">'+m.qtd+' '+m.unidade+'</div>'
-      + '<div style="font-size:0.65rem;color:#444;">'+dia+' '+hora+'</div>'
-      + '</div>'
-      + '</div>';
-  }).join('');
-}
-// ── FIM HISTÓRICO RECENTE ──
 
 </script>
 
