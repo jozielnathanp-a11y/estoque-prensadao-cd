@@ -143,7 +143,7 @@
       <h1>🏪 Prensadão DELIVERY</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button onclick="sair()">Saí fora</button></div></div>
+    <button onclick="sair()">Saí fora</button></div></div>
   </div>
 
   <div class="tabs" id="tabs-bar">
@@ -434,7 +434,6 @@ function iniciarApp() {
 
   carregarProdutos();
   iniciarNomeOperador();
-  if(typeof _verificarTutorial==="function") _verificarTutorial();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -1771,53 +1770,5 @@ function enviarFeedback() {
 <!-- TUTORIAL -->
 
 
-<!-- TUTORIAL v2 -->
-<div id="tut-ov" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;width:calc(100vw - 32px);max-width:400px;background:#0d0d0d;border:2px solid #c62828;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.8);overflow:hidden;">
-  <div style="padding:18px 18px 0;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:1rem;font-weight:900;color:#c62828;letter-spacing:2px;text-transform:uppercase;">Como Usar</span>
-    <button onclick="document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut2_ok_delivery','1')" style="background:#1a1a1a;border:1px solid #333;color:#aaa;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
-  </div>
-  <div style="padding:10px 18px 4px;display:flex;gap:5px;" id="tut-dots"></div>
-  <div style="padding:4px 18px 0;font-size:1.05rem;font-weight:800;color:#fff;" id="tut-tit"></div>
-  <div style="padding:8px 18px 16px;font-size:0.85rem;color:#bbb;line-height:1.7;min-height:80px;" id="tut-txt"></div>
-  <div style="padding:0 18px 12px;display:flex;gap:8px;">
-    <button onclick="_tutPrev()" id="tut-prev" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#ccc;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">← Voltar</button>
-    <button onclick="_tutNext()" id="tut-next" style="flex:2;background:#c62828;border:none;color:#fff;border-radius:10px;padding:9px;cursor:pointer;font-weight:800;font-size:0.85rem;">Próximo →</button>
-  </div>
-  <div style="padding:0 18px 16px;">
-    <a href="https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20DELIVERY!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:#0a1a0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:9px;text-decoration:none;font-size:0.8rem;font-weight:700;">💬 Chamar Josiel no WhatsApp</a>
-  </div>
-</div>
-<script>
-(function(){
-  var TUT=[["📦 TRAMPO GERAL", "🔴 Vermelho = zerou<br>🟡 Amarelo = tá no limite<br>🟢 Verde = OK<br><br>Filtra por categoria ou busca pelo nome."], ["➕ LANÇAR", "<b>ENTRADA</b> = chegou produto novo<br><b>CONTAGEM</b> = conferência<br><br>1️⃣ Tipo → 2️⃣ Produto → 3️⃣ Qtd PCT → 4️⃣ CONFIRMAR"], ["📋 ROLO", "Histórico do dia. Troca a data pra ver dias anteriores."], ["🔥 DICAS", "✅ Confirma antes de sair<br>❓ Problema? Chama o Josiel!"]];
-  var step=0;
-  var CHAVE='tut2_ok_delivery';
-  function render(){
-    var p=TUT[step];
-    document.getElementById('tut-tit').textContent=p[0];
-    document.getElementById('tut-txt').innerHTML=p[1];
-    document.getElementById('tut-prev').style.opacity=step===0?'0.3':'1';
-    document.getElementById('tut-next').textContent=step===TUT.length-1?'✅ Entendido!':'Próximo →';
-    document.getElementById('tut-dots').innerHTML=TUT.map(function(_,i){
-      return '<div style="width:8px;height:8px;border-radius:50%;background:'+(i===step?'#c62828':'#2a2a2a')+';border:1px solid '+(i===step?'#c62828':'#444')+'"></div>';
-    }).join('');
-  }
-  window.abrirTutorial=function(){
-    step=0;
-    document.getElementById('tut-ov').style.display='block';
-    render();
-  };
-  window._tutNext=function(){
-    if(step<TUT.length-1){step++;render();}
-    else{document.getElementById('tut-ov').style.display='none';localStorage.setItem(CHAVE,'1');}
-  };
-  window._tutPrev=function(){if(step>0){step--;render();}}
-  // Abrir após login — chamado por iniciarApp ou fazerLogin
-  window._verificarTutorial=function(){
-    if(!localStorage.getItem(CHAVE)){setTimeout(abrirTutorial,1200);}
-  };
-})();
-</script>
 </body>
 </html>
