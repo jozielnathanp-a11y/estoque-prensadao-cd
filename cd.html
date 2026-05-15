@@ -1789,637 +1789,104 @@ function tutRender() {
 </div>
 <!-- FIM TUTORIAL -->
 
+
+
 <script>
-// ── VARIÁVEIS GLOBAIS CD ──
-var _almoxDados = [];
-var _almoxFiltro = "todos";
-var _almoxTipo = "entrada";
-var _almoxLote = [];
-var _chefaoDados = [];
-var _chefaoFiltro = "todos";
-
-// ── FUNÇÕES EXCLUSIVAS CD ──
-
-async function carregarSaidasCD() {
-  var el = document.getElementById('lista-saidas-cd');
-  if (!el) return;
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
-
-  // Buscar movimentações de ENTRADA nas unidades que têm Smart CD (ou seja, saídas do ponto de vista do CD)
-  // São as entradas registradas em centro/delivery/boqueiraw com produtos que existem no CD
-  var data = document.getElementById('saidas-data') ? document.getElementById('saidas-data').value : '';
-  var filtroUnidade = document.getElementById('saidas-filtro-uni') ? document.getElementById('saidas-filtro-uni').value : '';
-
-  var query = 'tipo=eq.entrada&unidade_loja=in.(centro,delivery,boqueiraw)&status=eq.confirmado&order=created_at.desc&select=*&limit=100';
-  if (data) {
-    query += '&created_at=gte.' + data + 'T00:00:00&created_at=lte.' + data + 'T23:59:59';
-  }
-  if (filtroUnidade) {
-    query = query.replace('unidade_loja=in.(centro,delivery,boqueiraw)', 'unidade_loja=eq.' + filtroUnidade);
-  }
-
-  var movs = await supa('GET', 'movimentacoes', null, query);
-
-  if (!movs || !movs.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída encontrada.</p>';
-    return;
-  }
-
-  // Agrupar por produto
-  var agrup = {};
-  movs.forEach(function(m) {
-    var base = m.codigo.replace(/_centro$|_delivery$|_boqueiraw$/, '');
-    if (!agrup[base]) agrup[base] = { nome: m.nome, unidade: m.unidade || '', total: 0, por_uni: {} };
-    agrup[base].total += parseFloat(m.qtd) || 0;
-    if (!agrup[base].por_uni[m.unidade_loja]) agrup[base].por_uni[m.unidade_loja] = 0;
-    agrup[base].por_uni[m.unidade_loja] += parseFloat(m.qtd) || 0;
-  });
-
-  var uniLabel = { centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🍔 Boqueirão' };
-  var html = '<div style="margin-bottom:8px;font-size:0.78rem;color:#888;">'+movs.length+' registros encontrados</div>';
-  Object.entries(agrup).forEach(function(entry) {
-    var base = entry[0]; var p = entry[1];
-    var uniStr = Object.entries(p.por_uni).map(function(e){ return (uniLabel[e[0]]||e[0])+': '+e[1]+' '+p.unidade; }).join(' | ');
-    html += '<div class="card" style="margin:0 0 8px;padding:12px;">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
-      + '<div><div style="font-weight:700;font-size:0.92rem;">'+p.nome+'</div>'
-      + '<div style="font-size:0.72rem;color:#aaa;margin-top:2px;">'+uniStr+'</div></div>'
-      + '<div style="background:#1a2a1a;color:#81c784;padding:4px 10px;border-radius:8px;font-weight:700;font-size:0.88rem;">Total: '+p.total.toFixed(3)+' '+p.unidade+'</div>'
-      + '</div></div>';
-  });
-  el.innerHTML = html;
-}
-
-function filtrarAlmox() {
-  var busca = (document.getElementById('almox-busca').value || '').toLowerCase();
-  var filtrado = _almoxCache.filter(function(p){
-    return p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca) || (p.categoria||'').toLowerCase().includes(busca);
-  });
-  renderAlmox(filtrado);
-}
-
-function renderAlmox(lista) {
-  var el = document.getElementById('lista-almox');
-  if (!el) return;
-  if (!lista || !lista.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Nenhum produto encontrado.</p>';
-    return;
-  }
-
-  var catAtual = '';
-  var html = '';
-  lista.forEach(function(p) {
-    var est = parseFloat(p.estoque) || 0;
-    var min = parseFloat(p.estoque_min) || 0;
-    var cor = est === 0 ? '#f44336' : (min > 0 && est <= min ? '#ff9800' : '#4caf50');
-    var dot = est === 0 ? '🔴' : (min > 0 && est <= min ? '🟡' : '🟢');
-
-    if (p.categoria !== catAtual) {
-      catAtual = p.categoria;
-      html += '<div style="font-size:0.72rem;font-weight:700;color:#888;letter-spacing:1px;padding:10px 0 4px;border-top:1px solid #222;margin-top:6px;">'+catAtual.toUpperCase()+'</div>';
-    }
-
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1a1a1a;" onclick="selecionarAlmoxProduto(''+p.codigo+'')" style="cursor:pointer;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-size:0.88rem;font-weight:600;color:#f0f0f0;">'+dot+' '+p.nome+'</div>'
-      + '<div style="font-size:0.72rem;color:#666;">'+p.codigo+'</div>'
-      + '</div>'
-      + '<div style="text-align:right;">'
-      + '<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+est+'</div>'
-      + '<div style="font-size:0.68rem;color:#555;">'+p.unidade+'</div>'
-      + '</div>'
-      + '</div>';
-  });
-  el.innerHTML = html;
-}
-
-function selecionarAlmoxProduto(cod) {
-  var sel = document.getElementById('almox-produto');
-  if (sel) { sel.value = cod; }
-  document.getElementById('almox-qtd').focus();
-}
-
-async function lancarAlmox() {
-  var cod  = document.getElementById('almox-produto').value;
-  var tipo = document.getElementById('almox-tipo').value;
-  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
-  if (!cod)         { showToast('Seleciona o produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
-
-  var p = _almoxCache.find(function(x){ return x.codigo === cod; });
-  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
-
-  var est = parseFloat(p.estoque) || 0;
-  var novoEst = tipo === 'contagem' ? qtd : est + qtd;
-
-  var r = await supa('PATCH', 'produtos?codigo=eq.'+cod+'&unidade_loja=eq.almoxarifado', { estoque: novoEst });
-  await supa('POST', 'movimentacoes', {
-    codigo: cod, nome: p.nome, tipo: tipo, qtd: qtd, unidade: p.unidade,
-    colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
-    obs: tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox',
-    unidade_loja: 'almoxarifado', status: 'confirmado',
-    estoque_anterior: est, novo_estoque: novoEst
-  });
-
-  // Atualizar cache local
-  var idx = _almoxCache.findIndex(function(x){ return x.codigo === cod; });
-  if (idx >= 0) _almoxCache[idx].estoque = novoEst;
-
-  document.getElementById('almox-qtd').value = '';
-  document.getElementById('almox-produto').value = '';
-  showToast('✅ ' + p.nome + ': ' + novoEst + ' ' + p.unidade, 'success');
-  if (typeof beep === 'function') beep();
-  renderAlmox(_almoxCache);
-}
-
-async function abrirCameraAlmox() {
-  var area  = document.getElementById('almox-camera-area');
-  var video = document.getElementById('almox-camera-video');
-  if (!('BarcodeDetector' in window)) {
-    showToast('Scanner não suportado neste navegador.', 'error');
-    return;
-  }
-  try {
-    _almoxCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    video.srcObject = _almoxCameraStream;
-    area.style.display = 'block';
-    var detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','qr_code'] });
-    _almoxScanLoop = setInterval(async function() {
-      try {
-        var codes = await detector.detect(video);
-        if (codes.length > 0) {
-          fecharCameraAlmox();
-          document.getElementById('almox-scan').value = codes[0].rawValue;
-          buscarAlmoxPorCodigo();
-        }
-      } catch(e) {}
-    }, 500);
-  } catch(e) { showToast('Erro ao acessar câmera.', 'error'); }
-}
-
-function fecharCameraAlmox() {
-  if (_almoxCameraStream) { _almoxCameraStream.getTracks().forEach(function(t){t.stop();}); _almoxCameraStream = null; }
-  if (_almoxScanLoop) { clearInterval(_almoxScanLoop); _almoxScanLoop = null; }
-  var area = document.getElementById('almox-camera-area');
-  if (area) area.style.display = 'none';
-}
-
-function buscarAlmoxPorCodigo() {
-  var raw = (document.getElementById('almox-scan').value || '').trim();
-  if (!raw) return;
-  // Busca pelo código exato ou pelo código base (sem sufixo _almoxarifado)
-  var found = _almoxCache.find(function(p){
-    return p.codigo === raw ||
-           p.codigo === raw + '_almoxarifado' ||
-           p.codigo.replace('_almoxarifado','') === raw;
-  });
-  if (found) {
-    document.getElementById('almox-produto').value = found.codigo;
-    document.getElementById('almox-scan').value = '';
-    document.getElementById('almox-qtd').focus();
-    if (typeof beep === 'function') beep();
-    if (typeof showToast === 'function') showToast('✅ ' + found.nome, 'success');
-  } else {
-    if (typeof showToast === 'function') showToast('Produto não encontrado no Almoxarifado!', 'error');
-  }
-}
+/* ALMOX CD STANDALONE */
+var _acd = [];
+var _acdFiltro = 'todos';
 
 async function carregarAlmox() {
-  var el = document.getElementById('almox-lista');
+  var lista = document.getElementById('almox-lista');
   var stats = document.getElementById('almox-stats');
-  if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
+  if (lista) lista.innerHTML = '<p style="text-align:center;color:#aaa;padding:20px;">Carregando...</p>';
   try {
-    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado_cd&select=*&order=categoria.asc,nome.asc');
-    _almoxDados = (res && Array.isArray(res)) ? res : [];
-  } catch(err) {
-    _almoxDados = [];
-    if (el) el.innerHTML = '<p style="text-align:center;color:#e57373;padding:16px;">Erro ao carregar. Tente novamente.</p>';
+    var r = await fetch(
+      'https://trbyynbtuzpszdvjivbs.supabase.co/rest/v1/produtos?unidade_loja=eq.almoxarifado_cd&select=codigo,nome,categoria,unidade,estoque,estoque_min&order=categoria.asc,nome.asc',
+      { headers: { 'apikey': 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj', 'Authorization': 'Bearer sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj' } }
+    );
+    _acd = await r.json();
+    if (!Array.isArray(_acd)) _acd = [];
+  } catch(e) {
+    _acd = [];
+    if (lista) lista.innerHTML = '<p style="color:#e57373;text-align:center;padding:20px;">Erro ao carregar.</p>';
     return;
   }
-  // Stats
-  if (stats) {
-    var total = _almoxDados.length;
-    var zerados = _almoxDados.filter(function(p){ return parseFloat(p.estoque||0) <= 0; }).length;
-    stats.textContent = total + ' itens · ' + zerados + ' zerados';
-  }
-  // Popular select
-  try { almoxPopularSelect(); } catch(e) {}
-  // Renderizar lista
-  almoxRender();
-}
-
-function filtrarAlmoxChefao(filtro) {
-  window._almoxFiltro = filtro;
-  // Destacar botão ativo
-  ['todos','ok','comprar','zerado'].forEach(function(f) {
-    var btn = document.getElementById('abtn-' + f);
-    if (btn) btn.style.background = f === filtro ? '#757575' : '';
-  });
-  renderAlmoxChefao();
-}
-
-function renderAlmoxChefao() {
-  var lista = document.getElementById('almox-chefao-lista');
-  var stats = document.getElementById('almox-chefao-stats');
-  if (!lista) return;
-
-  var dados = window._almoxEstoques || [];
-  var busca = (document.getElementById('almox-chefao-busca') ? document.getElementById('almox-chefao-busca').value : '').toLowerCase();
-  var filtro = window._almoxFiltro || 'todos';
-
-  if (!dados.length) {
-    lista.innerHTML = '<div style="text-align:center;padding:20px;"><p style="color:#888;">Nenhum produto carregado.</p><button onclick="carregarAlmox()" style="margin-top:8px;padding:10px 20px;background:#757575;border:none;border-radius:8px;color:#fff;cursor:pointer;">🔄 Tentar novamente</button></div>';
-    return;
-  }
-
-  // Calcular status de cada item
-  var processados = dados.map(function(p) {
-    var est = parseFloat(p.estoque) || 0;
-    var min = parseFloat(p.estoque_min) || 0;
-    var status = est <= 0 ? 'zerado' : (min > 0 && est <= min ? 'comprar' : 'ok');
-    return Object.assign({}, p, { _est: est, _min: min, _status: status });
-  });
-
-  // Stats
-  var nTodos   = processados.length;
-  var nOk      = processados.filter(function(p){ return p._status === 'ok'; }).length;
-  var nComprar = processados.filter(function(p){ return p._status === 'comprar'; }).length;
-  var nZerado  = processados.filter(function(p){ return p._status === 'zerado'; }).length;
-  if (stats) {
-    stats.innerHTML = [
-      ['📦 Todos', nTodos, '#757575'],
-      ['✅ OK', nOk, '#388e3c'],
-      ['🛒 Comprar', nComprar, '#f57c00'],
-      ['🔴 Zerado', nZerado, '#c62828'],
-    ].map(function(s) {
-      return '<div style="flex:1;background:' + s[2] + ';border-radius:8px;padding:6px 8px;text-align:center;min-width:60px;">'
-        + '<div style="font-size:0.65rem;color:#fff;">' + s[0] + '</div>'
-        + '<div style="font-size:1.1rem;font-weight:700;color:#fff;">' + s[1] + '</div>'
-        + '</div>';
-    }).join('');
-  }
-
-  // Filtrar
-  var filtrados = processados.filter(function(p) {
-    var matchBusca = !busca || p.nome.toLowerCase().includes(busca);
-    var matchFiltro = filtro === 'todos' || p._status === filtro;
-    return matchBusca && matchFiltro;
-  });
-
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">Nenhum item.</div>';
-    return;
-  }
-
-  lista.innerHTML = filtrados.map(function(p) {
-    var cor = p._status === 'zerado' ? '#c62828' : p._status === 'comprar' ? '#f57c00' : '#388e3c';
-    var bg  = p._status === 'zerado' ? '#1a0000' : p._status === 'comprar' ? '#1a0d00' : '#001a00';
-    var pct = p._min > 0 ? Math.min(100, Math.round((p._est / p._min) * 100)) : (p._est > 0 ? 100 : 0);
-    return '<div class="card" style="margin:0 0 8px;padding:12px;background:' + bg + ';border-left:4px solid ' + cor + ';">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.92rem;color:#fff;">' + p.nome + '</div>'
-      + (p._min > 0 ? '<div style="font-size:0.7rem;color:#888;margin-top:2px;">Mín: ' + p._min + ' ' + p.unidade + '</div>' : '')
-      + '</div>'
-      + '<div style="text-align:right;">'
-      + '<div style="font-size:1.2rem;font-weight:700;color:' + cor + ';">' + p._est + ' <span style="font-size:0.75rem;">' + p.unidade + '</span></div>'
-      + '</div>'
-      + '</div>'
-      + (p._min > 0 ? '<div style="margin-top:8px;height:4px;background:#333;border-radius:2px;">'
-        + '<div style="height:4px;background:' + cor + ';border-radius:2px;width:' + pct + '%;transition:width 0.3s;"></div>'
-        + '</div>' : '')
-      + '</div>';
-  }).join('');
-}
-
-function selecionarTipoAlmox(tipo) {
-  document.getElementById('almox-tipo').value = tipo;
-  document.getElementById('almox-btn-entrada').className  = tipo === 'entrada'  ? 'btn btn-green' : 'btn btn-gray';
-  document.getElementById('almox-btn-contagem').className = tipo === 'contagem' ? 'btn btn-gray btn-active' : 'btn btn-gray';
-  document.getElementById('almox-btn-contagem').style.background = tipo === 'contagem' ? '#64b5f6' : '';
-}
-
-function adicionarAlmoxAoLote() {
-  var cod  = document.getElementById('almox-produto').value;
-  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
-  var tipo = document.getElementById('almox-tipo').value;
-  if (!cod) { showToast('Selecione um produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
-  var p = getProduto(cod);
-  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
-  if (_almoxLote.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
-  // Verificar duplicata
-  var dup = _almoxLote.find(function(x){ return x.cod === cod && x.tipo === tipo; });
-  if (dup) { dup.qtd += qtd; }
-  else { _almoxLote.push({ cod: cod, nome: p.nome, unidade: p.unidade, qtd: qtd, tipo: tipo }); }
-  document.getElementById('almox-qtd').value = '';
-  document.getElementById('almox-produto').value = '';
-  renderAlmoxLote();
-  showToast('✅ ' + p.nome + ' adicionado', 'success');
-  if (typeof beep === 'function') beep();
-}
-
-function renderAlmoxLote() {
-  var el  = document.getElementById('almox-lista-pendentes');
-  var cnt = document.getElementById('almox-lanc-count');
-  var btn = document.getElementById('almox-btn-salvar');
-  if (!el) return;
-  if (cnt) cnt.textContent = _almoxLote.length;
-  if (!_almoxLote.length) {
-    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:8px;">Confirme um item acima.</p>';
-    if (btn) btn.style.display = 'none';
-    return;
-  }
-  if (btn) btn.style.display = 'block';
-  el.innerHTML = _almoxLote.map(function(l, i) {
-    var ic = l.tipo === 'contagem' ? '📊' : '📥';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e1e1e;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-size:0.85rem;font-weight:700;">' + ic + ' ' + l.nome + '</div>'
-      + '</div>'
-      + '<div style="display:flex;align-items:center;gap:6px;">'
-      + '<input type="number" value="' + l.qtd + '" min="0.001" step="0.001"'
-      + ' onchange="_almoxLote[' + i + '].qtd=parseFloat(this.value)||0;renderAlmoxLote();"'
-      + ' style="width:70px;padding:4px 6px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:0.85rem;" />'
-      + '<span style="font-size:0.75rem;color:#888;">' + l.unidade + '</span>'
-      + '<button onclick="_almoxLote.splice(' + i + ',1);renderAlmoxLote();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">✖</button>'
-      + '</div>'
-      + '</div>';
-  }).join('');
-}
-
-function limparAlmoxLote() { _almoxLote = []; renderAlmoxLote(); }
-
-async function salvarAlmoxLote() {
-  if (!_almoxLote.length) { showToast('Nenhum item!', 'error'); return; }
-  var btn = document.getElementById('almox-btn-salvar');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando...'; }
-  var ok = 0;
-  for (var i = 0; i < _almoxLote.length; i++) {
-    var l = _almoxLote[i];
-    var dados = {
-      codigo: l.cod, nome: l.nome, unidade_loja: 'cd', tipo: l.tipo,
-      qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
-      status: 'confirmado', categoria: 'embalagem'
-    };
-    var r = await supa('POST', 'movimentacoes', dados);
-    if (r) {
-      // Atualizar estoque do almox
-      var p = getProduto(l.cod);
-      if (p) {
-        var novoEst = l.tipo === 'contagem' ? l.qtd : (parseFloat(p.estoque || 0) + l.qtd);
-        await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + encodeURIComponent(l.cod) + '&unidade_loja=eq.cd');
-      }
-      ok++;
-    }
-  }
-  showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
-  _almoxLote = [];
-  renderAlmoxLote();
-  if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR NO ALMOXARIFADO'; }
-  carregarAlmox();
-  carregarAlmox();
-}
-
-function popularAlmoxSelect() {
-  var sel = document.getElementById('almox-produto');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">-- Selecione --</option>';
-  Object.values(produtosCache).sort(function(a,b){ return a.nome.localeCompare(b.nome); }).forEach(function(p) {
-    sel.innerHTML += '<option value="' + p.codigo + '">' + p.nome + '</option>';
-  });
-}
-
-function prodAtualizarCats() {
-  var destino = document.getElementById('prod-destino').value;
-  var sel = document.getElementById('prod-cat');
-  if (!sel) return;
-  if (destino === 'almoxarifado') {
-    sel.innerHTML = '<option value="Bruto">Bruto</option>'
-      + '<option value="Embalagens">Embalagens</option>'
-      + '<option value="Limpeza">Limpeza</option>';
-  } else {
-    sel.innerHTML = '<option value="Bruto">Bruto</option>'
-      + '<option value="Embalagem">Embalagem</option>'
-      + '<option value="Processado">Processado</option>'
-      + '<option value="Temperos">Temperos</option>';
-  }
+  var zerados = _acd.filter(function(p){ return !parseFloat(p.estoque); }).length;
+  if (stats) stats.textContent = _acd.length + ' itens | ' + zerados + ' zerados';
+  _renderAlmoxCD();
+  _popularSelectAlmoxCD();
 }
 
 function almoxFiltrar(f) {
-  _almoxFiltro = f;
-  var ids = ['todos','ok','comprar','zerado'];
-  for (var i=0; i<ids.length; i++) {
-    var btn = document.getElementById('af-' + ids[i]);
-    if (btn) btn.style.background = ids[i] === f ? '#616161' : '';
-  }
-  almoxRender();
+  _acdFiltro = f;
+  ['todos','ok','comprar','zerado'].forEach(function(k) {
+    var b = document.getElementById('abtn-' + k);
+    if (b) b.style.background = '';
+  });
+  var cores = { todos: '#757575', ok: '#388e3c', comprar: '#f57f17', zerado: '#c62828' };
+  var bid = document.getElementById('abtn-' + f);
+  if (bid) bid.style.background = cores[f] || '#757575';
+  _renderAlmoxCD();
 }
 
-function almoxRender() {
-  var el = document.getElementById('almox-lista');
-  if (!el) return;
+function _renderAlmoxCD() {
+  var lista = document.getElementById('almox-lista');
+  if (!lista) return;
   var buscaEl = document.getElementById('almox-busca');
-  var busca   = buscaEl ? buscaEl.value.toLowerCase() : '';
-  var filtro  = _almoxFiltro || 'todos';
-  var filtrados = [];
-  for (var i=0; i<_almoxDados.length; i++) {
-    var p = _almoxDados[i];
-    var okB = !busca || p.nome.toLowerCase().indexOf(busca) !== -1;
-    var okF = filtro === 'todos' || almoxStatus(p) === filtro;
-    if (okB && okF) filtrados.push(p);
-  }
-  if (!filtrados.length) {
-    el.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:16px;">Nenhum produto encontrado.</div>';
-    return;
-  }
-  var html = '';
-  for (var k=0; k<filtrados.length; k++) {
-    var p = filtrados[k];
+  var busca = buscaEl ? buscaEl.value.toLowerCase() : '';
+  var filtrados = _acd.filter(function(p) {
     var est = parseFloat(p.estoque) || 0;
     var min = parseFloat(p.estoque_min) || 0;
-    var st  = almoxStatus(p);
-    var cor = st==='zerado' ? '#c62828' : st==='comprar' ? '#f57c00' : '#388e3c';
-    var bg  = st==='zerado' ? 'rgba(198,40,40,0.08)' : st==='comprar' ? 'rgba(245,124,0,0.08)' : 'rgba(56,142,60,0.08)';
-    var pct = min>0 ? Math.min(100,Math.round((est/min)*100)) : (est>0 ? 100 : 0);
-    var barra = min>0
-      ? '<div style="margin-top:6px;height:3px;background:#333;border-radius:2px;"><div style="height:3px;background:'+cor+';border-radius:2px;width:'+pct+'%;"></div></div>'
-      : '';
-    var minTxt = min>0 ? '<div style="font-size:0.68rem;color:#888;margin-top:1px;">Min: '+min+' '+p.unidade+'</div>' : '';
-    html += '<div class="card" style="margin:0 0 6px;padding:12px;border-left:4px solid '+cor+';background:'+bg+';">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;">'
-      +'<div><div style="font-weight:700;font-size:0.9rem;">'+p.nome+'</div>'+minTxt+'</div>'
-      +'<div style="font-size:1.15rem;font-weight:700;color:'+cor+';">'+est+' <span style="font-size:0.7rem;">'+p.unidade+'</span></div>'
-      +'</div>'+barra+'</div>';
-  }
-  el.innerHTML = html;
-}
-
-function almoxSelecionarProd() {
-  var sel = document.getElementById('almox-sel');
-  var und = document.getElementById('almox-und');
-  if (!sel || !und) return;
-  var cod = sel.value;
-  var p = null;
-  for (var i=0; i<_almoxDados.length; i++) {
-    if (_almoxDados[i].codigo === cod) { p = _almoxDados[i]; break; }
-  }
-  und.textContent = p ? p.unidade : 'und';
-}
-
-function almoxSetTipo(tipo) {
-  var ti = document.getElementById('almox-tipo');
-  if (ti) ti.value = tipo;
-  var btnEnt = document.getElementById('almox-btn-ent');
-  var btnCnt = document.getElementById('almox-btn-cnt');
-  if (btnEnt) btnEnt.className = tipo === 'entrada' ? 'btn btn-green' : 'btn btn-gray';
-  if (btnCnt) {
-    btnCnt.className = tipo === 'contagem' ? 'btn btn-green' : 'btn btn-gray';
-    btnCnt.style.background = tipo === 'contagem' ? '#64b5f6' : '';
-  }
-}
-
-function almoxRenderLote() {
-  var el  = document.getElementById('almox-pendentes');
-  var cnt = document.getElementById('almox-cnt');
-  var btn = document.getElementById('almox-btn-salvar');
-  if (!el) return;
-  if (cnt) cnt.textContent = _almoxLote.length;
-  if (!_almoxLote.length) {
-    el.innerHTML = '<p style="color:#555;font-size:0.78rem;text-align:center;padding:6px;">Nenhum item ainda.</p>';
-    if (btn) btn.style.display = 'none';
+    var okB = busca ? p.nome.toLowerCase().indexOf(busca) !== -1 : true;
+    if (_acdFiltro === 'ok')      return okB && est > min;
+    if (_acdFiltro === 'comprar') return okB && est <= min && est > 0;
+    if (_acdFiltro === 'zerado')  return okB && est <= 0;
+    return okB;
+  });
+  if (!filtrados.length) {
+    lista.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Nenhum item encontrado.</p>';
     return;
   }
-  if (btn) btn.style.display = 'block';
-  var html = '';
-  for (var i=0; i<_almoxLote.length; i++) {
-    var l = _almoxLote[i];
-    var ic = l.tipo === 'contagem' ? '[C]' : '[E]';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #222;">'
-      +'<div style="flex:1;font-size:0.85rem;font-weight:700;">'+ic+' '+l.nome+'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="font-size:0.9rem;font-weight:700;color:#fff;">'+l.qtd+'</span>'
-      +'<span style="font-size:0.72rem;color:#888;">'+l.unidade+'</span>'
-      +'<button onclick="_almoxLote.splice('+i+',1);almoxRenderLote();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">x</button>'
-      +'</div></div>';
-  }
-  el.innerHTML = html;
-}
-
-function almoxLimpar() {
-  _almoxLote = [];
-  almoxRenderLote();
-}
-
-async function almoxSalvar() {
-  if (!_almoxLote.length) { showToast('Nenhum item!','error'); return; }
-  var btn = document.getElementById('almox-btn-salvar');
-  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-  var ok = 0;
-  for (var i=0; i<_almoxLote.length; i++) {
-    var l = _almoxLote[i];
-    var p = null;
-    for (var j=0; j<_almoxDados.length; j++) {
-      if (_almoxDados[j].codigo === l.cod) { p = _almoxDados[j]; break; }
+  var out = '';
+  var catAtual = '';
+  for (var i = 0; i < filtrados.length; i++) {
+    var p = filtrados[i];
+    var est = parseFloat(p.estoque) || 0;
+    var min = parseFloat(p.estoque_min) || 0;
+    var cor = est <= 0 ? '#c62828' : est <= min ? '#f57f17' : '#388e3c';
+    var ico = est <= 0 ? '🔴' : est <= min ? '🟡' : '✅';
+    if (p.categoria !== catAtual) {
+      catAtual = p.categoria;
+      out += '<div style="font-size:0.75rem;font-weight:bold;color:#9e9e9e;padding:8px 4px 4px;">' + catAtual.toUpperCase() + '</div>';
     }
-    var estAtual = p ? parseFloat(p.estoque) || 0 : 0;
-    var novoEst  = l.tipo === 'contagem' ? l.qtd : estAtual + l.qtd;
-    novoEst = Math.round(novoEst * 1000) / 1000;
-    var r = await supa('PATCH','produtos',{ estoque: novoEst },'codigo=eq.'+l.cod+'&unidade_loja=eq.almoxarifado');
-    if (r !== null && r !== undefined) {
-      var colab = (typeof usuarioLogado !== 'undefined' && usuarioLogado) ? usuarioLogado.usuario : 'CD';
-      await supa('POST','movimentacoes',{
-        codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd,
-        unidade: l.unidade, colaborador: colab,
-        unidade_loja: 'cd', status: 'confirmado', categoria: 'almoxarifado',
-        estoque_anterior: estAtual, novo_estoque: novoEst,
-        obs: l.tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox'
-      });
-      if (p) p.estoque = novoEst;
-      ok++;
-    }
+    out += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid #333;">';
+    out += '<span style="font-size:0.9rem;">' + ico + ' ' + p.nome + '</span>';
+    out += '<span style="font-weight:bold;color:' + cor + ';font-size:0.9rem;">' + est + ' ' + p.unidade + '</span>';
+    out += '</div>';
   }
-  showToast(ok + ' item(s) salvo(s)!','success');
-  _almoxLote = [];
-  almoxRenderLote();
-  if (btn) { btn.disabled = false; btn.textContent = 'SALVAR NO ALMOXARIFADO'; }
-  carregarAlmox();
+  lista.innerHTML = out;
 }
 
-function almoxConfirmar() {
-  var sel  = document.getElementById('almox-sel');
-  var qtdI = document.getElementById('almox-qtd');
-  var tiI  = document.getElementById('almox-tipo');
-  var cod  = sel ? sel.value : '';
-  var qtd  = qtdI ? parseFloat(qtdI.value) : 0;
-  var tipo = tiI ? tiI.value : 'entrada';
-  if (!cod)         { showToast('Selecione um produto!','error'); return; }
-  if (!qtd || qtd<=0){ showToast('Informe a quantidade!','error'); return; }
-  var p = null;
-  for (var i=0; i<_almoxDados.length; i++) {
-    if (_almoxDados[i].codigo === cod) { p = _almoxDados[i]; break; }
-  }
-  if (!p) { showToast('Produto nao encontrado!','error'); return; }
-  var dup = null;
-  for (var j=0; j<_almoxLote.length; j++) {
-    if (_almoxLote[j].cod === cod && _almoxLote[j].tipo === tipo) { dup = _almoxLote[j]; break; }
-  }
-  if (dup) {
-    dup.qtd = Math.round((dup.qtd + qtd) * 1000) / 1000;
-  } else {
-    _almoxLote.push({ cod: cod, nome: p.nome, unidade: p.unidade, qtd: qtd, tipo: tipo });
-  }
-  if (qtdI) qtdI.value = '';
-  if (sel)  sel.value  = '';
-  var und = document.getElementById('almox-und');
-  if (und) und.textContent = 'und';
-  almoxRenderLote();
-  showToast(p.nome + ' adicionado','success');
-}
-
-function almoxStatus(p) {
-  var est = parseFloat(p.estoque) || 0;
-  var min = parseFloat(p.estoque_min) || 0;
-  if (est <= 0) return 'zerado';
-  if (min > 0 && est <= min) return 'comprar';
-  return 'ok';
-}
-
+function almoxRender() { _renderAlmoxCD(); }
 function almoxRenderStats() {
-  var el = document.getElementById('almox-stats');
-  if (!el) return;
-  var nOk = 0; var nCom = 0; var nZer = 0;
-  for (var i=0; i<_almoxDados.length; i++) {
-    var st = almoxStatus(_almoxDados[i]);
-    if (st==='ok') nOk++;
-    else if (st==='comprar') nCom++;
-    else nZer++;
-  }
-  var itens = [
-    ['Todos', _almoxDados.length, '#616161'],
-    ['OK', nOk, '#388e3c'],
-    ['Comprar', nCom, '#f57c00'],
-    ['Zerado', nZer, '#c62828']
-  ];
-  var html = '';
-  for (var j=0; j<itens.length; j++) {
-    html += '<div style="flex:1;background:'+itens[j][2]+';border-radius:8px;padding:5px 4px;text-align:center;min-width:55px;">'
-      +'<div style="font-size:0.62rem;color:#fff;">'+itens[j][0]+'</div>'
-      +'<div style="font-size:1.1rem;font-weight:700;color:#fff;">'+itens[j][1]+'</div>'
-      +'</div>';
-  }
-  el.innerHTML = html;
+  var zerados = _acd.filter(function(p){ return !parseFloat(p.estoque); }).length;
+  var stats = document.getElementById('almox-stats');
+  if (stats) stats.textContent = _acd.length + ' itens | ' + zerados + ' zerados';
 }
 
-function almoxPopularSelect() {
-  var sel = document.getElementById('almox-sel');
+function _popularSelectAlmoxCD() {
+  var sel = document.getElementById('almox-produto-sel');
   if (!sel) return;
-  sel.innerHTML = '<option value="">-- Selecione --</option>';
-  var sorted = _almoxDados.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); });
-  for (var i=0; i<sorted.length; i++) {
-    sel.innerHTML += '<option value="'+sorted[i].codigo+'">'+sorted[i].nome+'</option>';
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  for (var i = 0; i < _acd.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = _acd[i].codigo;
+    opt.textContent = _acd[i].nome + ' (' + _acd[i].unidade + ')';
+    sel.appendChild(opt);
   }
 }
+function almoxPopularSelect() { _popularSelectAlmoxCD(); }
 </script>
 </body>
 </html>
