@@ -423,6 +423,12 @@ async function fazerLogin() {
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 function iniciarApp() {
+  // Verificar tutorial após login
+  setTimeout(function() {
+    var isAdm = (typeof usuarioLogado !== 'undefined' && usuarioLogado && usuarioLogado.perfil === 'adm');
+    var chave = isAdm ? _tutChave.replace('_op','_adm') : _tutChave;
+    if (!localStorage.getItem(chave)) { abrirTutorial(); }
+  }, 1000);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
