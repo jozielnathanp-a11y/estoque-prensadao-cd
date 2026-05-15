@@ -426,6 +426,7 @@ function iniciarApp() {
   }
 
   carregarProdutos();
+  setTimeout(carregarAlmoxChefao, 1500);
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -448,7 +449,7 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') { carregarAlmox(); carregarAlmoxChefao(); popularAlmoxSelect(); }
+  if (name === 'almoxarifado') { carregarAlmox(); setTimeout(carregarAlmoxChefao, 300); popularAlmoxSelect(); }
   if (name === 'saidas') carregarSaidasCD();
 }
 
@@ -1918,7 +1919,10 @@ function popularAlmoxSelect() {
   <div class="screen" id="tab-almoxarifado">
     <!-- ESTOQUE ALMOXARIFADO -->
     <div class="card">
-      <h3>📦 Almoxarifado de Embalagens</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;">📦 Almoxarifado de Embalagens</h3>
+        <button onclick="carregarAlmoxChefao()" style="background:#424242;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:0.8rem;">🔄 Atualizar</button>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;background:#757575;">📦 Todos</button>
         <button onclick="filtrarAlmoxChefao('ok')"    id="abtn-ok"     class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
