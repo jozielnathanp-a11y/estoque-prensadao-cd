@@ -134,7 +134,7 @@
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin();" />
     <label>Senha</label>
     <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin();" />
-    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <button id="btn-login">🔒 ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
@@ -1162,6 +1162,14 @@ async function salvarLancamentos() {
 
 // ── FIM LISTA DE LANÇAMENTOS ──
 
+
+// Login via addEventListener
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('btn-login');
+  if (btn) btn.addEventListener('click', fazerLogin);
+  var senhaEl = document.getElementById('login-senha');
+  if (senhaEl) senhaEl.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+});
 </script>
 
 
