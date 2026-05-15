@@ -350,16 +350,18 @@
     <!-- ESTOQUE ALMOXARIFADO -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="margin:0;">📦 Almoxarifado de Embalagens</h3>
-        <button onclick="carregarAlmoxChefao()" style="background:#424242;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:0.8rem;">🔄 Atualizar</button>
+        <h3 style="margin:0;">📦 Almoxarifado</h3>
+        <button onclick="carregarAlmox()" style="background:#424242;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:0.8rem;">🔄 Atualizar</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;background:#757575;">📦 Todos</button>
-        <button onclick="filtrarAlmoxChefao('ok')"    id="abtn-ok"     class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
-        <button onclick="filtrarAlmoxChefao('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
-        <button onclick="filtrarAlmoxChefao('zerado')"  id="abtn-zerado"  class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
+        <button onclick="almoxFiltrar('todos')" id="abtn-todos" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;background:#757575;">📦 Todos</button>
+        <button onclick="almoxFiltrar('ok')"    id="abtn-ok"    class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
+        <button onclick="almoxFiltrar('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
+        <button onclick="almoxFiltrar('zerado')"  id="abtn-zerado"  class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
       </div>
-      <input type="text" id="almox-chefao-busca" placeholder="🔍 Buscar embalagem..." oninput="renderAlmoxChefao()" style="margin:0;" />
+      <input type="text" id="almox-busca" placeholder="🔍 Buscar produto..." oninput="almoxRender()" style="margin:0;" />
+      <div id="almox-stats" style="margin:8px 0;font-size:0.82rem;color:#9e9e9e;"></div>
+      <div id="almox-lista" style="margin-top:8px;"></div>
     </div>
     <div id="almox-chefao-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
     <div id="almox-chefao-lista"></div>
