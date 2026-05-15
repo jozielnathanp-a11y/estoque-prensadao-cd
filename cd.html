@@ -1339,15 +1339,6 @@ async function pedidoEmbalagens() {
 // Init
 document.getElementById('login-usuario').focus();
 
-// ── TUTORIAL ──
-const TUTORIAL_PASSOS = [{ titulo: "\ud83d\udce6 ESTOQUE", texto: "Aqui voc\u00ea v\u00ea o estoque atual do CD. Filtra por categoria ou busca pelo nome. Vermelho = zerado, amarelo = abaixo do m\u00ednimo." }, { titulo: "\u2795 LAN\u00c7AR", texto: "Aqui voc\u00ea lan\u00e7a entrada ou contagem no CD.<br><br>1\ufe0f\u20e3 Escolhe ENTRADA (chegou do fornecedor) ou CONTAGEM (confer\u00eancia).<br>2\ufe0f\u20e3 Escaneia o c\u00f3digo ou digita o nome.<br>3\ufe0f\u20e3 Digita a quantidade em pacotes.<br>4\ufe0f\u20e3 Clica ADICIONAR e depois CONFIRMAR TUDO." }, { titulo: "\ud83d\udce6 Almoxarifado", texto: "O Almoxarifado \u00e9 separado do estoque do CD.<br><br>Aqui ficam todas as EMBALAGENS (caixas, sacolas, copos...).<br>Quando uma unidade recebe embalagem com origem CD, desconta do Almoxarifado automaticamente." }, { titulo: "\ud83d\udccb HIST\u00d3RICO", texto: "Aqui voc\u00ea v\u00ea tudo que foi movimentado. Filtra por data para ver dias anteriores." }, { titulo: "\u2699\ufe0f Dicas Finais", texto: "Dicas importantes:<br><br>\u2705 Sempre confirme os pendentes antes de sair.<br>\ud83d\udcf7 Escanear o c\u00f3digo \u00e9 mais r\u00e1pido que digitar!<br>\ud83c\udfed Embalagens \u2192 lan\u00e7a no Almoxarifado.<br>\ud83e\udd69 Bruto/Processado \u2192 lan\u00e7a no Estoque normal.<br>\u2753 D\u00favidas? Toca no bot\u00e3o \u2753 a qualquer momento." }];
-let _tutStep = 0;
-
-function abrirTutorial() {
-  _tutStep = 0;
-  document.getElementById('tutorial-overlay').style.display = 'flex';
-  renderTutorial();
-}
 
 function fecharTutorial() {
   document.getElementById('tutorial-overlay').style.display = 'none';
@@ -1384,13 +1375,54 @@ function verificarTutorial() {
   }
 }
 
+
+// ── TUTORIAL ──
+const TUTORIAL_PASSOS_CD = [{"titulo": "\ud83d\udce6 ESTOQUE CD", "texto": "Aqui \u00e9 o raio-x do CD, sangue! V\u00ea tudo que tem na base.<br><br>\ud83d\udd34 Vermelho = zerou<br>\ud83d\udfe1 Amarelo = t\u00e1 no limite<br>\ud83d\udfe2 Verde = t\u00e1 suave<br><br>Filtra por categoria ou digita o nome."}, {"titulo": "\u2795 LAN\u00c7AR", "texto": "Aqui voc\u00ea registra o que entrou no CD.<br><br><b>ENTRADA</b> = chegou do fornecedor<br><b>CONTAGEM</b> = confer\u00eancia do estoque<br><br>1\ufe0f\u20e3 Escolhe o tipo<br>2\ufe0f\u20e3 Escaneia ou digita o produto<br>3\ufe0f\u20e3 Coloca a quantidade em PCT<br>4\ufe0f\u20e3 ADICIONAR \u2192 CONFIRMAR TUDO"}, {"titulo": "\ud83d\udce6 ALMOXARIFADO", "texto": "O Almoxarifado \u00e9 separado do estoque normal, brother!<br><br>Aqui ficam todas as <b>embalagens</b> (caixas, sacolas, copos...).<br><br>Quando uma unidade recebe embalagem com origem CD \u2192 desconta do Almoxarifado automaticamente. Faz a entrada aqui!"}, {"titulo": "\ud83d\udccb HIST\u00d3RICO", "texto": "Aqui \u00e9 o livro de ata do CD. Tudo que movimentou aparece aqui, filtra por data."}, {"titulo": "\u2699\ufe0f DICAS FINAIS", "texto": "\ud83d\udd25 Dicas pra n\u00e3o vacilar:<br><br>\u2705 Confirma os pendentes antes de sair<br>\ud83d\udcf7 Escanear \u00e9 mais r\u00e1pido que digitar<br>\ud83c\udfed Embalagens \u2192 lan\u00e7a no Almoxarifado<br>\ud83e\udd69 Bruto/Processado \u2192 lan\u00e7a no Estoque normal<br>\u2753 Travou? Cola no bot\u00e3o de ajuda!"}];
+let _tutStep = 0;
+
+function abrirTutorial() {
+  _tutStep = 0;
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+  renderTutorial();
+}
+
+function fecharTutorial() {
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  localStorage.setItem('tut_visto_cd', '1');
+}
+
+function tutorialNext() {
+  if (_tutStep < TUTORIAL_PASSOS_CD.length - 1) { _tutStep++; renderTutorial(); }
+  else fecharTutorial();
+}
+
+function tutorialPrev() {
+  if (_tutStep > 0) { _tutStep--; renderTutorial(); }
+}
+
+function renderTutorial() {
+  const passos = TUTORIAL_PASSOS_CD;
+  const p = passos[_tutStep];
+  document.getElementById('tut-titulo').textContent = p.titulo;
+  document.getElementById('tut-texto').innerHTML = p.texto;
+  document.getElementById('tut-dots').innerHTML = passos.map((_, i) =>
+    '<div style="width:10px;height:10px;border-radius:50%;background:' + (i === _tutStep ? '#37474f' : '#222') + ';border:1px solid ' + (i === _tutStep ? '#37474f' : '#333') + ';transition:all 0.2s;"></div>'
+  ).join('');
+  const prev = document.getElementById('tut-btn-prev');
+  const next = document.getElementById('tut-btn-next');
+  prev.style.opacity = _tutStep === 0 ? '0.2' : '1';
+  prev.disabled = _tutStep === 0;
+  next.textContent = _tutStep === passos.length - 1 ? '✅ ENTENDIDO!' : 'PRÓXIMO →';
+}
+
+function verificarTutorial() {
+  if (!localStorage.getItem('tut_visto_cd')) {
+    setTimeout(abrirTutorial, 1000);
+  }
+}
+
 </script>
 
-<!-- TUTORIAL -->
-<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#111;border:2px solid #37474f;border-radius:16px;width:100%;max-width:420px;padding:24px;position:relative;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#37474f;letter-spacing:2px;">❓ COMO USAR</div>
       <button onclick="fecharTutorial()" style="background:transparent;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
     </div>
     <!-- Progresso -->
@@ -1404,6 +1436,40 @@ function verificarTutorial() {
       <button id="tut-btn-next" onclick="tutorialNext()" style="flex:1;background:#37474f;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">Próximo →</button>
     </div>
     <button onclick="fecharTutorial()" style="width:100%;margin-top:8px;background:transparent;border:none;color:#444;font-size:0.78rem;cursor:pointer;">Pular tutorial</button>
+  </div>
+</div>
+
+
+<!-- TUTORIAL -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:2px solid #37474f;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;position:relative;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#37474f;letter-spacing:2px;">COMO USAR O SISTEMA</div>
+      <button onclick="fecharTutorial()" style="background:transparent;border:none;color:#444;font-size:1.5rem;cursor:pointer;line-height:1;">✕</button>
+    </div>
+    <div style="font-size:0.72rem;color:#444;margin-bottom:16px;font-style:italic;">Lê com atenção, mano 👇</div>
+
+    <!-- Dots progresso -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;" id="tut-dots"></div>
+
+    <!-- Conteúdo -->
+    <div id="tut-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:1px;margin-bottom:10px;"></div>
+    <div id="tut-texto" style="font-size:0.9rem;color:#bbb;line-height:1.8;min-height:130px;"></div>
+
+    <!-- Navegação -->
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button id="tut-btn-prev" onclick="tutorialPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-size:0.85rem;font-weight:700;">← VOLTAR</button>
+      <button id="tut-btn-next" onclick="tutorialNext()" style="flex:2;background:#37474f;border:none;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-weight:700;font-size:0.9rem;letter-spacing:1px;">PRÓXIMO →</button>
+    </div>
+
+    <!-- Ajuda -->
+    <div style="margin-top:12px;border-top:1px solid #1a1a1a;padding-top:12px;display:flex;gap:8px;align-items:center;">
+      <a href="https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20do%20CD!" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#1a3a1a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
+        💬 Preciso de ajuda
+      </a>
+      <button onclick="fecharTutorial()" style="flex:1;background:transparent;border:1px solid #222;color:#444;border-radius:10px;padding:10px;cursor:pointer;font-size:0.78rem;">Pular tutorial</button>
+    </div>
   </div>
 </div>
 
