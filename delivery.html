@@ -1753,7 +1753,7 @@ function enviarFeedback() {
 }
 </script>
 
-<div id="tut-ov" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.93);z-index:99999;padding:16px;box-sizing:border-box;">
+<div id="tut-ov" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;width:calc(100% - 32px);max-width:420px;">
   <div style="background:#0d0d0d;border:2px solid #c62828;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#c62828;letter-spacing:2px;">COMO USAR</span>
@@ -1775,15 +1775,7 @@ var _TUT_ADM=[["\ud83d\udce6 TRAMPO GERAL", "Aqui \u00e9 o raio-x completo do es
 var _TUT=_TUT_OP;
 var _tStep=0;
 var _tutChave='tut_ok_delivery_operador';
-function abrirTutorial(){var ov=document.getElementById('tut-ov');ov.style.display='flex';ov.style.alignItems='center';ov.style.justifyContent='center';_tStep=0;
-  var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
-  _TUT=isAdm?_TUT_ADM:_TUT_OP;
-  _tutChave=isAdm?'tut_ok_delivery_adm':'tut_ok_delivery_operador';
-  document.getElementById('tut-wpp').href=isAdm?'https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20do%20DELIVERY%20(ADM)!':'https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20do%20DELIVERY!';
-  _tStep=0;
-  document.getElementById('tut-ov').style.display='flex';
-  _rTut();
-}
+function abrirTutorial(){var ov=document.getElementById('tut-ov');ov.style.display='block';_tStep=0;_rTut();}
 function fecharTut(){var ov=document.getElementById('tut-ov');ov.style.display='none';localStorage.setItem(_tutChave,'1');}
 function tutNext(){if(_tStep<_TUT.length-1){_tStep++;_rTut();}else fecharTut();}
 function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
