@@ -151,14 +151,14 @@
   </div>
 
   <div class="tabs" id="tabs-bar">
-    <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO</div>
-    <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
+    <div class="tab active" onclick="showTab('estoque',this)">📦 TRAMPO</div>
+    <div class="tab" onclick="showTab('lancar',this)">➕ LANÇAR</div>
     
     
-    <div class="tab adm-only" onclick="showTab('pedidos')">🛒 PEDIDOS</div>
+    <div class="tab adm-only" onclick="showTab('pedidos',this)">🛒 PEDIDOS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
-    <div class="tab adm-only" onclick="showTab('produtos')">⚙️ BASE</div>
-    <div class="tab" onclick="showTab('almoxarifado')">🏬 Almoxarifado</div>
+    <div class="tab adm-only" onclick="showTab('produtos',this)">⚙️ BASE</div>
+    <div class="tab" onclick="showTab('almoxarifado',this)">🏬 Almoxarifado</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -527,15 +527,16 @@ function sair() {
 }
 
 // ── TABS ──
-function showTab(name) {
+function showTab(name, el) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  var tabEl = document.getElementById('tab-' + name);
+  if (tabEl) tabEl.classList.add('active');
+  try { if (el) el.classList.add('active'); else if (event && event.currentTarget) event.currentTarget.classList.add('active'); } catch(e) {}
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') { carregarAlmox(); }
+  if (name === 'almoxarifado') { setTimeout(carregarAlmox, 50); }
 }
 
 // ── PRODUTOS ──
@@ -1980,7 +1981,7 @@ async function carregarAlmox() {
   var el = document.getElementById('almox-lista');
   if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
   try {
-    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc'); console.log('almox res:', res ? res.length : 'null', res);
+    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
     _almoxDados = (res && Array.isArray(res)) ? res : [];
   } catch(err) {
     _almoxDados = [];
