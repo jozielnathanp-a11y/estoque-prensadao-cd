@@ -1,47 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teste Login Centro</title>
-  <script defer>
-    const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
-    const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+<head><meta charset="utf-8"><title>Teste Login CD</title></head>
+<body style="background:#111;color:#fff;font-family:sans-serif;padding:40px;text-align:center">
+<h2>Teste Login CD</h2>
+<input id="u" type="text" placeholder="usuario" style="display:block;margin:10px auto;padding:10px;width:200px"><br>
+<input id="s" type="password" placeholder="senha" style="display:block;margin:10px auto;padding:10px;width:200px"><br>
+<button id="btn" style="padding:15px 30px;background:#e53935;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer">ENTRAR</button>
+<div id="msg" style="margin-top:20px;font-size:1.2rem"></div>
+<script>
+var URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+var KEY = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
 
-    async function fazerLogin() {
-      const msg = document.getElementById('msg');
-      const usuario = document.getElementById('u').value.trim();
-      const senha = document.getElementById('s').value.trim();
-      msg.textContent = '⏳ Tentando...';
-      try {
-        const r = await fetch(
-          `${SUPA_URL}/rest/v1/usuario?usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.centro&select=*`,
-          { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
-        );
-        const data = await r.json();
-        if (data && data.length > 0) {
-          msg.textContent = '✅ LOGIN OK! ' + data[0].usuario + ' - ' + data[0].perfil;
-          msg.style.color = 'green';
-        } else {
-          msg.textContent = '❌ Usuário ou senha errados';
-          msg.style.color = 'red';
-        }
-      } catch(e) {
-        msg.textContent = '❌ ERRO: ' + e.message;
-        msg.style.color = 'red';
-      }
+document.getElementById('btn').addEventListener('click', function() {
+  var u = document.getElementById('u').value.trim();
+  var s = document.getElementById('s').value.trim();
+  document.getElementById('msg').textContent = 'Tentando...';
+  fetch(URL + '/rest/v1/usuario?usuario=eq.' + encodeURIComponent(u) + '&senha=eq.' + encodeURIComponent(s) + '&unidade=eq.cd&select=*', {
+    headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data && data.length > 0) {
+      document.getElementById('msg').textContent = 'LOGADO! ' + JSON.stringify(data[0]);
+      document.getElementById('msg').style.color = '#4caf50';
+    } else {
+      document.getElementById('msg').textContent = 'Usuario/senha errado';
+      document.getElementById('msg').style.color = '#e53935';
     }
-  </script>
-</head>
-<body style="font-family:sans-serif;padding:20px;background:#111;color:#fff;">
-  <h2>🔐 Teste Login Centro</h2>
-  <br>
-  <input id="u" type="text" placeholder="Usuário (ex: Josiel)" style="display:block;width:100%;padding:10px;margin-bottom:10px;font-size:16px;border-radius:8px;border:none;"><br>
-  <input id="s" type="password" placeholder="Senha (ex: 2810)" style="display:block;width:100%;padding:10px;margin-bottom:10px;font-size:16px;border-radius:8px;border:none;"><br>
-  <button onclick="fazerLogin()" style="width:100%;padding:15px;background:#00e676;color:#000;font-size:18px;font-weight:bold;border:none;border-radius:8px;cursor:pointer;">
-    🔓 ENTRAR
-  </button>
-  <br><br>
-  <p id="msg" style="font-size:18px;font-weight:bold;"></p>
+  })
+  .catch(function(e) {
+    document.getElementById('msg').textContent = 'ERRO: ' + e.message;
+    document.getElementById('msg').style.color = '#ff9800';
+  });
+});
+</script>
 </body>
 </html>
