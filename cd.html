@@ -169,8 +169,11 @@
     <div style="display:flex;gap:8px;margin-bottom:12px;">
       <input type="text" id="busca-estoque" placeholder="🔍 Buscar produto..." style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
-        <option value="">Todas</option>
-        <option>Bruto</option><option>Processado</option>
+        <option value="">📦 Todas</option>
+        <option value="Bruto">🌿 Bruto</option>
+        <option value="Embalagem">📦 Embalagem</option>
+        <option value="Processado">🥩 Processado</option>
+        <option value="Temperos">🧂 Temperos</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -265,9 +268,10 @@
       <input type="date" id="rel-data" />
       <label>Categoria</label>
       <div style="display:flex;gap:8px;margin-bottom:10px;">
-        <button id="btn-cat-proc" onclick="selecionarCat('Processado')" class="btn btn-red" style="flex:1;margin:0;">🥩 Processado</button>
+        <button id="btn-cat-proc" onclick="selecionarCat('Processado')" class="btn btn-red" style="flex:1;margin:0;">🥩 Proc.</button>
         <button id="btn-cat-bruto" onclick="selecionarCat('Bruto')" class="btn btn-gray" style="flex:1;margin:0;">🌿 Bruto</button>
         <button id="btn-cat-todos" onclick="selecionarCat('Todos')" class="btn btn-gray" style="flex:1;margin:0;">📦 Todos</button>
+        <button id="btn-cat-almox" onclick="selecionarCat('Almoxarifado')" class="btn btn-gray" style="flex:1;margin:0;">🏬 Almox</button>
       </div>
       <input type="hidden" id="rel-cat-sel" value="Processado" />
       <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
@@ -280,44 +284,75 @@
   </div>
 
   <!-- PRODUTOS (ADM) -->
-  <div class="screen adm-only" id="tab-produtos">
+    <div class="screen adm-only" id="tab-produtos">
     <div class="card">
       <h3>➕ Novo Produto</h3>
       <button class="btn btn-red" onclick="mostrarFormProduto()" id="btn-novo-produto">+ Cadastrar novo produto</button>
       <div id="form-produto" style="display:none;margin-top:10px;">
         <input type="hidden" id="prod-id" />
+
+        <label>Unidade de Destino</label>
+        <select id="prod-destino" onchange="prodAtualizarCats()" style="margin-bottom:8px;">
+          <option value="cd">🏭 CD</option>
+          <option value="almoxarifado">🏬 Almoxarifado</option>
+        </select>
+
         <label>Código (EAN/barras)</label>
         <input type="text" id="prod-codigo" placeholder="Ex: 7894900015119" />
+
         <label>Nome</label>
-        <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
+        <input type="text" id="prod-nome" placeholder="Ex: Detergente Ypê" />
+
         <label>Categoria</label>
         <select id="prod-cat">
-          <option>Bruto</option><option>Processado</option>
+          <option value="Bruto">🌿 Bruto</option>
+          <option value="Embalagem">📦 Embalagem</option>
+          <option value="Processado">🥩 Processado</option>
+          <option value="Temperos">🧂 Temperos</option>
         </select>
-        <label>Unidade</label>
+
+        <label>Unidade de Medida</label>
         <select id="prod-unidade">
-          <option>un</option><option>kg</option><option>g</option>
-          <option>L</option><option>ml</option><option>cx</option><option>pct</option>
+          <option value="und">und</option>
+          <option value="kg">kg</option>
+          <option value="L">L</option>
+          <option value="ml">ml</option>
+          <option value="cx">cx</option>
+          <option value="pct">pct</option>
         </select>
+
         <label>Estoque mínimo</label>
         <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
+
         <label>Qtd por PCT em kg (opcional)</label>
-        <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
-        <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
-        <button class="btn btn-gray" onclick="limparFormProduto()">✖ Cancelar</button>
+        <input type="number" id="prod-pct" placeholder="Ex: 2" step="0.001" min="0" />
+
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-red" onclick="salvarProduto()" style="flex:1;">💾 Salvar</button>
+          <button class="btn btn-gray" onclick="limparFormProduto()" style="flex:1;">✖ Cancelar</button>
+        </div>
       </div>
     </div>
+
     <div class="card">
       <h3>📦 Produtos Cadastrados</h3>
-      <input type="text" id="busca-prod" placeholder="🔍 Buscar..." oninput="renderProdutos()" />
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="prod-filtro-destino" onchange="renderProdutos()" style="flex:1;margin:0;">
+          <option value="">Todas unidades</option>
+          <option value="cd">CD</option>
+          <option value="almoxarifado">Almoxarifado</option>
+        </select>
+        <input type="text" id="busca-prod" placeholder="🔍 Buscar..." oninput="renderProdutos()" style="flex:2;margin:0;" />
+      </div>
       <div id="lista-produtos"></div>
     </div>
+
     <div class="card">
       <h3>🗑️ Zerar Histórico</h3>
-      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Apaga todas as movimentações do banco. O estoque atual não é alterado.</p>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Apaga movimentações do banco. O estoque atual não é alterado.</p>
       <input type="date" id="hist-zerar-data" style="margin-bottom:8px;" />
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data selecionada</button>
+        <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data</button>
         <button class="btn btn-red" style="flex:1;background:#b71c1c;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
       </div>
     </div>
@@ -509,24 +544,24 @@ function renderEstoque() {
 }
 
 function renderProdutos() {
-  const busca = (document.getElementById('busca-prod')?.value || '').toLowerCase();
-  const lista = Object.values(produtosCache)
-    .filter(p => !busca || p.nome.toLowerCase().includes(busca))
-    .sort((a,b) => a.nome.localeCompare(b.nome));
-
-  const el = document.getElementById('lista-produtos');
+  var busca   = (document.getElementById('busca-prod') ? document.getElementById('busca-prod').value : '').toLowerCase();
+  var destino = document.getElementById('prod-filtro-destino') ? document.getElementById('prod-filtro-destino').value : '';
+  var prods   = Object.values(produtosCache);
+  if (destino) prods = prods.filter(function(p){ return p.unidade_loja === destino; });
+  else         prods = prods.filter(function(p){ return p.unidade_loja === 'cd' || p.unidade_loja === 'almoxarifado'; });
+  if (busca)   prods = prods.filter(function(p){ return p.nome.toLowerCase().indexOf(busca) !== -1; });
+  prods.sort(function(a,b){ return a.nome.localeCompare(b.nome); });
+  var el = document.getElementById('lista-produtos');
   if (!el) return;
-  el.innerHTML = lista.map(p => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
-      <div>
-        <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
-        <div style="font-size:0.72rem;color:#aaa;">${p.codigo} · ${p.categoria} · ${p.unidade}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button onclick="editarProduto('${p.codigo}')" style="background:#e3f2fd;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">✏️</button>
-        <button onclick="zerarEstoqueProduto('${p.codigo}')" style="background:#fff0f0;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">🗑️</button>
-      </div>
-    </div>`).join('');
+  if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Nenhum produto.</p>'; return; }
+  el.innerHTML = prods.map(function(p){
+    var tag = p.unidade_loja === 'almoxarifado' ? '<span style="font-size:0.65rem;background:#424242;color:#fff;padding:2px 6px;border-radius:6px;margin-left:4px;">ALMOX</span>' : '';
+    return '<div class="card" style="padding:10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">'
+      +'<div><div style="font-weight:700;font-size:0.88rem;">'+p.nome+tag+'</div>'
+      +'<div style="font-size:0.72rem;color:#aaa;">'+p.categoria+' · '+p.unidade+' · Est: '+p.estoque+'</div></div>'
+      +'<button onclick="editarProduto(''+p.id+'')" style="background:#333;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;font-size:0.8rem;">✏️</button>'
+      +'</div>';
+  }).join('');
 }
 
 function calcMultiplicador() {
@@ -566,33 +601,38 @@ function popularSelectProdutos() {
 
 // ── SALVAR PRODUTO ──
 async function salvarProduto() {
-  const id = document.getElementById('prod-id').value;
-  const dados = {
-    codigo: document.getElementById('prod-codigo').value.trim(),
-    nome: document.getElementById('prod-nome').value.trim(),
-    categoria: document.getElementById('prod-cat').value,
-    unidade: document.getElementById('prod-unidade').value,
-    estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
-    qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
+  var destino  = document.getElementById('prod-destino') ? document.getElementById('prod-destino').value : 'cd';
+  var codigo   = document.getElementById('prod-codigo').value.trim();
+  var nome     = document.getElementById('prod-nome').value.trim();
+  var cat      = document.getElementById('prod-cat').value;
+  var unidade  = document.getElementById('prod-unidade').value;
+  var min      = parseFloat(document.getElementById('prod-min').value) || 0;
+  var pct      = parseFloat(document.getElementById('prod-pct').value) || 0;
+  if (!codigo) { showToast('Informe o codigo!','error'); return; }
+  if (!nome)   { showToast('Informe o nome!','error'); return; }
+  var sufixo  = '_' + destino;
+  var codFinal = codigo.endsWith(sufixo) ? codigo : codigo + sufixo;
+  var dados = {
+    codigo: codFinal, nome: nome, categoria: cat,
+    unidade: unidade, estoque: 0, estoque_min: min,
+    qtd_por_pct: pct, unidade_loja: destino, estoque_max: 0
   };
-  if (!dados.codigo || !dados.nome) { showToast('Preencha código e nome!', 'error'); return; }
-
+  var idEl = document.getElementById('prod-id');
+  var id   = idEl ? idEl.value : '';
+  var r;
   if (id) {
-    await supa('PATCH', `produtos?id=eq.${id}`, dados);
-    showToast('✅ Produto atualizado!', 'success');
+    r = await supa('PATCH','produtos',dados,'id=eq.'+id);
+    showToast('Produto atualizado!','success');
   } else {
-    const existe = await supa('GET', 'produtos', null, `codigo=eq.${dados.codigo}&select=id`);
-    if (existe && existe.length > 0) {
-      await supa('PATCH', `produtos?codigo=eq.${dados.codigo}`, dados);
-      showToast('✅ Produto atualizado!', 'success');
-    } else {
-      dados.estoque = 0;
-      await supa('POST', 'produtos', dados);
-      showToast('✅ Produto cadastrado!', 'success');
-    }
+    r = await supa('POST','produtos',dados,null);
+    showToast('Produto cadastrado!','success');
   }
   limparFormProduto();
-  carregarProdutos();
+  renderProdutos();
+  if (destino === 'almoxarifado') {
+    _almoxDados = [];
+    carregarAlmox();
+  }
 }
 
 function mostrarFormProduto() {
@@ -1051,7 +1091,7 @@ async function salvarLancamentos() {
         try {
           const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
           const cat = (l.categoria || p.categoria || '').toLowerCase();
-          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens';
+          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens' || cat === 'limpeza';
 
           if (isEmbalagem) {
             // Embalagem → desconta do Almoxarifado pelo código base
@@ -1341,25 +1381,7 @@ function enviarFeedback() {
 
 
 // ── FUNÇÕES EXCLUSIVAS CD ──
-async function carregarAlmox() {
-  var el = document.getElementById('lista-almox');
-  var sel = document.getElementById('almox-produto');
-  if (el) el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
 
-  var prods = await supa('GET', 'produtos', null,
-    'unidade_loja=eq.almoxarifado&order=categoria,nome&select=*');
-  _almoxCache = prods || [];
-
-  // Popular select de produto
-  if (sel) {
-    sel.innerHTML = '<option value="">-- Selecione --</option>' +
-      _almoxCache.map(function(p){
-        return '<option value="'+p.codigo+'">'+p.nome+' ('+p.categoria+')</option>';
-      }).join('');
-  }
-
-  renderAlmox(_almoxCache);
-}
 
 function filtrarAlmox() {
   var busca = (document.getElementById('almox-busca').value || '').toLowerCase();
@@ -1754,9 +1776,16 @@ function popularAlmoxSelect() {
 // ── RELATÓRIO CD (restaurado) ──
 function selecionarCat(cat) {
   document.getElementById('rel-cat-sel').value = cat;
-  document.getElementById('btn-cat-proc').className = 'btn ' + (cat === 'Processado' ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-cat-bruto').className = 'btn ' + (cat === 'Bruto' ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-cat-todos').className = 'btn ' + (cat === 'Todos' ? 'btn-red' : 'btn-gray');
+  var cats = ['proc','bruto','todos','almox'];
+  for (var i=0; i<cats.length; i++) {
+    var b = document.getElementById('btn-cat-' + cats[i]);
+    if (b) b.className = 'btn btn-gray';
+  }
+  var map = { 'Processado':'proc', 'Bruto':'bruto', 'Todos':'todos', 'Almoxarifado':'almox' };
+  if (map[cat]) {
+    var btn = document.getElementById('btn-cat-' + map[cat]);
+    if (btn) btn.className = 'btn btn-red';
+  }
 }
 
 async function gerarRelatorio() {
@@ -1771,7 +1800,14 @@ async function gerarRelatorio() {
   const eHoje = data === hoje;
 
   // Filtrar produtos pela categoria
-  const produtos = Object.values(produtosCache).filter(p => cat === 'Todos' || p.categoria === cat);
+  // Para almoxarifado buscar direto do Supabase
+  var produtos;
+  if (cat === 'Almoxarifado') {
+    var almoxRes = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+    produtos = almoxRes && Array.isArray(almoxRes) ? almoxRes : _almoxDados;
+  } else {
+    produtos = Object.values(produtosCache).filter(function(p){ return cat === 'Todos' || p.categoria === cat; });
+  }
 
   // Buscar movimentações do período completo (dia anterior + dia atual)
   const diaAnterior = new Date(data);
@@ -1925,6 +1961,321 @@ function exportarCSV() {
 }
 
 // ── FIM RELATÓRIO CD ──
+
+// ALMOXARIFADO CD
+var _almoxDados  = [];
+var _almoxFiltro = 'todos';
+var _almoxLote   = [];
+
+async function carregarAlmox() {
+  var el = document.getElementById('almox-lista');
+  if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
+  try {
+    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+    _almoxDados = (res && Array.isArray(res)) ? res : [];
+  } catch(err) {
+    _almoxDados = [];
+  }
+  almoxRenderStats();
+  almoxRender();
+  almoxPopularSelect();
+}
+
+function almoxFiltrar(f) {
+  _almoxFiltro = f;
+  var ids = ['todos','ok','comprar','zerado'];
+  for (var i=0; i<ids.length; i++) {
+    var btn = document.getElementById('af-' + ids[i]);
+    if (btn) btn.style.background = ids[i] === f ? '#616161' : '';
+  }
+  almoxRender();
+}
+
+function almoxStatus(p) {
+  var est = parseFloat(p.estoque) || 0;
+  var min = parseFloat(p.estoque_min) || 0;
+  if (est <= 0) return 'zerado';
+  if (min > 0 && est <= min) return 'comprar';
+  return 'ok';
+}
+
+function almoxRenderStats() {
+  var el = document.getElementById('almox-stats');
+  if (!el) return;
+  var nOk = 0; var nCom = 0; var nZer = 0;
+  for (var i=0; i<_almoxDados.length; i++) {
+    var st = almoxStatus(_almoxDados[i]);
+    if (st==='ok') nOk++;
+    else if (st==='comprar') nCom++;
+    else nZer++;
+  }
+  var itens = [
+    ['Todos', _almoxDados.length, '#616161'],
+    ['OK', nOk, '#388e3c'],
+    ['Comprar', nCom, '#f57c00'],
+    ['Zerado', nZer, '#c62828']
+  ];
+  var html = '';
+  for (var j=0; j<itens.length; j++) {
+    html += '<div style="flex:1;background:'+itens[j][2]+';border-radius:8px;padding:5px 4px;text-align:center;min-width:55px;">'
+      +'<div style="font-size:0.62rem;color:#fff;">'+itens[j][0]+'</div>'
+      +'<div style="font-size:1.1rem;font-weight:700;color:#fff;">'+itens[j][1]+'</div>'
+      +'</div>';
+  }
+  el.innerHTML = html;
+}
+
+function almoxRender() {
+  var el = document.getElementById('almox-lista');
+  if (!el) return;
+  var buscaEl = document.getElementById('almox-busca');
+  var busca   = buscaEl ? buscaEl.value.toLowerCase() : '';
+  var filtro  = _almoxFiltro || 'todos';
+  var filtrados = [];
+  for (var i=0; i<_almoxDados.length; i++) {
+    var p = _almoxDados[i];
+    var okB = !busca || p.nome.toLowerCase().indexOf(busca) !== -1;
+    var okF = filtro === 'todos' || almoxStatus(p) === filtro;
+    if (okB && okF) filtrados.push(p);
+  }
+  if (!filtrados.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:16px;">Nenhum produto encontrado.</div>';
+    return;
+  }
+  var html = '';
+  for (var k=0; k<filtrados.length; k++) {
+    var p = filtrados[k];
+    var est = parseFloat(p.estoque) || 0;
+    var min = parseFloat(p.estoque_min) || 0;
+    var st  = almoxStatus(p);
+    var cor = st==='zerado' ? '#c62828' : st==='comprar' ? '#f57c00' : '#388e3c';
+    var bg  = st==='zerado' ? 'rgba(198,40,40,0.08)' : st==='comprar' ? 'rgba(245,124,0,0.08)' : 'rgba(56,142,60,0.08)';
+    var pct = min>0 ? Math.min(100,Math.round((est/min)*100)) : (est>0 ? 100 : 0);
+    var barra = min>0
+      ? '<div style="margin-top:6px;height:3px;background:#333;border-radius:2px;"><div style="height:3px;background:'+cor+';border-radius:2px;width:'+pct+'%;"></div></div>'
+      : '';
+    var minTxt = min>0 ? '<div style="font-size:0.68rem;color:#888;margin-top:1px;">Min: '+min+' '+p.unidade+'</div>' : '';
+    html += '<div class="card" style="margin:0 0 6px;padding:12px;border-left:4px solid '+cor+';background:'+bg+';">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+      +'<div><div style="font-weight:700;font-size:0.9rem;">'+p.nome+'</div>'+minTxt+'</div>'
+      +'<div style="font-size:1.15rem;font-weight:700;color:'+cor+';">'+est+' <span style="font-size:0.7rem;">'+p.unidade+'</span></div>'
+      +'</div>'+barra+'</div>';
+  }
+  el.innerHTML = html;
+}
+
+function almoxPopularSelect() {
+  var sel = document.getElementById('almox-sel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Selecione --</option>';
+  var sorted = _almoxDados.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); });
+  for (var i=0; i<sorted.length; i++) {
+    sel.innerHTML += '<option value="'+sorted[i].codigo+'">'+sorted[i].nome+'</option>';
+  }
+}
+
+function almoxSelecionarProd() {
+  var sel = document.getElementById('almox-sel');
+  var und = document.getElementById('almox-und');
+  if (!sel || !und) return;
+  var cod = sel.value;
+  var p = null;
+  for (var i=0; i<_almoxDados.length; i++) {
+    if (_almoxDados[i].codigo === cod) { p = _almoxDados[i]; break; }
+  }
+  und.textContent = p ? p.unidade : 'und';
+}
+
+function almoxSetTipo(tipo) {
+  var ti = document.getElementById('almox-tipo');
+  if (ti) ti.value = tipo;
+  var btnEnt = document.getElementById('almox-btn-ent');
+  var btnCnt = document.getElementById('almox-btn-cnt');
+  if (btnEnt) btnEnt.className = tipo === 'entrada' ? 'btn btn-green' : 'btn btn-gray';
+  if (btnCnt) {
+    btnCnt.className = tipo === 'contagem' ? 'btn btn-green' : 'btn btn-gray';
+    btnCnt.style.background = tipo === 'contagem' ? '#64b5f6' : '';
+  }
+}
+
+function almoxConfirmar() {
+  var sel  = document.getElementById('almox-sel');
+  var qtdI = document.getElementById('almox-qtd');
+  var tiI  = document.getElementById('almox-tipo');
+  var cod  = sel ? sel.value : '';
+  var qtd  = qtdI ? parseFloat(qtdI.value) : 0;
+  var tipo = tiI ? tiI.value : 'entrada';
+  if (!cod)         { showToast('Selecione um produto!','error'); return; }
+  if (!qtd || qtd<=0){ showToast('Informe a quantidade!','error'); return; }
+  var p = null;
+  for (var i=0; i<_almoxDados.length; i++) {
+    if (_almoxDados[i].codigo === cod) { p = _almoxDados[i]; break; }
+  }
+  if (!p) { showToast('Produto nao encontrado!','error'); return; }
+  var dup = null;
+  for (var j=0; j<_almoxLote.length; j++) {
+    if (_almoxLote[j].cod === cod && _almoxLote[j].tipo === tipo) { dup = _almoxLote[j]; break; }
+  }
+  if (dup) {
+    dup.qtd = Math.round((dup.qtd + qtd) * 1000) / 1000;
+  } else {
+    _almoxLote.push({ cod: cod, nome: p.nome, unidade: p.unidade, qtd: qtd, tipo: tipo });
+  }
+  if (qtdI) qtdI.value = '';
+  if (sel)  sel.value  = '';
+  var und = document.getElementById('almox-und');
+  if (und) und.textContent = 'und';
+  almoxRenderLote();
+  showToast(p.nome + ' adicionado','success');
+}
+
+function almoxRenderLote() {
+  var el  = document.getElementById('almox-pendentes');
+  var cnt = document.getElementById('almox-cnt');
+  var btn = document.getElementById('almox-btn-salvar');
+  if (!el) return;
+  if (cnt) cnt.textContent = _almoxLote.length;
+  if (!_almoxLote.length) {
+    el.innerHTML = '<p style="color:#555;font-size:0.78rem;text-align:center;padding:6px;">Nenhum item ainda.</p>';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = 'block';
+  var html = '';
+  for (var i=0; i<_almoxLote.length; i++) {
+    var l = _almoxLote[i];
+    var ic = l.tipo === 'contagem' ? '[C]' : '[E]';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #222;">'
+      +'<div style="flex:1;font-size:0.85rem;font-weight:700;">'+ic+' '+l.nome+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+      +'<span style="font-size:0.9rem;font-weight:700;color:#fff;">'+l.qtd+'</span>'
+      +'<span style="font-size:0.72rem;color:#888;">'+l.unidade+'</span>'
+      +'<button onclick="_almoxLote.splice('+i+',1);almoxRenderLote();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">x</button>'
+      +'</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function almoxLimpar() {
+  _almoxLote = [];
+  almoxRenderLote();
+}
+
+async function almoxSalvar() {
+  if (!_almoxLote.length) { showToast('Nenhum item!','error'); return; }
+  var btn = document.getElementById('almox-btn-salvar');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  var ok = 0;
+  for (var i=0; i<_almoxLote.length; i++) {
+    var l = _almoxLote[i];
+    var p = null;
+    for (var j=0; j<_almoxDados.length; j++) {
+      if (_almoxDados[j].codigo === l.cod) { p = _almoxDados[j]; break; }
+    }
+    var estAtual = p ? parseFloat(p.estoque) || 0 : 0;
+    var novoEst  = l.tipo === 'contagem' ? l.qtd : estAtual + l.qtd;
+    novoEst = Math.round(novoEst * 1000) / 1000;
+    var r = await supa('PATCH','produtos',{ estoque: novoEst },'codigo=eq.'+l.cod+'&unidade_loja=eq.almoxarifado');
+    if (r !== null && r !== undefined) {
+      var colab = (typeof usuarioLogado !== 'undefined' && usuarioLogado) ? usuarioLogado.usuario : 'CD';
+      await supa('POST','movimentacoes',{
+        codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd,
+        unidade: l.unidade, colaborador: colab,
+        unidade_loja: 'cd', status: 'confirmado', categoria: 'almoxarifado',
+        estoque_anterior: estAtual, novo_estoque: novoEst,
+        obs: l.tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox'
+      });
+      if (p) p.estoque = novoEst;
+      ok++;
+    }
+  }
+  showToast(ok + ' item(s) salvo(s)!','success');
+  _almoxLote = [];
+  almoxRenderLote();
+  if (btn) { btn.disabled = false; btn.textContent = 'SALVAR NO ALMOXARIFADO'; }
+  carregarAlmox();
+}
+// FIM ALMOXARIFADO CD
+
+
+// TUTORIAL
+var _tutPassos = [
+    ['📦 Estoque', 'Aqui você vê os produtos do CD — Processado, Bruto e Embalagens. Vermelho = zerado, amarelo = abaixo do mínimo.'],
+    ['➕ Lançar', 'Registre entradas ou faça contagem dos produtos do CD. Adicione vários itens à lista de pendentes e salve tudo de uma vez.'],
+    ['📤 Saídas', 'Registre saídas de produtos do CD para as unidades. Quando uma unidade recebe, o estoque do CD é descontado automaticamente.'],
+    ['🏬 Almoxarifado', 'Estoque central de embalagens, insumos e limpeza. Quando qualquer unidade recebe um produto de embalagem ou limpeza, o almoxarifado é descontado automaticamente.'],
+    ['📊 Relatório', 'Gere relatório por data e categoria. Filtre por Processado, Bruto, Todos ou Almoxarifado. Compartilhe via WhatsApp ou exporte em CSV.'],
+  ];
+var _tutAtual  = 0;
+
+function abrirTutorial() {{
+  _tutAtual = 0;
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+  tutRender();
+}}
+
+function fecharTutorial() {{
+  document.getElementById('tutorial-overlay').style.display = 'none';
+}}
+
+function tutProximo() {{
+  if (_tutAtual < _tutPassos.length - 1) {{
+    _tutAtual++;
+    tutRender();
+  }} else {{
+    fecharTutorial();
+  }}
+}}
+
+function tutAnterior() {{
+  if (_tutAtual > 0) {{
+    _tutAtual--;
+    tutRender();
+  }}
+}}
+
+function tutRender() {{
+  var p = _tutPassos[_tutAtual];
+  var total = _tutPassos.length;
+  // Icone e titulo
+  var partes = p[0].split(' ');
+  var icone  = partes[0];
+  var titulo = partes.slice(1).join(' ');
+  document.getElementById('tut-icone').textContent  = icone;
+  document.getElementById('tut-titulo').textContent = titulo;
+  document.getElementById('tut-desc').textContent   = p[1];
+  document.getElementById('tut-passo-label').textContent = 'Passo ' + (_tutAtual+1) + ' de ' + total;
+  // Dots
+  var dots = '';
+  for (var i=0; i<total; i++) {{
+    dots += '<div style="width:'+(i===_tutAtual?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_tutAtual?'#e53935':'#444')+';transition:width 0.2s;"></div>';
+  }}
+  document.getElementById('tut-dots').innerHTML = dots;
+  // Botoes
+  var btnAnt  = document.getElementById('tut-btn-ant');
+  var btnProx = document.getElementById('tut-btn-prox');
+  if (btnAnt)  btnAnt.style.display  = _tutAtual === 0 ? 'none' : 'block';
+  if (btnProx) btnProx.textContent   = _tutAtual === total-1 ? '✅ Concluir' : 'Próximo →';
+}}
+// FIM TUTORIAL
+
+
+function prodAtualizarCats() {
+  var destino = document.getElementById('prod-destino').value;
+  var sel = document.getElementById('prod-cat');
+  if (!sel) return;
+  if (destino === 'almoxarifado') {
+    sel.innerHTML = '<option value="Bruto">Bruto</option>'
+      + '<option value="Embalagens">Embalagens</option>'
+      + '<option value="Limpeza">Limpeza</option>';
+  } else {
+    sel.innerHTML = '<option value="Bruto">Bruto</option>'
+      + '<option value="Embalagem">Embalagem</option>'
+      + '<option value="Processado">Processado</option>'
+      + '<option value="Temperos">Temperos</option>';
+  }
+}
+
 </script>
 
 
@@ -2011,5 +2362,29 @@ function exportarCSV() {
     </div>
     <div id="lista-saidas-cd" style="margin-top:8px;"></div>
   </div>
+
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#1e1e1e;border-radius:16px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.6);position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span id="tut-passo-label" style="font-size:0.75rem;color:#888;">Passo 1 de 3</span>
+      <button onclick="fecharTutorial()" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;padding:0;">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div id="tut-icone" style="font-size:2.5rem;margin-bottom:8px;">📦</div>
+      <div id="tut-titulo" style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;"></div>
+      <div id="tut-desc" style="font-size:0.88rem;color:#ccc;line-height:1.5;"></div>
+    </div>
+    <!-- Dots -->
+    <div id="tut-dots" style="display:flex;justify-content:center;gap:6px;margin-bottom:20px;"></div>
+    <!-- Botoes -->
+    <div style="display:flex;gap:10px;">
+      <button id="tut-btn-ant" onclick="tutAnterior()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#333;color:#fff;cursor:pointer;font-size:0.9rem;">← Anterior</button>
+      <button id="tut-btn-prox" onclick="tutProximo()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#e53935;color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;">Próximo →</button>
+    </div>
+  </div>
+</div>
+<!-- FIM TUTORIAL -->
+
 </body>
 </html>
