@@ -1986,16 +1986,26 @@ function buscarAlmoxPorCodigo() {
 
 async function carregarAlmox() {
   var el = document.getElementById('almox-lista');
+  var stats = document.getElementById('almox-stats');
   if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
   try {
     var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado_cd&select=*&order=categoria.asc,nome.asc');
     _almoxDados = (res && Array.isArray(res)) ? res : [];
   } catch(err) {
     _almoxDados = [];
+    if (el) el.innerHTML = '<p style="text-align:center;color:#e57373;padding:16px;">Erro ao carregar. Tente novamente.</p>';
+    return;
   }
-  almoxRenderStats();
+  // Stats
+  if (stats) {
+    var total = _almoxDados.length;
+    var zerados = _almoxDados.filter(function(p){ return parseFloat(p.estoque||0) <= 0; }).length;
+    stats.textContent = total + ' itens · ' + zerados + ' zerados';
+  }
+  // Popular select
+  try { almoxPopularSelect(); } catch(e) {}
+  // Renderizar lista
   almoxRender();
-  almoxPopularSelect();
 }
 
 function filtrarAlmoxChefao(filtro) {
