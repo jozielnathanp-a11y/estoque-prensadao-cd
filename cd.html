@@ -122,6 +122,60 @@
       .tab { padding: 14px 24px; }
     }
   </style>
+<script>
+window._SU = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+window._SK = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+
+function fazerLogin() {
+  var u = (document.getElementById('login-usuario')||{}).value||'';
+  var s = (document.getElementById('login-senha')||{}).value||'';
+  u = u.trim(); s = s.trim();
+  var err = document.getElementById('login-erro');
+  var btn = document.getElementById('btn-entrar');
+  if (err) err.style.display = 'none';
+  if (!u || !s) { if(err) err.style.display='block'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+  var url = window._SU + '/rest/v1/usuario?usuario=eq.' + encodeURIComponent(u) + '&senha=eq.' + encodeURIComponent(s) + '&unidade=eq.cd&select=*';
+  fetch(url, { headers: { 'apikey': window._SK, 'Authorization': 'Bearer ' + window._SK } })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data && data.length > 0) {
+      window.usuarioLogado = data[0];
+      iniciarApp();
+    } else {
+      if (err) err.style.display = 'block';
+      if (btn) { btn.disabled = false; btn.textContent = 'BORA ENTRAR'; }
+    }
+  })
+  .catch(function(e) {
+    if (err) { err.style.display = 'block'; err.textContent = 'Erro de conexao'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'BORA ENTRAR'; }
+  });
+}
+
+function iniciarApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  var tb = document.getElementById('topbar-usuario');
+  if (tb) tb.textContent = window.usuarioLogado.usuario + ' - ' + (window.usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
+  if (window.usuarioLogado.perfil !== 'adm') {
+    document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display='none'; });
+  }
+  var hoje = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+  var hd = document.getElementById('hist-data'); if(hd) hd.value = hoje;
+  var rd = document.getElementById('rel-data');  if(rd) rd.value = hoje;
+  if (typeof carregarProdutos === 'function') carregarProdutos();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('btn-entrar');
+  if (btn) btn.addEventListener('click', fazerLogin);
+  ['login-senha','login-usuario'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+  });
+});
+</script>
 </head>
 <body>
 
@@ -134,7 +188,7 @@
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
     <label>Senha</label>
     <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
-    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <button id="btn-entrar">🔓 BORA ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
@@ -436,41 +490,11 @@ async function supa(metodo, tabela, dados=null, params='') {
 }
 
 // ── LOGIN ──
-async function fazerLogin() {
-  const usuario = document.getElementById('login-usuario').value.trim();
-  const senha = document.getElementById('login-senha').value.trim();
-  if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
 
-  try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`);
-    if (res && res.length > 0) {
-      usuarioLogado = res[0];
-      iniciarApp();
-    } else {
-      document.getElementById('login-erro').style.display = 'block';
-    }
-  } catch(e) {
-    showToast('Erro de conexão', 'error');
-  }
-}
 
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
-function iniciarApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
 
-  // Esconder abas ADM se for operador
-  if (usuarioLogado.perfil !== 'adm') {
-    document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
-  }
-
-  carregarProdutos();
-  const hoje = dataHoje();
-  document.getElementById('hist-data').value = hoje;
-  document.getElementById('rel-data').value = hoje;
-}
 
 function sair() {
   usuarioLogado = null;
