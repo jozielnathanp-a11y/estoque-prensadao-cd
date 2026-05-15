@@ -2018,7 +2018,7 @@ function renderAlmoxChefao() {
   var filtro = window._almoxFiltro || 'todos';
 
   if (!dados.length) {
-    lista.innerHTML = '<div style="text-align:center;padding:20px;"><p style="color:#888;">Nenhum produto carregado.</p><button onclick="carregarAlmoxChefao()" style="margin-top:8px;padding:10px 20px;background:#757575;border:none;border-radius:8px;color:#fff;cursor:pointer;">🔄 Tentar novamente</button></div>';
+    lista.innerHTML = '<div style="text-align:center;padding:20px;"><p style="color:#888;">Nenhum produto carregado.</p><button onclick="carregarAlmox()" style="margin-top:8px;padding:10px 20px;background:#757575;border:none;border-radius:8px;color:#fff;cursor:pointer;">🔄 Tentar novamente</button></div>';
     return;
   }
 
@@ -2168,7 +2168,7 @@ async function salvarAlmoxLote() {
   renderAlmoxLote();
   if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR NO ALMOXARIFADO'; }
   carregarAlmox();
-  carregarAlmoxChefao();
+  carregarAlmox();
 }
 
 function popularAlmoxSelect() {
