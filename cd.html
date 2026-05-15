@@ -412,6 +412,7 @@ function iniciarApp() {
 
   carregarProdutos();
   carregarAlmox();
+  showTab('estoque');
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -1461,6 +1462,26 @@ async function lancarAlmox() {
 
       <button class="btn btn-gold" onclick="lancarAlmox()" style="width:100%;">✅ Confirmar</button>
     </div>
+  </div>
+
+
+  <!-- SAIDAS CD -->
+  <div class="screen adm-only" id="tab-saidas">
+    <div class="card">
+      <h3>📤 Saídas do CD por Unidade</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Entradas registradas nas unidades que saíram do CD.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input type="date" id="saidas-data" onchange="carregarSaidasCD()" style="flex:1;margin:0;" />
+        <select id="saidas-filtro-uni" onchange="carregarSaidasCD()" style="flex:1;margin:0;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;">
+          <option value="">Todas as unidades</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🍔 Boqueirão</option>
+        </select>
+      </div>
+      <button class="btn btn-red" onclick="carregarSaidasCD()" style="width:100%;">🔄 Atualizar</button>
+    </div>
+    <div id="lista-saidas-cd" style="margin-top:8px;"></div>
   </div>
 
 <!-- CHATBOT -->
