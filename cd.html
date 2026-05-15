@@ -140,7 +140,7 @@ function fazerLogin() {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data && data.length > 0) {
-      window.usuarioLogado = data[0];
+      usuarioLogado = data[0]; window.usuarioLogado = data[0];
       iniciarApp();
     } else {
       if (err) err.style.display = 'block';
@@ -157,8 +157,8 @@ function iniciarApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   var tb = document.getElementById('topbar-usuario');
-  if (tb) tb.textContent = window.usuarioLogado.usuario + ' - ' + (window.usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
-  if (window.usuarioLogado.perfil !== 'adm') {
+  if (tb) tb.textContent = usuarioLogado.usuario + ' - ' + (usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
+  if (usuarioLogado.perfil !== 'adm') {
     document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display='none'; });
   }
   var hoje = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
@@ -445,7 +445,8 @@ const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
 const UNIDADE_LOJA = 'cd';
 
-let usuarioLogado = null;
+// usuarioLogado definido pelo script de login no head
+if (typeof usuarioLogado === "undefined") var usuarioLogado = null;
 let produtosCache = {};
 let modalCodigo = null;
 let modalTipo = null;
