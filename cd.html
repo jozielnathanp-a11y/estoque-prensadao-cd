@@ -6,7 +6,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Estoques Prensadão CD v181441</title>
+  <title>Estoques Prensadão CD</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -131,10 +131,10 @@
     <h1>🏪 Estoques Prensadão CD</h1>
     <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
-    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin();" />
+    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
     <label>Senha</label>
-    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin();" />
-    <button id="btn-login" onclick="fazerLogin()">🔒 ENTRAR</button>
+    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
@@ -437,56 +437,39 @@ async function supa(metodo, tabela, dados=null, params='') {
 
 // ── LOGIN ──
 async function fazerLogin() {
-  var usuario = document.getElementById('login-usuario').value.trim();
-  var senha   = document.getElementById('login-senha').value.trim();
-  var erroEl  = document.getElementById('login-erro');
-  if (erroEl) erroEl.style.display = 'none';
-  if (!usuario || !senha) {
-    if (erroEl) erroEl.style.display = 'block';
-    return;
-  }
-  var btnEl = document.querySelector('#login-screen button');
-  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Entrando...'; }
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
+
   try {
-    var url = SUPA_URL + '/rest/v1/usuario?usuario=eq.' + encodeURIComponent(usuario) + '&senha=eq.' + encodeURIComponent(senha) + '&unidade=eq.cd&select=*';
-    var resp = await fetch(url, {
-      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
-    });
-    var res = await resp.json();
+    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
       iniciarApp();
     } else {
-      if (erroEl) erroEl.style.display = 'block';
-      if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔓 BORA ENTRAR'; }
+      document.getElementById('login-erro').style.display = 'block';
     }
   } catch(e) {
-    if (erroEl) { erroEl.style.display = 'block'; erroEl.textContent = 'Erro de conexao. Tenta de novo.'; }
-    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔓 BORA ENTRAR'; }
+    showToast('Erro de conexão', 'error');
   }
 }
 
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 function iniciarApp() {
-  try {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    var topbar = document.getElementById('topbar-usuario');
-    if (topbar) topbar.textContent = usuarioLogado.usuario + ' - ' + (usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
-    if (usuarioLogado.perfil !== 'adm') {
-      document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display = 'none'; });
-    }
-    var hoje = dataHoje();
-    var hd = document.getElementById('hist-data');
-    var rd = document.getElementById('rel-data');
-    if (hd) hd.value = hoje;
-    if (rd) rd.value = hoje;
-    carregarProdutos();
-  } catch(err) {
-    alert('Erro ao iniciar: ' + err.message);
-    console.error('iniciarApp erro:', err);
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
+
+  // Esconder abas ADM se for operador
+  if (usuarioLogado.perfil !== 'adm') {
+    document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
   }
+
+  carregarProdutos();
+  const hoje = dataHoje();
+  document.getElementById('hist-data').value = hoje;
+  document.getElementById('rel-data').value = hoje;
 }
 
 function sair() {
@@ -506,7 +489,7 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') { carregarAlmox(); }
+  if (name === 'almoxarifado') { carregarAlmox(); setTimeout(carregarAlmox, 300); popularAlmoxSelect(); }
   if (name === 'saidas') carregarSaidasCD();
 }
 
@@ -1592,7 +1575,19 @@ async function carregarSaidasCD() {
 
 
 // ── ALMOX VISUAL (da Matriz) ──
-
+async function carregarAlmox() {
+  var el = document.getElementById('almox-chefao-lista');
+  if (el) el.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">⏳ Carregando...</div>';
+  try {
+    var res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+    window._almoxEstoques = (res && Array.isArray(res)) ? res : [];
+  } catch(e) {
+    window._almoxEstoques = [];
+    if (el) el.innerHTML = '<div style="text-align:center;color:#f44336;padding:20px;">❌ Erro ao carregar. <button onclick="carregarAlmox()" style="margin-left:8px;padding:6px 12px;background:#757575;border:none;border-radius:6px;color:#fff;cursor:pointer;">🔄 Tentar</button></div>';
+    return;
+  }
+  renderAlmoxChefao();
+}
 
 function filtrarAlmoxChefao(filtro) {
   window._almoxFiltro = filtro;
@@ -1977,19 +1972,7 @@ var _almoxDados  = [];
 var _almoxFiltro = 'todos';
 var _almoxLote   = [];
 
-async function carregarAlmox() {
-  var el = document.getElementById('almox-lista');
-  if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
-  try {
-    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
-    _almoxDados = (res && Array.isArray(res)) ? res : [];
-  } catch(err) {
-    _almoxDados = [];
-  }
-  almoxRenderStats();
-  almoxRender();
-  almoxPopularSelect();
-}
+async 
 
 function almoxFiltrar(f) {
   _almoxFiltro = f;
@@ -2172,13 +2155,6 @@ function almoxLimpar() {
 }
 
 async function almoxSalvar() {
-  var almoxNomeEl = document.getElementById('almox-nome-lancador');
-  var almoxNome   = almoxNomeEl ? almoxNomeEl.value.trim() : '';
-  if (!almoxNome) {
-    showToast('Coloca teu nome antes de salvar, parceiro!', 'error');
-    if (almoxNomeEl) almoxNomeEl.focus();
-    return;
-  }
   if (!_almoxLote.length) { showToast('Nenhum item!','error'); return; }
   var btn = document.getElementById('almox-btn-salvar');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
@@ -2208,7 +2184,6 @@ async function almoxSalvar() {
   }
   showToast(ok + ' item(s) salvo(s)!','success');
   _almoxLote = [];
-  var anl = document.getElementById('almox-nome-lancador'); if (anl) anl.value = '';
   almoxRenderLote();
   if (btn) { btn.disabled = false; btn.textContent = 'SALVAR NO ALMOXARIFADO'; }
   carregarAlmox();
@@ -2410,28 +2385,5 @@ function prodAtualizarCats() {
 </div>
 <!-- FIM TUTORIAL -->
 
-
-<script>
-// Garantir que o botao de login funciona
-(function() {
-  function bindLogin() {
-    var btn = document.getElementById('btn-login');
-    if (btn) {
-      btn.onclick = null;
-      btn.addEventListener('click', function() { fazerLogin(); });
-    }
-    var senha = document.getElementById('login-senha');
-    if (senha) {
-      senha.onkeydown = null;
-      senha.addEventListener('keydown', function(e) { if(e.key==='Enter') fazerLogin(); });
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindLogin);
-  } else {
-    bindLogin();
-  }
-})();
-</script>
 </body>
 </html>
