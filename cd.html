@@ -454,7 +454,7 @@ async function fazerLogin() {
   }
 }
 
-document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+// addEventListener movido para o botao onclick
 
 function iniciarApp() {
   document.getElementById('login-screen').style.display = 'none';
@@ -936,7 +936,7 @@ function fecharCamera() {
 }
 
 // Init
-document.getElementById('login-usuario').focus();
+// focus movido para iniciarApp
 
 // ── PENDENTES ──
 
