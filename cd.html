@@ -512,14 +512,17 @@ function showTab(name) {
 
 // ── PRODUTOS ──
 async function carregarProdutos() {
+  console.log('carregarProdutos iniciado');
   try {
     const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.cd');
+    console.log('produtos recebidos:', lista ? lista.length : 'null');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     renderEstoque();
     renderProdutos();
     atualizarStats();
   } catch(e) {
+    console.error('carregarProdutos erro:', e);
     showToast('Erro ao carregar produtos', 'error');
   }
 }
