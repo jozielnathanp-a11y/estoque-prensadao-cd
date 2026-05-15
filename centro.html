@@ -150,7 +150,7 @@
   <div class="tabs" id="tabs-bar">
     <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO</div>
     <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
-    <div class="tab" onclick="showTab('historico')">📋 ROLO</div>
+    
     <div class="tab" onclick="showTab('pendentes");carregarPendentes()">⏳ PENDENTES <span id="badge-pendentes" style="background:#ff9800;color:#000;border-radius:10px;padding:1px 6px;font-size:0.72rem;margin-left:2px;"></span></div>
     <div class="tab adm-only" onclick="showTab('pedidos')">🛒 PEDIDOS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
@@ -233,7 +233,16 @@
 
 
   <!-- LISTA DE LANÇAMENTOS (embaixo do form) -->
-  <div id="lista-lancamentos-wrap" style="margin-top:12px;display:none;">
+  
+    <!-- HISTÓRICO RECENTE -->
+    <div class="card" style="margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h4 style="margin:0;font-size:0.92rem;color:#aaa;">📋 Últimos lançamentos</h4>
+        <button onclick="carregarHistoricoRecente()" style="background:none;border:none;color:#555;font-size:0.75rem;cursor:pointer;">🔄 Atualizar</button>
+      </div>
+      <div id="historico-recente"><p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Carregando...</p></div>
+    </div>
+    <div id="lista-lancamentos-wrap" style="margin-top:12px;display:none;">
     <div class="card" style="padding:10px 12px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h3 style="margin:0;font-size:0.95rem;">📋 Lançamentos (<span id="lanc-count">0</span>)</h3>
@@ -621,9 +630,7 @@ function editarProduto(cod) {
   showToast('Editando: ' + p.nome, '');
 }
 
-function limparFormProduto() {
-  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
-}
+
 
 async function zerarEstoqueProduto(cod) {
   const p = getProduto(cod);
@@ -1142,20 +1149,10 @@ function calcTotal() {
 }
 
 // Alias para compatibilidade
-function calcMultiplicador() { calcTotal(); }
+
 
 // Mostrar/ocultar campo aberto conforme tipo
-function selecionarTipo(tipo) {
-  document.getElementById('lanc-tipo').value = tipo;
-  const isCont = tipo === 'contagem';
-  const blocoAberto = document.getElementById('bloco-aberto');
-  if (blocoAberto) blocoAberto.style.display = isCont ? 'block' : 'none';
-  // Atualizar botões
-  document.getElementById('btn-tipo-entrada').className   = 'btn ' + (tipo === 'entrada'   ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-tipo-contagem').className  = 'btn ' + (tipo === 'contagem'  ? 'btn-red' : 'btn-gray');
-  // Atualizar label do campo aberto conforme unidade do produto selecionado
-  atualizarLabelAberto();
-}
+
 
 function atualizarLabelAberto() {
   const cod = document.getElementById('lanc-produto') ? document.getElementById('lanc-produto').value : '';
@@ -1325,6 +1322,7 @@ async function salvarLancamentos() {
   renderEstoque();
   limparLancamentos();
   showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  carregarHistoricoRecente();
   if (btn) btn.disabled = false;
 }
 
