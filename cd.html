@@ -147,13 +147,13 @@
   </div>
 
   <div class="tabs" id="tabs-bar">
-    <div class="tab active" onclick="showTab('estoque')">📦 Estoque</div>
-    <div class="tab" onclick="showTab('lancar')">➕ Lançar</div>
-    <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
-    <div class="tab adm-only" onclick="showTab('saidas');carregarSaidasCD()">📤 SAÍDAS</div>
-    <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
-    <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
-    <div class="tab adm-only" onclick="showTab('almoxarifado');carregarAlmox()">🏬 Almoxarifado</div>
+    <div class="tab active" onclick="showTab('estoque', this)">📦 Estoque</div>
+    <div class="tab" onclick="showTab('lancar', this)">➕ Lançar</div>
+    <div class="tab" onclick="showTab('historico', this)">📋 Histórico</div>
+    <div class="tab adm-only" onclick="showTab('saidas', this)">📤 SAÍDAS</div>
+    <div class="tab adm-only" onclick="showTab('relatorio', this)">📊 Relatório</div>
+    <div class="tab adm-only" onclick="showTab('produtos', this)">⚙️ Produtos</div>
+    <div class="tab adm-only" onclick="showTab('almoxarifado', this)">🏬 Almoxarifado</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -412,7 +412,10 @@ function iniciarApp() {
 
   carregarProdutos();
   carregarAlmox();
-  showTab('estoque');
+  // abrir aba estoque diretamente
+  var primeiraAba = document.querySelector('.tab:not(.adm-only)');
+  if (primeiraAba) primeiraAba.click();
+  else { var tel = document.getElementById('tab-estoque'); if(tel) tel.classList.add('active'); }
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -427,14 +430,18 @@ function sair() {
 }
 
 // ── TABS ──
-function showTab(name) {
+function showTab(name, el) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  var tela = document.getElementById('tab-' + name);
+  if (tela) tela.classList.add('active');
+  if (el) el.classList.add('active');
+  else if (typeof event !== 'undefined' && event && event.currentTarget) event.currentTarget.classList.add('active');
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
+  if (name === 'saidas') carregarSaidasCD();
+  if (name === 'almoxarifado') carregarAlmox();
 }
 
 // ── PRODUTOS ──
