@@ -969,32 +969,68 @@ function buscarPorCodigo() {
     });
   }
 
-  if (p) {
-    const sel = document.getElementById('lanc-produto');
-    sel.value = p.codigo;
-    sel.dispatchEvent(new Event('change'));
-    document.getElementById('scan-input').value = '';
-
-    if (pesoKg !== null) {
-      document.getElementById('lanc-qtd').value = pesoKg;
-      document.getElementById('lanc-total').textContent = pesoKg + ' kg';
-      showToast('⚖️ ' + p.nome + ' — ' + pesoKg + ' kg', 'success');
-      setTimeout(function() {
-        var btn = document.querySelector('#tab-lancar .btn-red');
-        if (btn) btn.focus();
-      }, 100);
-    } else {
-      if (!document.getElementById('lanc-qtd').value) {
-        document.getElementById('lanc-qtd').value = 1;
-      }
-      document.getElementById('lanc-qtd').focus();
-      document.getElementById('lanc-qtd').select();
-      showToast('✅ ' + p.nome, 'success');
-    }
-    beep();
-  } else {
+  if (!p) {
     showToast('Produto não encontrado! Pede pro chefe cadastrar esse código 😤', 'error');
+    return;
   }
+
+  const tipo = document.getElementById('lanc-tipo').value;
+  var qtd = 0;
+
+  if (pesoKg !== null) {
+    // Balança: usa o peso extraído direto
+    qtd = pesoKg;
+  } else {
+    // EAN normal: verifica se já tem pct × fator preenchido
+    const pct   = parseFloat(document.getElementById('lanc-pct').value)   || 0;
+    const fator = parseFloat(document.getElementById('lanc-fator').value)  || 0;
+    const aberto= parseFloat(document.getElementById('lanc-aberto') ? document.getElementById('lanc-aberto').value : 0) || 0;
+    if (pct > 0 && fator > 0) {
+      qtd = pct * fator + aberto;
+    } else if (parseFloat(document.getElementById('lanc-qtd').value) > 0) {
+      qtd = parseFloat(document.getElementById('lanc-qtd').value);
+    } else {
+      qtd = 1;
+    }
+  }
+
+  qtd = Math.round(qtd * 1000) / 1000;
+
+  // Verificar duplicata no lote
+  var dup = null;
+  for (var i = 0; i < _lancamentos.length; i++) {
+    if (_lancamentos[i].cod === p.codigo && _lancamentos[i].tipo === tipo) {
+      dup = _lancamentos[i]; break;
+    }
+  }
+
+  if (_lancamentos.length >= 15 && !dup) {
+    showToast('Limite de 15 itens!', 'error');
+    return;
+  }
+
+  if (dup) {
+    dup.qtd = Math.round((dup.qtd + qtd) * 1000) / 1000;
+  } else {
+    _lancamentos.push({ cod: p.codigo, tipo: tipo, qtd: qtd, nome: p.nome, unidade: p.unidade, categoria: p.categoria || '' });
+  }
+
+  // Limpar campos
+  document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-qtd').value = '';
+  document.getElementById('lanc-pct').value = '';
+  var fel = document.getElementById('lanc-fator'); if (fel) fel.value = p.qtd_por_pct || '';
+  var ael = document.getElementById('lanc-aberto'); if (ael) ael.value = '';
+  document.getElementById('lanc-produto').value = '';
+  var tel = document.getElementById('lanc-total'); if (tel) tel.textContent = '';
+
+  beep();
+  renderLancamentos();
+
+  var msg = pesoKg !== null
+    ? '⚖️ ' + p.nome + ' — ' + qtd + ' kg → pendente'
+    : '📥 ' + p.nome + ' — ' + qtd + ' ' + p.unidade + ' → pendente';
+  showToast(msg, 'success');
 }
 
 
