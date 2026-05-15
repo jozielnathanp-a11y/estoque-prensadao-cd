@@ -1338,476 +1338,7 @@ async function salvarLimites(codigo, unidade) {
 document.getElementById('login-usuario').focus();
 
 // Listeners do lançamento Matriz (após DOM carregado)
-document.addEventListener('DOMContentLoaded', function() {
-  const selUnidade = document.getElementById('mtz-lanc-unidade');
-  if (selUnidade) selUnidade.addEventListener('change', mtzCarregarProdutos);
-  const scanInput = document.getElementById('mtz-scan-input');
-  if (scanInput) scanInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') mtzBuscarPorCodigo(); });
-});
 
-// ── LANÇAMENTO MATRIZ ──
-let mtzPendentes = [];
-let mtzProdutosCache = {};
-let mtzCameraStream = null;
-let mtzScanLoop = null;
-let mtzBarcodeDetector = null;
-
-async function mtzCarregarProdutos() {
-  const u = document.getElementById('mtz-lanc-unidade').value;
-  const sel = document.getElementById('mtz-lanc-produto');
-  if (!u) { sel.innerHTML = '<option value="">-- Selecione a unidade primeiro --</option>'; return; }
-  const lista = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*&order=nome.asc');
-  mtzProdutosCache = {};
-  if (Array.isArray(lista)) lista.forEach(p => mtzProdutosCache[p.codigo] = p);
-  sel.innerHTML = '<option value="">-- Selecione o produto --</option>' +
-    lista.map(p => '<option value="' + p.codigo + '">' + p.nome + ' (' + fmtQ(p.estoque, p.unidade) + ')</option>').join('');
-  sel.onchange = () => {
-    const p = mtzProdutosCache[sel.value];
-    const info = document.getElementById('mtz-lanc-info');
-    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
-      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
-      info.style.display = 'block';
-    } else { info.style.display = 'none'; }
-  };
-}
-
-function mtzSelecionarTipo(tipo) {
-  document.getElementById('mtz-lanc-tipo').value = tipo;
-  document.getElementById('mtz-btn-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-gold' : 'btn-gray');
-  document.getElementById('mtz-btn-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-gold' : 'btn-gray');
-}
-
-function mtzPendentes_push(p, tipo, qtd, u) {
-  const idx = mtzPendentes.findIndex(x => x.codigo === p.codigo && x.tipo === tipo && x.unidade_loja === u);
-  if (idx >= 0) {
-    mtzPendentes[idx].qtd = parseFloat((mtzPendentes[idx].qtd + qtd).toFixed(3));
-    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(mtzPendentes[idx].qtd, p.unidade), 'success');
-  } else {
-    mtzPendentes.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, unidade_loja: u });
-    showToast('➕ ' + p.nome + ' — ' + fmtQ(qtd, p.unidade), 'success');
-  }
-  document.getElementById('mtz-lanc-qtd').value = '';
-  document.getElementById('mtz-scan-input').value = '';
-  mtzRenderPendentes();
-}
-
-function mtzAdicionarPendente() {
-  const u = document.getElementById('mtz-lanc-unidade').value;
-  const cod = document.getElementById('mtz-lanc-produto').value;
-  const tipo = document.getElementById('mtz-lanc-tipo').value;
-  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
-  if (!u) { showToast('Selecione a unidade!', 'error'); return; }
-  if (!cod) { showToast('Selecione o produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
-  const p = mtzProdutosCache[cod];
-  mtzPendentes_push(p, tipo, qtd, u);
-}
-
-function mtzRenderPendentes() {
-  const el = document.getElementById('mtz-lista-pendentes');
-  const card = document.getElementById('mtz-card-pendentes');
-  const badge = document.getElementById('mtz-badge-pendentes');
-  badge.textContent = mtzPendentes.length;
-  card.style.display = mtzPendentes.length > 0 ? 'block' : 'none';
-  if (!mtzPendentes.length) { el.innerHTML = ''; return; }
-  const labels = { cd: '🏭 CD', centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🏪 Boqueirão' };
-  el.innerHTML = mtzPendentes.map((item, i) => {
-    const icone = item.tipo === 'contagem' ? '📊' : '📥';
-    const cor = item.tipo === 'contagem' ? '#1565c0' : '#2e7d32';
-    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
-      + '<div style="font-size:0.75rem;color:#aaa;">' + (labels[item.unidade_loja]||item.unidade_loja) + ' · ' + (item.tipo==='contagem'?'Contagem':'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
-      + '</div>'
-      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="mtzEditarPendente(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
-      + '<button onclick="mtzRemoverPendente(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;">🗑️</button>'
-      + '</div>';
-  }).join('');
-}
-
-function mtzEditarPendente(i, val) {
-  const qtd = parseFloat(val);
-  if (qtd > 0) { mtzPendentes[i].qtd = qtd; }
-}
-
-function mtzRemoverPendente(i) {
-  const nome = mtzPendentes[i].nome;
-  mtzPendentes.splice(i, 1);
-  mtzRenderPendentes();
-  showToast('🗑️ ' + nome + ' removido', 'error');
-}
-
-async function mtzConfirmarTodos() {
-  if (!mtzPendentes.length) return;
-  const btn = document.querySelector('[onclick="mtzConfirmarTodos()"]');
-  btn.textContent = '⏳ Salvando...';
-  btn.disabled = true;
-  for (const item of mtzPendentes) {
-    const lista = await supa('GET', 'produtos', null, 'codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja + '&select=estoque');
-    if (!lista || !lista.length) continue;
-    const est = parseFloat(lista[0].estoque) || 0;
-    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
-    const opts = {
-      method: 'PATCH',
-      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ estoque: novoEst })
-    };
-    await fetch(SUPA_URL + '/rest/v1/produtos?codigo=eq.' + item.codigo + '&unidade_loja=eq.' + item.unidade_loja, opts);
-    await supa('POST', 'movimentacoes', {
-      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
-      qtd: item.qtd, unidade: item.unidade,
-      colaborador: usuarioLogado.usuario,
-      obs: item.tipo === 'contagem' ? 'Contagem Chefão' : 'Entrada Chefão',
-      unidade_loja: item.unidade_loja,
-      estoque_anterior: est, novo_estoque: novoEst
-    });
-  }
-  mtzPendentes = [];
-  mtzRenderPendentes();
-  todosEstoques = await supa('GET', 'produtos', 'select=*&order=nome.asc');
-  renderEstoque();
-  showToast('✅ Todos confirmados!', 'success');
-  btn.textContent = '✅ CONFIRMAR TUDO';
-  btn.disabled = false;
-}
-
-async function mtzBuscarPorCodigo() {
-  const cod = document.getElementById('mtz-scan-input').value.trim();
-  if (!cod) return;
-  const u = document.getElementById('mtz-lanc-unidade').value;
-  if (!u) { showToast('Selecione a unidade primeiro!', 'error'); return; }
-
-  // Carregar cache se vazio
-  if (!Object.keys(mtzProdutosCache).length) await mtzCarregarProdutos();
-
-  const tipo = document.getElementById('mtz-lanc-tipo').value;
-  let produto = null;
-  let pesoKg = null;
-
-  if (cod.length === 13 && cod[0] === '2') {
-    // EAN-13 peso variavel: pos 1-6 = produto, pos 7-11 = peso
-    const prefixo = cod.substring(1, 7);
-    pesoKg = parseInt(cod.substring(7, 12), 10) / 1000;
-    produto = Object.values(mtzProdutosCache).find(p =>
-      p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
-    if (!produto) {
-      const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.' + u + '&select=*');
-      if (Array.isArray(res)) {
-        produto = res.find(p => p.codigo.replace('_' + u, '').substring(0, 6) === prefixo);
-        if (produto) mtzProdutosCache[produto.codigo] = produto;
-      }
-    }
-  } else {
-    produto = mtzProdutosCache[cod] || mtzProdutosCache[cod + '_' + u]
-      || Object.values(mtzProdutosCache).find(p => p.codigo.replace('_' + u, '') === cod);
-    if (!produto) {
-      const res = await supa('GET', 'produtos', null, 'codigo=eq.' + cod + '_' + u + '&select=*');
-      if (Array.isArray(res) && res.length) { produto = res[0]; mtzProdutosCache[produto.codigo] = produto; }
-    }
-  }
-
-  document.getElementById('mtz-scan-input').value = '';
-
-  if (produto) {
-    beep();
-    if (pesoKg && produto.unidade === 'kg') {
-      // Kg com peso no código: lança direto
-      mtzPendentes_push(produto, tipo, pesoKg, u);
-    } else if (produto.unidade !== 'kg') {
-      // Unidade (bebidas, embalagens): lança direto com qtd_por_pct
-      const pctPadrao = parseFloat(produto.qtd_por_pct) || 1;
-      mtzPendentes_push(produto, tipo, pctPadrao, u);
-    } else {
-      // Kg sem peso no código: abre campo para digitar
-      document.getElementById('mtz-lanc-produto-cod').value = produto.codigo;
-      document.getElementById('mtz-lanc-nome').textContent = '⚖️ ' + produto.nome + ' (kg)';
-      document.getElementById('mtz-lanc-qtd').value = '';
-      document.getElementById('mtz-lanc-pct').value = '';
-      document.getElementById('mtz-lanc-fator').value = '';
-      document.getElementById('mtz-lanc-total').textContent = '—';
-      document.getElementById('mtz-manual-area').style.display = 'block';
-      setTimeout(() => document.getElementById('mtz-lanc-qtd').focus(), 100);
-      showToast('⚖️ ' + produto.nome + ' — informe o peso', '');
-    }
-  } else {
-    showToast('Produto não encontrado nessa unidade! Verifica o cadastro 😤', 'error');
-  }
-}
-
-function mtzCalcMulti() {
-  const pct = parseFloat(document.getElementById('mtz-lanc-pct').value) || 0;
-  const fator = parseFloat(document.getElementById('mtz-lanc-fator').value) || 0;
-  const total = document.getElementById('mtz-lanc-total');
-  if (pct > 0 && fator > 0) {
-    const result = pct * fator;
-    total.textContent = result % 1 === 0 ? result : result.toFixed(3);
-    document.getElementById('mtz-lanc-qtd').value = result.toFixed(3);
-  } else {
-    total.textContent = '—';
-  }
-}
-
-function mtzConfirmarManual() {
-  const cod = document.getElementById('mtz-lanc-produto-cod').value;
-  const qtd = parseFloat(document.getElementById('mtz-lanc-qtd').value);
-  const u = document.getElementById('mtz-lanc-unidade').value;
-  const tipo = document.getElementById('mtz-lanc-tipo').value;
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
-  const p = mtzProdutosCache[cod];
-  mtzPendentes_push(p, tipo, qtd, u);
-  document.getElementById('mtz-manual-area').style.display = 'none';
-  document.getElementById('mtz-lanc-qtd').value = '';
-  document.getElementById('mtz-lanc-pct').value = '';
-  document.getElementById('mtz-lanc-fator').value = '';
-  document.getElementById('mtz-lanc-total').textContent = '—';
-}
-
-async function mtzAbrirCamera() {
-  if (!('BarcodeDetector' in window)) { showToast('Câmera não suportada. Use o campo de texto.', 'error'); return; }
-  try {
-    mtzCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    const video = document.getElementById('mtz-camera-video');
-    video.srcObject = mtzCameraStream;
-    document.getElementById('mtz-camera-area').style.display = 'block';
-    mtzBarcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
-    mtzScanLoop = setInterval(async () => {
-      try {
-        const barcodes = await mtzBarcodeDetector.detect(video);
-        if (barcodes.length > 0) {
-          const cod = barcodes[0].rawValue;
-          mtzFecharCamera();
-          document.getElementById('mtz-scan-input').value = cod;
-          mtzBuscarPorCodigo();
-        }
-      } catch(e) {}
-    }, 500);
-  } catch(e) { showToast('Erro ao acessar câmera', 'error'); }
-}
-
-function mtzFecharCamera() {
-  if (mtzScanLoop) { clearInterval(mtzScanLoop); mtzScanLoop = null; }
-  if (mtzCameraStream) { mtzCameraStream.getTracks().forEach(t => t.stop()); mtzCameraStream = null; }
-  document.getElementById('mtz-camera-area').style.display = 'none';
-}
-</script>
-
-    <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-    <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
-    <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:110px;"></div>
-    <div style="display:flex;gap:8px;margin-top:18px;">
-      <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
-      <button id="tut-next" onclick="tutNext()" style="flex:2;background:#b8860b;border:none;color:#000;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
-    </div>
-    <a href="https://wa.me/5542988819420?text=Oi,%20preciso%20de%20ajuda%20no%20sistema%20do%20Chefão!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda</a>
-  </div>
-</div>
-
-
-<!-- CHATBOT -->
-<div id="chat-btn" onclick="toggleChat()" style="position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;z-index:8000;box-shadow:0 4px 16px rgba(0,0,0,0.4);">💬</div>
-
-<div id="chat-box" style="display:none;position:fixed;bottom:84px;right:16px;width:calc(100% - 32px);max-width:360px;background:#111;border:1px solid #333;border-radius:16px;z-index:8000;box-shadow:0 8px 32px rgba(0,0,0,0.6);overflow:hidden;">
-  <!-- Header -->
-  <div style="background:#1a1a1a;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:36px;height:36px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">🤖</div>
-      <div>
-        <div style="font-weight:700;font-size:0.88rem;color:#fff;">Assistente Prensadão</div>
-        <div style="font-size:0.7rem;color:#4caf50;">● Online</div>
-      </div>
-    </div>
-    <button onclick="toggleChat()" style="background:none;border:none;color:#555;font-size:1.3rem;cursor:pointer;">✕</button>
-  </div>
-  <!-- Mensagens -->
-  <div id="chat-msgs" style="padding:12px;height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;">
-    <div class="chat-bot-msg">Salve! 👋 Tô aqui pra tirar suas dúvidas sobre o sistema.<br><br>Digita o que você precisa ou escolhe uma opção abaixo 👇</div>
-    <div id="chat-sugestoes" style="display:flex;flex-direction:column;gap:6px;"></div>
-  </div>
-  <!-- Input -->
-  <div style="padding:10px 12px;border-top:1px solid #222;display:flex;gap:8px;">
-    <input id="chat-input" type="text" placeholder="Digita sua dúvida..." style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:8px 12px;font-size:0.85rem;" onkeydown="if(event.key==='Enter') enviarChat()" />
-    <button onclick="enviarChat()" style="background:#25d366;border:none;color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:1rem;">➤</button>
-  </div>
-</div>
-
-<style>
-.chat-bot-msg { background:#1a1a1a;border:1px solid #2a2a2a;color:#ccc;padding:10px 12px;border-radius:12px 12px 12px 4px;font-size:0.83rem;line-height:1.6;max-width:92%;align-self:flex-start; }
-.chat-user-msg { background:#1565c0;color:#fff;padding:10px 12px;border-radius:12px 12px 4px 12px;font-size:0.83rem;line-height:1.6;max-width:80%;align-self:flex-end; }
-.chat-sug { background:#1a1a1a;border:1px solid #333;color:#aaa;padding:8px 12px;border-radius:10px;font-size:0.8rem;cursor:pointer;text-align:left;transition:all 0.15s; }
-.chat-sug:hover { background:#252525;color:#fff; }
-</style>
-
-<script>
-var _RESPOSTAS = [{"q": "Como faço uma entrada?", "tags": ["entrada", "entrar", "chegou", "produto chegou", "como lancar", "lançar entrada"], "r": "📥 <b>Como fazer uma ENTRADA:</b><br><br>1️⃣ Vai na aba <b>➕ LANÇAR</b><br>2️⃣ Seleciona <b>ENTRADA</b><br>3️⃣ Escaneia o código de barras ou digita o nome<br>4️⃣ Digita a quantidade em <b>PCT (pacotes)</b><br>5️⃣ Clica <b>ADICIONAR</b><br>6️⃣ Confere a lista de pendentes e clica <b>CONFIRMAR TUDO</b><br><br>⚠️ Não feche o app antes de confirmar!"}, {"q": "O que é contagem?", "tags": ["contagem", "contar", "o que é contagem", "diferença entrada contagem"], "r": "📊 <b>O que é CONTAGEM:</b><br><br>Contagem é quando você <b>confere o que tem fisicamente</b> no estoque e registra no sistema.<br><br>• <b>ENTRADA</b> = chegou produto novo do CD<br>• <b>CONTAGEM</b> = você tá verificando o que tem agora<br><br>Na contagem você digita o total real que existe — não o que chegou. Ex: tem 3kg de frango no freezer → digita 3."}, {"q": "O que é PCT?", "tags": ["pct", "pacote", "o que é pct", "quantidade pct", "o que significa pct"], "r": "📦 <b>O que é PCT (Pacote):</b><br><br>PCT é a unidade de compra do produto.<br><br>Exemplos:<br>• Coca Cola vem em caixa de <b>6 und</b> → 1 PCT = 6<br>• Frango vem em pacote de <b>3kg</b> → 1 PCT = 3kg<br>• Pão vem em pacote de <b>4 und</b> → 1 PCT = 4<br><br>Na entrada você digita <b>quantos pacotes chegaram</b> — o sistema multiplica automaticamente! 😊"}, {"q": "Como funciona a multiplicação?", "tags": ["multiplicação", "multiplicar", "calculo", "cálculo", "conta", "como calcula"], "r": "✖️ <b>Como funciona a multiplicação:</b><br><br>Quando você digita a quantidade na entrada, o sistema multiplica automaticamente pelo PCT do produto.<br><br>Exemplo:<br>• Chegaram <b>2 caixas</b> de Coca Cola (PCT = 6)<br>• Você digita: <b>2</b><br>• O sistema lança: <b>12 unidades</b> no estoque<br><br>Você só precisa contar os pacotes — o sistema faz o resto! 🧮"}, {"q": "Por que preciso colocar quantidade?", "tags": ["porque quantidade", "por que quantidade", "pra que quantidade", "quantidade obrigatorio"], "r": "🔢 <b>Por que informar a quantidade:</b><br><br>A quantidade é essencial pra o sistema saber quanto tem em estoque.<br><br>Sem ela, não dá pra:<br>• Saber quando tá acabando 🔴<br>• Gerar pedido automático 🛒<br>• Controlar o que saiu do CD 📤<br><br>É o coração do sistema — cada lançamento conta!"}, {"q": "Como tiro um relatório?", "tags": ["relatorio", "relatório", "extrato", "historico", "histórico", "como ver", "ver lançamentos"], "r": "📊 <b>Como tirar relatório:</b><br><br><b>Operador:</b><br>→ Aba <b>📋 ROLO</b> — vê tudo que foi lançado no dia. Muda a data pra ver outros dias.<br><br><b>ADM:</b><br>→ Aba <b>📊 EXTRATO</b> — relatório completo com totais por produto. Dá pra exportar pro WhatsApp.<br><br>Filtra por data e tipo (entrada ou contagem)."}, {"q": "O que significa o mínimo e máximo?", "tags": ["minimo", "mínimo", "maximo", "máximo", "min", "max", "limite", "o que é min", "o que é max"], "r": "📏 <b>O que são Mínimo e Máximo:</b><br><br>• <b>Mínimo</b> = quantidade mínima que deve ter em estoque. Abaixo disso fica amarelo ⚠️ no sistema.<br>• <b>Máximo</b> = capacidade máxima de armazenamento.<br><br>Quem define esses valores é o <b>ADM ou o Chefão</b> no sistema.<br><br>Se estiver vermelho 🔴 = zerou. Se estiver amarelo 🟡 = tá no limite e precisa pedir mais!"}, {"q": "Como sei meu mínimo e máximo?", "tags": ["como ver min", "como ver max", "ver minimo", "ver maximo", "onde fica minimo"], "r": "📏 <b>Como ver o Mínimo e Máximo:</b><br><br>Na aba <b>📦 TRAMPO GERAL</b>, cada produto mostra:<br>• O estoque atual<br>• A cor indica se está OK, no limite ou zerado<br><br>Os valores de mín/máx são configurados pelo ADM.<br><br>Se quiser saber os valores exatos, <b>chama o Josiel</b> pelo botão abaixo! 👇"}, {"q": "Produto não aparece ou código errado", "tags": ["produto não aparece", "nao aparece", "código errado", "codigo errado", "produto errado", "não acha", "nao acha", "produto sumiu"], "r": "🔍 <b>Produto não aparece / código errado:</b><br><br>Isso pode acontecer quando:<br>• O produto ainda não foi cadastrado no sistema<br>• O código de barras foi alterado pelo fornecedor<br>• O produto foi cadastrado com nome diferente<br><br>✅ Tenta buscar pelo <b>nome</b> em vez do código.<br><br>Se não achar mesmo assim, <b>chama o Josiel</b> pelo botão abaixo pra cadastrar! 👇"}, {"q": "Esqueci a senha", "tags": ["senha", "esqueci senha", "nao lembro senha", "não lembro senha", "senha errada", "não consigo entrar"], "r": "🔑 <b>Esqueceu a senha:</b><br><br>Senhas são gerenciadas pelo Josiel.<br><br>Manda mensagem pra ele pelo botão abaixo que ele resolve rapidinho! 👇"}, {"q": "O que significa vermelho ou amarelo?", "tags": ["vermelho", "amarelo", "verde", "cor", "cores", "o que significa cor", "por que vermelho", "por que amarelo"], "r": "🎨 <b>O que significam as cores:</b><br><br>🔴 <b>Vermelho</b> = estoque ZERADO. Precisa fazer entrada urgente!<br>🟡 <b>Amarelo</b> = estoque abaixo do mínimo. Tá acabando, faz o pedido!<br>🟢 <b>Verde</b> = tá suave, estoque OK.<br><br>Essas cores aparecem na aba <b>📦 TRAMPO GERAL</b>."}, {"q": "Como escanear o código?", "tags": ["escanear", "scanner", "câmera", "camera", "como escanear", "codigo barras", "código de barras"], "r": "📷 <b>Como escanear o código de barras:</b><br><br>1️⃣ Na aba <b>➕ LANÇAR</b>, clica no campo de código<br>2️⃣ Se o celular tiver câmera disponível, aparece opção de escanear<br>3️⃣ Aponta pro código de barras do produto<br>4️⃣ O sistema preenche automaticamente!<br><br>💡 Dica: deixa o código bem iluminado pra leitura ser mais rápida."}, {"q": "Como sei o que vai chegar de produto?", "tags": ["vai chegar", "o que vai chegar", "produto vai chegar", "pedido", "precisao", "precisão", "o que pedir", "o que precisa", "falta produto", "o que falta"], "r": "🛒 <b>Como saber o que vai chegar:</b><br><br>O sistema tem a aba <b>🛒 PRECISÃO</b> (só no Chefão e ADM) que mostra automaticamente o que precisa ser pedido.<br><br>Ela calcula com base no estoque mínimo de cada produto:<br>• Se tiver abaixo do mínimo → aparece na lista de pedido<br>• Mostra a quantidade sugerida pra pedir<br><br>Pra operadores: quando um produto ficar <b>🔴 vermelho ou 🟡 amarelo</b> na aba TRAMPO GERAL, é sinal que tá chegando pedido em breve — fala com o Josiel ou ADM!"}];
-var _chatAberto = false;
-
-var _SUGESTOES = [
-  "O que é entrada?",
-  "O que é contagem?",
-  "O que é PCT?",
-  "Como funciona a multiplicação?",
-  "Como tiro um relatório?",
-  "O que significa mínimo e máximo?",
-  "Como sei o que vai chegar de produto?",
-  "Produto não aparece",
-  "O que significa vermelho ou amarelo?",
-];
-
-function toggleChat() {
-  _chatAberto = !_chatAberto;
-  document.getElementById('chat-box').style.display = _chatAberto ? 'flex' : 'none';
-  document.getElementById('chat-box').style.flexDirection = 'column';
-  if (_chatAberto) {
-    renderSugestoes();
-    setTimeout(function() { document.getElementById('chat-input').focus(); }, 200);
-  }
-}
-
-function renderSugestoes() {
-  var el = document.getElementById('chat-sugestoes');
-  el.innerHTML = _SUGESTOES.map(function(s) {
-    return '<button class="chat-sug" onclick="responderSugestao(' + JSON.stringify(s) + ')">' + s + '</button>';
-  }).join('');
-}
-
-function adicionarMsg(texto, tipo) {
-  var msgs = document.getElementById('chat-msgs');
-  var div = document.createElement('div');
-  div.className = tipo === 'user' ? 'chat-user-msg' : 'chat-bot-msg';
-  div.innerHTML = texto;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function responderSugestao(pergunta) {
-  document.getElementById('chat-sugestoes').innerHTML = '';
-  adicionarMsg(pergunta, 'user');
-  setTimeout(function() { buscarResposta(pergunta); }, 300);
-}
-
-function enviarChat() {
-  var input = document.getElementById('chat-input');
-  var texto = input.value.trim();
-  if (!texto) return;
-  input.value = '';
-  document.getElementById('chat-sugestoes').innerHTML = '';
-  adicionarMsg(texto, 'user');
-  setTimeout(function() { buscarResposta(texto); }, 300);
-}
-
-function buscarResposta(pergunta) {
-  var p = pergunta.toLowerCase();
-  var melhor = null;
-  var melhorScore = 0;
-
-  for (var i = 0; i < _RESPOSTAS.length; i++) {
-    var r = _RESPOSTAS[i];
-    var score = 0;
-    for (var j = 0; j < r.tags.length; j++) {
-      if (p.includes(r.tags[j])) {
-        score += r.tags[j].length; // prioriza tags mais longas/específicas
-      }
-    }
-    if (score > melhorScore) {
-      melhorScore = score;
-      melhor = r;
-    }
-  }
-
-  if (melhor && melhorScore > 0) {
-    adicionarMsg(melhor.r, 'bot');
-    // Oferecer mais opções
-    setTimeout(function() {
-      adicionarMsg('Isso ajudou? Tem mais alguma dúvida? 😊<br><br><button class="chat-sug" onclick="mostrarTodasOpcoes()" style="margin-top:4px;">Ver outras dúvidas</button>', 'bot');
-    }, 600);
-  } else {
-    // Não encontrou resposta
-    var msgWpp = 'Oi Josiel, tenho uma duvida: ' + pergunta;
-    var wppUrl = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msgWpp);
-    adicionarMsg(
-      'Hmm, essa eu não sei responder não, mano! 🤔<br><br>Mas o Josiel resolve — clica aí pra chamar ele diretamente:<br><br><a href="' + wppUrl + '" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:8px;padding:8px 12px;text-decoration:none;font-size:0.82rem;font-weight:700;margin-top:4px;">💬 Chamar Josiel no WhatsApp</a>',
-      'bot'
-    );
-  }
-}
-
-function mostrarTodasOpcoes() {
-  adicionarMsg('Escolhe aí o que você quer saber:', 'bot');
-  var msgs = document.getElementById('chat-msgs');
-  var div = document.createElement('div');
-  div.style.cssText = 'display:flex;flex-direction:column;gap:6px;align-self:stretch;';
-  div.innerHTML = _SUGESTOES.map(function(s) {
-    return '<button class="chat-sug" onclick="responderSugestao(' + JSON.stringify(s) + ')">' + s + '</button>';
-  }).join('');
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-</script>
-
-<!-- FEEDBACK BTN -->
-<div id="feedback-btn" onclick="toggleFeedback()" style="position:fixed;bottom:84px;right:20px;width:44px;height:44px;border-radius:50%;background:#1a1a2e;border:2px solid #7c4dff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;z-index:7999;box-shadow:0 4px 16px rgba(0,0,0,0.4);" title="Feedback">💡</div>
-
-<!-- FEEDBACK PANEL -->
-<div id="feedback-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:8500;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#0d0d0d;border:2px solid #7c4dff;border-radius:18px;width:100%;max-width:400px;padding:24px 20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#7c4dff;letter-spacing:2px;">💡 FEEDBACK</span>
-      <button onclick="toggleFeedback()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
-    </div>
-    <p style="font-size:0.78rem;color:#555;margin-bottom:16px;">Encontrou um erro ou tem uma sugestão? Manda aqui — vai direto pro Josiel!</p>
-
-    <!-- Tipo -->
-    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">TIPO</label>
-    <div style="display:flex;gap:8px;margin:8px 0 16px;">
-      <button id="fb-tipo-erro" onclick="setFbTipo('erro')" style="flex:1;background:#2a0a0a;border:2px solid #b71c1c;color:#ef5350;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">🐛 Erro</button>
-      <button id="fb-tipo-sugestao" onclick="setFbTipo('sugestao')" style="flex:1;background:#0a2a0a;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">💡 Sugestão</button>
-      <button id="fb-tipo-elogio" onclick="setFbTipo('elogio')" style="flex:1;background:#1a1200;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">⭐ Elogio</button>
-    </div>
-
-    <!-- Mensagem -->
-    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">MENSAGEM</label>
-    <textarea id="fb-texto" placeholder="Descreve aqui o que aconteceu ou a sua ideia..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:12px;font-size:0.88rem;line-height:1.5;resize:none;height:110px;margin-top:8px;box-sizing:border-box;"></textarea>
-
-    <!-- Quem é -->
-    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;margin-top:12px;display:block;">SEU NOME <span style="color:#444;font-weight:400;">(opcional)</span></label>
-    <input id="fb-nome" type="text" placeholder="Ex: Gabriel, Ruan..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px 12px;font-size:0.85rem;margin-top:8px;box-sizing:border-box;" />
-
-    <button onclick="enviarFeedback()" style="width:100%;margin-top:16px;background:#7c4dff;border:none;color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;">📤 ENVIAR FEEDBACK</button>
-    <div id="fb-status" style="text-align:center;font-size:0.8rem;color:#4caf50;margin-top:8px;min-height:18px;"></div>
-  </div>
-</div>
-
-<script>
-var _fbTipo = 'erro';
-
-function toggleFeedback() {
-  var p = document.getElementById('feedback-panel');
-  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
-  p.style.alignItems = 'center';
-  p.style.justifyContent = 'center';
-  if (p.style.display === 'flex') setFbTipo('erro');
-}
-
-function setFbTipo(tipo) {
-  _fbTipo = tipo;
-  var estilos = {
-    'erro':     { bg: '#2a0a0a', border: '2px solid #b71c1c', color: '#ef5350' },
-    'sugestao': { bg: '#0a1a2a', border: '2px solid #1565c0', color: '#42a5f5' },
-    'elogio':   { bg: '#1a1200', border: '2px solid #f9a825', color: '#f9a825' },
-  };
-  ['erro','sugestao','elogio'].forEach(function(t) {
-    var btn = document.getElementById('fb-tipo-' + t);
-    var s = estilos[t];
-    if (t === tipo) {
-      btn.style.background = s.bg;
-      btn.style.border = s.border;
-      btn.style.color = s.color;
-    } else {
-      btn.style.background = '#111';
-      btn.style.border = '1px solid #333';
-      btn.style.color = '#555';
-    }
-  });
 }
 
 function enviarFeedback() {
@@ -1850,56 +1381,60 @@ function enviarFeedback() {
   </div>
 </div>
 
+
 <!-- TUTORIAL -->
-<div id="tut-ov" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;width:calc(100vw - 32px);max-width:420px;background:#0d0d0d;border:2px solid #b8860b;border-radius:18px;padding:24px 20px;box-shadow:0 8px 40px rgba(0,0,0,0.7);max-height:85vh;overflow-y:auto;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#b8860b;letter-spacing:2px;">COMO USAR</span>
-    <button onclick="fecharTut()" style="background:#1a1a1a;border:1px solid #333;color:#aaa;font-size:1rem;width:30px;height:30px;border-radius:50%;cursor:pointer;line-height:1;">✕</button>
+
+
+<!-- TUTORIAL -->
+
+
+<!-- TUTORIAL v2 -->
+<div id="tut-ov" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;width:calc(100vw - 32px);max-width:400px;background:#0d0d0d;border:2px solid #b8860b;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.8);overflow:hidden;">
+  <div style="padding:18px 18px 0;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:1rem;font-weight:900;color:#b8860b;letter-spacing:2px;text-transform:uppercase;">Como Usar</span>
+    <button onclick="document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut2_ok_matriz','1')" style="background:#1a1a1a;border:1px solid #333;color:#aaa;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
   </div>
-  <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-  <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
-  <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:100px;"></div>
-  <div style="display:flex;gap:8px;margin-top:18px;">
-    <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
-    <button id="tut-next" onclick="tutNext()" style="flex:2;background:#b8860b;border:none;color:#000;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
+  <div style="padding:10px 18px 4px;display:flex;gap:5px;" id="tut-dots"></div>
+  <div style="padding:4px 18px 0;font-size:1.05rem;font-weight:800;color:#fff;" id="tut-tit"></div>
+  <div style="padding:8px 18px 16px;font-size:0.85rem;color:#bbb;line-height:1.7;min-height:80px;" id="tut-txt"></div>
+  <div style="padding:0 18px 12px;display:flex;gap:8px;">
+    <button onclick="_tutPrev()" id="tut-prev" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#ccc;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">← Voltar</button>
+    <button onclick="_tutNext()" id="tut-next" style="flex:2;background:#b8860b;border:none;color:#000;border-radius:10px;padding:9px;cursor:pointer;font-weight:800;font-size:0.85rem;">Próximo →</button>
   </div>
-  <a href="https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20do%20MATRIZ!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda — falar com Josiel</a>
+  <div style="padding:0 18px 16px;">
+    <a href="https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20MATRIZ!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:#0a1a0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:9px;text-decoration:none;font-size:0.8rem;font-weight:700;">💬 Chamar Josiel no WhatsApp</a>
+  </div>
 </div>
 <script>
-var _TUT_OP=[["\ud83d\udce6 TRAMPO GERAL", "Estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade ou categoria.<br>Toca no \u270f\ufe0f pra corrigir qualquer produto."], ["\u2795 LAN\u00c7AR", "Lan\u00e7a em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 tipo \u2192 produto \u2192 quantidade \u2192 CONFIRMAR."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado. \u00datil pra auditar operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Pedido inteligente!<br><br>Calcula o que precisa comprar com base no estoque m\u00ednimo. Ajusta e exporta pro WhatsApp."], ["\u2699\ufe0f LIMITES", "Define M\u00ednimo e M\u00e1ximo de cada produto por unidade.<br><br>\u26a0\ufe0f Sem m\u00ednimo definido, o sistema n\u00e3o alerta quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque de embalagens.<br><br>\u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>Sugest\u00e3o de compra aparece autom\u00e1tico quando abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico do que o CD enviou pras unidades.<br><br>Filtra por data e unidade."], ["\u2795 CADASTRAR", "Cadastra produtos novos em v\u00e1rias unidades de uma vez.<br><br>Nome \u2192 C\u00f3digo \u2192 Onde fica (CD/Almox) \u2192 Quais unidades \u2192 Categoria \u2192 CADASTRAR"], ["\ud83d\udd25 DICAS", "\u2705 Configure limites antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar<br>\ud83d\uded2 Use Precis\u00e3o toda semana pro pedido<br>\u2753 Algo errado? Fala com a Zapia!"]];
-var _TUT_ADM=[["\ud83d\udce6 TRAMPO GERAL", "Estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade ou categoria.<br>Toca no \u270f\ufe0f pra corrigir qualquer produto."], ["\u2795 LAN\u00c7AR", "Lan\u00e7a em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 tipo \u2192 produto \u2192 quantidade \u2192 CONFIRMAR."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado. \u00datil pra auditar operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Pedido inteligente!<br><br>Calcula o que precisa comprar com base no estoque m\u00ednimo. Ajusta e exporta pro WhatsApp."], ["\u2699\ufe0f LIMITES", "Define M\u00ednimo e M\u00e1ximo de cada produto por unidade.<br><br>\u26a0\ufe0f Sem m\u00ednimo definido, o sistema n\u00e3o alerta quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque de embalagens.<br><br>\u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>Sugest\u00e3o de compra aparece autom\u00e1tico quando abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico do que o CD enviou pras unidades.<br><br>Filtra por data e unidade."], ["\u2795 CADASTRAR", "Cadastra produtos novos em v\u00e1rias unidades de uma vez.<br><br>Nome \u2192 C\u00f3digo \u2192 Onde fica (CD/Almox) \u2192 Quais unidades \u2192 Categoria \u2192 CADASTRAR"], ["\ud83d\udd25 DICAS", "\u2705 Configure limites antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar<br>\ud83d\uded2 Use Precis\u00e3o toda semana pro pedido<br>\u2753 Algo errado? Fala com a Zapia!"]];
-var _TUT=_TUT_OP;
-var _tStep=0;
-var _tutChave='tut_ok_chefao';
-function abrirTutorial(){
-  var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
-  _TUT=isAdm?_TUT_ADM:_TUT_OP;
-  _tutChave=isAdm?'tut_ok_chefao':'tut_ok_chefao';
-  _tStep=0;
-  document.getElementById('tut-ov').style.display='block';
-  _rTut();
-}
-function fecharTut(){
-  document.getElementById('tut-ov').style.display='none';
-  localStorage.setItem(_tutChave,'1');
-}
-function tutNext(){if(_tStep<_TUT.length-1){_tStep++;_rTut();}else fecharTut();}
-function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
-function _rTut(){
-  var p=_TUT[_tStep];
-  document.getElementById('tut-tit').textContent=p[0];
-  document.getElementById('tut-txt').innerHTML=p[1];
-  document.getElementById('tut-dots').innerHTML=_TUT.map(function(_,i){
-    return '<div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:'+(i===_tStep?'#b8860b':'#2a2a2a')+';border:1px solid '+(i===_tStep?'#b8860b':'#444')+'"></div>';
-  }).join('');
-  document.getElementById('tut-prev').style.opacity=_tStep===0?'0.25':'1';
-  document.getElementById('tut-next').textContent=_tStep===_TUT.length-1?'✅ ENTENDIDO!':'PRÓXIMO →';
-}
-document.addEventListener('DOMContentLoaded',function(){
-  var isAdm=(typeof usuarioLogado!=='undefined'&&usuarioLogado&&usuarioLogado.perfil==='adm');
-  var chave=isAdm?'tut_ok_chefao':'tut_ok_chefao';
-  if(!localStorage.getItem(chave)){setTimeout(abrirTutorial,1200);}
-});
+(function(){
+  var TUT=[["📦 TRAMPO GERAL", "Estoque de TODAS as unidades.<br><br>Filtra por unidade ou categoria. Toca em ✏️ pra corrigir."], ["🛒 PRECISÃO", "Pedido inteligente — calcula o que precisa comprar baseado no mínimo de cada produto."], ["➕ CADASTRAR", "Cadastra produtos novos em várias unidades de uma vez."], ["⚙️ LIMITES", "Define Mínimo e Máximo por produto/unidade. Sem isso o sistema não alerta!"], ["📊 EXTRATO", "Histórico completo. Filtra por data e unidade."], ["🔥 DICAS", "✅ Configure limites antes de cobrar alertas dos operadores<br>🛒 Use Precisão toda semana pro pedido<br>❓ Dúvida? Fala com a Zapia!"]];
+  var step=0;
+  var CHAVE='tut2_ok_matriz';
+  function render(){
+    var p=TUT[step];
+    document.getElementById('tut-tit').textContent=p[0];
+    document.getElementById('tut-txt').innerHTML=p[1];
+    document.getElementById('tut-prev').style.opacity=step===0?'0.3':'1';
+    document.getElementById('tut-next').textContent=step===TUT.length-1?'✅ Entendido!':'Próximo →';
+    document.getElementById('tut-dots').innerHTML=TUT.map(function(_,i){
+      return '<div style="width:8px;height:8px;border-radius:50%;background:'+(i===step?'#b8860b':'#2a2a2a')+';border:1px solid '+(i===step?'#b8860b':'#444')+'"></div>';
+    }).join('');
+  }
+  window.abrirTutorial=function(){
+    step=0;
+    document.getElementById('tut-ov').style.display='block';
+    render();
+  };
+  window._tutNext=function(){
+    if(step<TUT.length-1){step++;render();}
+    else{document.getElementById('tut-ov').style.display='none';localStorage.setItem(CHAVE,'1');}
+  };
+  window._tutPrev=function(){if(step>0){step--;render();}}
+  // Abrir após login — chamado por iniciarApp ou fazerLogin
+  window._verificarTutorial=function(){
+    if(!localStorage.getItem(CHAVE)){setTimeout(abrirTutorial,1200);}
+  };
+})();
 </script>
 </body>
 </html>
