@@ -1590,12 +1590,6 @@ function mtzFecharCamera() {
 }
 </script>
 
-<div id="tut-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#0d0d0d;border:2px solid #b8860b;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;max-height:90vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#b8860b;letter-spacing:2px;">👑 COMO USAR — CHEFÃO</span>
-      <button onclick="fecharTut()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
-    </div>
     <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
     <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
     <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:110px;"></div>
@@ -1606,23 +1600,6 @@ function mtzFecharCamera() {
     <a href="https://wa.me/5542988819420?text=Oi,%20preciso%20de%20ajuda%20no%20sistema%20do%20Chefão!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda</a>
   </div>
 </div>
-<script>
-var _TUT_CHEFAO=[["\ud83d\udce6 TRAMPO GERAL", "Aqui voc\u00ea v\u00ea o estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade (Centro, Delivery, Boqueir\u00e3o, CD) ou por categoria.<br>\ud83d\udd34 Vermelho = zerado \u00b7 \ud83d\udfe1 Amarelo = abaixo do m\u00ednimo<br><br>Toca no \u270f\ufe0f pra corrigir estoque de qualquer unidade."], ["\u2795 LAN\u00c7AR", "Aqui o Chef\u00e3o pode lan\u00e7ar entradas e contagens em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 o tipo \u2192 o produto \u2192 quantidade \u2192 CONFIRMAR.<br><br>\u26a0\ufe0f Isso substitui o lan\u00e7amento do operador \u2014 use s\u00f3 quando necess\u00e1rio."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de entradas e contagens de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado no dia.<br>\u00datil pra auditoria e confer\u00eancia de operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Sistema de pedido inteligente!<br><br>Calcula automaticamente o que precisa comprar com base no estoque m\u00ednimo de cada unidade.<br>Voc\u00ea ajusta as quantidades e exporta pro WhatsApp pra fazer o pedido."], ["\u2699\ufe0f LIMITES", "Define o estoque M\u00ednimo e M\u00e1ximo de cada produto em cada unidade.<br><br>Seleciona a unidade e a categoria \u2192 define os valores \u2192 \ud83d\udcbe Salvar.<br><br>\u26a0\ufe0f Importante: sem m\u00ednimo definido, o sistema n\u00e3o consegue alertar quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque central de embalagens \u2014 separado do CD.<br><br>Mostra o que tem dispon\u00edvel, o que precisa comprar e o que t\u00e1 zerado.<br>Filtra por: \u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>A sugest\u00e3o de compra aparece automaticamente quando est\u00e1 abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico de tudo que o CD enviou para as unidades.<br><br>Seleciona a data e filtra por unidade (Centro, Delivery, Boqueir\u00e3o).<br>Mostra os totais do dia por produto."], ["\u2795 CADASTRAR", "Cadastra produtos novos no sistema para uma ou mais unidades de uma vez.<br><br>1\ufe0f\u20e3 Nome + c\u00f3digo de barras + unidade de medida + PCT<br>2\ufe0f\u20e3 Onde fica o estoque central (CD ou Almoxarifado)<br>3\ufe0f\u20e3 Quais unidades recebem esse item<br>4\ufe0f\u20e3 Categoria<br>5\ufe0f\u20e3 CADASTRAR PRODUTO"], ["\ud83d\udd25 DICAS FINAIS", "Voc\u00ea tem controle total do sistema \u2014 use com cuidado!<br><br>\u2705 Configure os limites (m\u00edn/m\u00e1x) antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar os operadores<br>\ud83d\uded2 Use a Precis\u00e3o toda semana pra montar o pedido<br>\ud83d\udce6 Confira o Almoxarifado antes de pedir embalagens<br>\u2753 Algo errado? Fala com a Zapia!"]];
-var _tStep=0;
-function abrirTutorial(){_tStep=0;document.getElementById('tut-ov').style.display='flex';_rTut();}
-function fecharTut(){document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut_ok_chefao','1');}
-function tutNext(){if(_tStep<_TUT_CHEFAO.length-1){_tStep++;_rTut();}else fecharTut();}
-function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
-function _rTut(){
-  var p=_TUT_CHEFAO[_tStep];
-  document.getElementById('tut-tit').textContent=p[0];
-  document.getElementById('tut-txt').innerHTML=p[1];
-  document.getElementById('tut-dots').innerHTML=_TUT_CHEFAO.map(function(_,i){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(i===_tStep?'#b8860b':'#2a2a2a')+';border:1px solid '+(i===_tStep?'#b8860b':'#444')+'"></div>';}).join('');
-  document.getElementById('tut-prev').style.opacity=_tStep===0?'0.25':'1';
-  document.getElementById('tut-next').textContent=_tStep===_TUT_CHEFAO.length-1?'✅ ENTENDIDO!':'PRÓXIMO →';
-}
-document.addEventListener('DOMContentLoaded',function(){if(!localStorage.getItem('tut_ok_chefao')){setTimeout(abrirTutorial,1200);}});
-</script>
 
 
 <!-- CHATBOT -->
@@ -1859,6 +1836,40 @@ function enviarFeedback() {
     status.textContent = '';
   }, 2000);
 }
+</script>
+
+<div id="tut-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:2px solid #b8860b;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#b8860b;letter-spacing:2px;">👑 COMO USAR — CHEFÃO</span>
+      <button onclick="fecharTut()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="tut-dots" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div id="tut-tit" style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#fff;margin-bottom:10px;letter-spacing:1px;"></div>
+    <div id="tut-txt" style="font-size:0.88rem;color:#bbb;line-height:1.75;min-height:110px;"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button id="tut-prev" onclick="tutPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.85rem;">← VOLTAR</button>
+      <button id="tut-next" onclick="tutNext()" style="flex:2;background:#b8860b;border:none;color:#000;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">PRÓXIMO →</button>
+    </div>
+    <a href="https://wa.me/5542988819420?text=Oi,%20preciso%20de%20ajuda%20no%20sistema%20do%20Chefão!" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#0a1f0a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">💬 Preciso de ajuda</a>
+  </div>
+</div>
+<script>
+var _TUT_CHEFAO=[["\ud83d\udce6 TRAMPO GERAL", "Aqui voc\u00ea v\u00ea o estoque de TODAS as unidades de uma vez.<br><br>Filtra por unidade (Centro, Delivery, Boqueir\u00e3o, CD) ou por categoria.<br>\ud83d\udd34 Vermelho = zerado \u00b7 \ud83d\udfe1 Amarelo = abaixo do m\u00ednimo<br><br>Toca no \u270f\ufe0f pra corrigir estoque de qualquer unidade."], ["\u2795 LAN\u00c7AR", "Aqui o Chef\u00e3o pode lan\u00e7ar entradas e contagens em qualquer unidade diretamente.<br><br>Escolhe a unidade \u2192 o tipo \u2192 o produto \u2192 quantidade \u2192 CONFIRMAR.<br><br>\u26a0\ufe0f Isso substitui o lan\u00e7amento do operador \u2014 use s\u00f3 quando necess\u00e1rio."], ["\ud83d\udce5 ENTRADAS & \ud83d\udcca CONTAGENS", "Hist\u00f3rico de entradas e contagens de todas as unidades.<br><br>Seleciona a data e v\u00ea tudo que foi movimentado no dia.<br>\u00datil pra auditoria e confer\u00eancia de operadores."], ["\ud83d\uded2 PRECIS\u00c3O", "Sistema de pedido inteligente!<br><br>Calcula automaticamente o que precisa comprar com base no estoque m\u00ednimo de cada unidade.<br>Voc\u00ea ajusta as quantidades e exporta pro WhatsApp pra fazer o pedido."], ["\u2699\ufe0f LIMITES", "Define o estoque M\u00ednimo e M\u00e1ximo de cada produto em cada unidade.<br><br>Seleciona a unidade e a categoria \u2192 define os valores \u2192 \ud83d\udcbe Salvar.<br><br>\u26a0\ufe0f Importante: sem m\u00ednimo definido, o sistema n\u00e3o consegue alertar quando t\u00e1 baixo."], ["\ud83d\udce6 ALMOXARIFADO", "Estoque central de embalagens \u2014 separado do CD.<br><br>Mostra o que tem dispon\u00edvel, o que precisa comprar e o que t\u00e1 zerado.<br>Filtra por: \u2705 OK \u00b7 \ud83d\uded2 Comprar \u00b7 \ud83d\udd34 Zerado<br><br>A sugest\u00e3o de compra aparece automaticamente quando est\u00e1 abaixo do m\u00ednimo."], ["\ud83d\udce4 SA\u00cdDAS CD", "Hist\u00f3rico de tudo que o CD enviou para as unidades.<br><br>Seleciona a data e filtra por unidade (Centro, Delivery, Boqueir\u00e3o).<br>Mostra os totais do dia por produto."], ["\u2795 CADASTRAR", "Cadastra produtos novos no sistema para uma ou mais unidades de uma vez.<br><br>1\ufe0f\u20e3 Nome + c\u00f3digo de barras + unidade de medida + PCT<br>2\ufe0f\u20e3 Onde fica o estoque central (CD ou Almoxarifado)<br>3\ufe0f\u20e3 Quais unidades recebem esse item<br>4\ufe0f\u20e3 Categoria<br>5\ufe0f\u20e3 CADASTRAR PRODUTO"], ["\ud83d\udd25 DICAS FINAIS", "Voc\u00ea tem controle total do sistema \u2014 use com cuidado!<br><br>\u2705 Configure os limites (m\u00edn/m\u00e1x) antes de cobrar alertas dos operadores<br>\ud83d\udcca Use Entradas e Contagens pra auditar os operadores<br>\ud83d\uded2 Use a Precis\u00e3o toda semana pra montar o pedido<br>\ud83d\udce6 Confira o Almoxarifado antes de pedir embalagens<br>\u2753 Algo errado? Fala com a Zapia!"]];
+var _tStep=0;
+function abrirTutorial(){_tStep=0;document.getElementById('tut-ov').style.display='flex';_rTut();}
+function fecharTut(){document.getElementById('tut-ov').style.display='none';localStorage.setItem('tut_ok_chefao','1');}
+function tutNext(){if(_tStep<_TUT_CHEFAO.length-1){_tStep++;_rTut();}else fecharTut();}
+function tutPrev(){if(_tStep>0){_tStep--;_rTut();}}
+function _rTut(){
+  var p=_TUT_CHEFAO[_tStep];
+  document.getElementById('tut-tit').textContent=p[0];
+  document.getElementById('tut-txt').innerHTML=p[1];
+  document.getElementById('tut-dots').innerHTML=_TUT_CHEFAO.map(function(_,i){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(i===_tStep?'#b8860b':'#2a2a2a')+';border:1px solid '+(i===_tStep?'#b8860b':'#444')+'"></div>';}).join('');
+  document.getElementById('tut-prev').style.opacity=_tStep===0?'0.25':'1';
+  document.getElementById('tut-next').textContent=_tStep===_TUT_CHEFAO.length-1?'✅ ENTENDIDO!':'PRÓXIMO →';
+}
+document.addEventListener('DOMContentLoaded',function(){if(!localStorage.getItem('tut_ok_chefao')){setTimeout(abrirTutorial,1200);}});
 </script>
 </body>
 </html>
