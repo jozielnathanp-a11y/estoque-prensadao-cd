@@ -243,7 +243,13 @@
       <div id="lista-lancamentos-itens" style="min-height:40px;">
         <p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum item ainda. Confirme um lançamento acima.</p>
       </div>
-      <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
+      
+        <div id="nome-lancador-wrap" style="margin-bottom:8px;">
+          <input type="text" id="nome-lancador" placeholder="👤 Seu nome antes de salvar, parceiro..." 
+            style="width:100%;padding:12px;border-radius:10px;border:2px solid #757575;background:#1a1a1a;color:#fff;font-size:1rem;box-sizing:border-box;" 
+            autocomplete="off" />
+        </div>
+        <button class="btn btn-green" id="btn-salvar-estoque" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;display:none;">💾 CONFIRMAR E ENVIAR AO ESTOQUE</button>
     </div>
     </div>
   </div>
@@ -2162,6 +2168,13 @@ function almoxLimpar() {
 }
 
 async function almoxSalvar() {
+  var almoxNomeEl = document.getElementById('almox-nome-lancador');
+  var almoxNome   = almoxNomeEl ? almoxNomeEl.value.trim() : '';
+  if (!almoxNome) {
+    showToast('Coloca teu nome antes de salvar, parceiro!', 'error');
+    if (almoxNomeEl) almoxNomeEl.focus();
+    return;
+  }
   if (!_almoxLote.length) { showToast('Nenhum item!','error'); return; }
   var btn = document.getElementById('almox-btn-salvar');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
@@ -2191,6 +2204,7 @@ async function almoxSalvar() {
   }
   showToast(ok + ' item(s) salvo(s)!','success');
   _almoxLote = [];
+  var anl = document.getElementById('almox-nome-lancador'); if (anl) anl.value = '';
   almoxRenderLote();
   if (btn) { btn.disabled = false; btn.textContent = 'SALVAR NO ALMOXARIFADO'; }
   carregarAlmox();
@@ -2380,7 +2394,13 @@ function prodAtualizarCats() {
     <!-- Botoes -->
     <div style="display:flex;gap:10px;">
       <button id="tut-btn-ant" onclick="tutAnterior()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#333;color:#fff;cursor:pointer;font-size:0.9rem;">← Anterior</button>
-      <button id="tut-btn-prox" onclick="tutProximo()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#e53935;color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;">Próximo →</button>
+      
+        <div id="almox-nome-wrap" style="margin-bottom:8px;">
+          <input type="text" id="almox-nome-lancador" placeholder="👤 Seu nome antes de salvar, parceiro..." 
+            style="width:100%;padding:12px;border-radius:10px;border:2px solid #757575;background:#1a1a1a;color:#fff;font-size:1rem;box-sizing:border-box;" 
+            autocomplete="off" />
+        </div>
+        <button id="tut-btn-prox" onclick="tutProximo()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#e53935;color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;">Próximo →</button>
     </div>
   </div>
 </div>
