@@ -123,52 +123,57 @@
     }
   </style>
 <script>
-window._SU = 'https://trbyynbtuzpszdvjivbs.supabase.co';
-window._SK = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+/* ── LOGIN CD ── */
+var _cdSU = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+var _cdSK = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+var _cdUser = null;
 
 function fazerLogin() {
-  var u = (document.getElementById('login-usuario')||{}).value||'';
-  var s = (document.getElementById('login-senha')||{}).value||'';
-  u = u.trim(); s = s.trim();
+  var u = (document.getElementById('login-usuario')||{value:''}).value.trim();
+  var s = (document.getElementById('login-senha')||{value:''}).value.trim();
   var err = document.getElementById('login-erro');
   var btn = document.getElementById('btn-entrar');
   if (err) err.style.display = 'none';
   if (!u || !s) { if(err) err.style.display='block'; return; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
-  var url = window._SU + '/rest/v1/usuario?usuario=eq.' + encodeURIComponent(u) + '&senha=eq.' + encodeURIComponent(s) + '&unidade=eq.cd&select=*';
-  fetch(url, { headers: { 'apikey': window._SK, 'Authorization': 'Bearer ' + window._SK } })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data && data.length > 0) {
-      window._usuarioLogado = data[0];
+  if (btn) { btn.disabled=true; btn.textContent='Entrando...'; }
+  var url = _cdSU+'/rest/v1/usuario?usuario=eq.'+encodeURIComponent(u)+'&senha=eq.'+encodeURIComponent(s)+'&unidade=eq.cd&select=*';
+  fetch(url,{headers:{'apikey':_cdSK,'Authorization':'Bearer '+_cdSK}})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data&&data.length>0){
+      _cdUser=data[0];
       iniciarApp();
     } else {
-      if (err) err.style.display = 'block';
-      if (btn) { btn.disabled = false; btn.textContent = 'BORA ENTRAR'; }
+      if(err) err.style.display='block';
+      if(btn){btn.disabled=false;btn.textContent='🔓 BORA ENTRAR';}
     }
   })
-  .catch(function(e) {
-    if (err) { err.style.display = 'block'; err.textContent = 'Erro de conexao'; }
-    if (btn) { btn.disabled = false; btn.textContent = 'BORA ENTRAR'; }
+  .catch(function(e){
+    if(err){err.style.display='block';err.textContent='Erro: '+e.message;}
+    if(btn){btn.disabled=false;btn.textContent='🔓 BORA ENTRAR';}
   });
 }
 
 function iniciarApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  var tb = document.getElementById('topbar-usuario');
-  var usuarioLogado = window._usuarioLogado;
-  if (tb) tb.textContent = usuarioLogado.usuario + ' - ' + (usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
-  if (!usuarioLogado) { console.error('usuarioLogado null!'); return; }
-  if (usuarioLogado.perfil !== 'adm') {
-    document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display='none'; });
-  }
-  var hoje = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
-  var hd = document.getElementById('hist-data'); if(hd) hd.value = hoje;
-  var rd = document.getElementById('rel-data');  if(rd) rd.value = hoje;
-  setTimeout(function() { if (typeof carregarProdutos === 'function') { carregarProdutos(); } else { console.error('carregarProdutos nao definido'); } }, 200);
+  var u = _cdUser;
+  if(!u){console.error('usuarioLogado nulo'); return;}
+  // Sincronizar com a variavel global do script do body
+  if(typeof usuarioLogado !== 'undefined') { try { usuarioLogado = u; } catch(e){} }
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  var tb=document.getElementById('topbar-usuario');
+  if(tb) tb.textContent=u.usuario+' - '+(u.perfil==='adm'?'ADM':'Operador');
+  if(u.perfil!=='adm') document.querySelectorAll('.adm-only').forEach(function(el){el.style.display='none';});
+  var d=new Date();
+  var hoje=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  var hd=document.getElementById('hist-data'); if(hd) hd.value=hoje;
+  var rd=document.getElementById('rel-data');  if(rd) rd.value=hoje;
+  // Chamar carregarProdutos depois que o body terminar de carregar
+  setTimeout(function(){
+    if(typeof carregarProdutos==='function') carregarProdutos();
+    else console.error('carregarProdutos nao definido');
+  }, 300);
 }
-
 </script>
 </head>
 <body>
@@ -439,7 +444,7 @@ const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
 const UNIDADE_LOJA = 'cd';
 
-var usuarioLogado = window._usuarioLogado || null;
+let usuarioLogado = null;
 let produtosCache = {};
 let modalCodigo = null;
 let modalTipo = null;
@@ -489,7 +494,6 @@ async function supa(metodo, tabela, dados=null, params='') {
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 
-
 function sair() {
   usuarioLogado = null;
   document.getElementById('login-screen').style.display = 'flex';
@@ -507,23 +511,20 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') { carregarAlmox(); setTimeout(carregarAlmox, 300); popularAlmoxSelect(); }
+  if (name === 'almoxarifado') { carregarAlmox(); setTimeout(carregarAlmoxChefao, 300); popularAlmoxSelect(); }
   if (name === 'saidas') carregarSaidasCD();
 }
 
 // ── PRODUTOS ──
 async function carregarProdutos() {
-  console.log('carregarProdutos iniciado');
   try {
     const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.cd');
-    console.log('produtos recebidos:', lista ? lista.length : 'null');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     renderEstoque();
     renderProdutos();
     atualizarStats();
   } catch(e) {
-    console.error('carregarProdutos erro:', e);
     showToast('Erro ao carregar produtos', 'error');
   }
 }
@@ -1993,7 +1994,7 @@ var _almoxDados  = [];
 var _almoxFiltro = 'todos';
 var _almoxLote   = [];
 
-async 
+
 
 function almoxFiltrar(f) {
   _almoxFiltro = f;
@@ -2408,14 +2409,21 @@ function prodAtualizarCats() {
 
 
 <script>
-// Bind login - DOM ja carregado
 (function(){
-  var btn = document.getElementById('btn-entrar');
-  if (btn) btn.addEventListener('click', fazerLogin);
-  var us = document.getElementById('login-usuario');
-  if (us) us.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
-  var pw = document.getElementById('login-senha');
-  if (pw) pw.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+  var b=document.getElementById('btn-entrar');
+  if(b) b.addEventListener('click',fazerLogin);
+  ['login-senha','login-usuario'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin();});
+  });
+  // Sincronizar usuarioLogado quando carregarProdutos rodar
+  var _origCP = typeof carregarProdutos === 'function' ? carregarProdutos : null;
+  if(_origCP) {
+    carregarProdutos = async function() {
+      if(typeof _cdUser !== 'undefined' && _cdUser) usuarioLogado = _cdUser;
+      return _origCP();
+    };
+  }
 })();
 </script>
 </body>
