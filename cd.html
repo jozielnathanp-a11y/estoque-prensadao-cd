@@ -469,19 +469,24 @@ async function fazerLogin() {
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
 function iniciarApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
-
-  // Esconder abas ADM se for operador
-  if (usuarioLogado.perfil !== 'adm') {
-    document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
+  try {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    var topbar = document.getElementById('topbar-usuario');
+    if (topbar) topbar.textContent = usuarioLogado.usuario + ' - ' + (usuarioLogado.perfil === 'adm' ? 'ADM' : 'Operador');
+    if (usuarioLogado.perfil !== 'adm') {
+      document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display = 'none'; });
+    }
+    var hoje = dataHoje();
+    var hd = document.getElementById('hist-data');
+    var rd = document.getElementById('rel-data');
+    if (hd) hd.value = hoje;
+    if (rd) rd.value = hoje;
+    carregarProdutos();
+  } catch(err) {
+    alert('Erro ao iniciar: ' + err.message);
+    console.error('iniciarApp erro:', err);
   }
-
-  carregarProdutos();
-  const hoje = dataHoje();
-  document.getElementById('hist-data').value = hoje;
-  document.getElementById('rel-data').value = hoje;
 }
 
 function sair() {
