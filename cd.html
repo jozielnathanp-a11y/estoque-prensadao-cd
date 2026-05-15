@@ -1708,113 +1708,93 @@ async function carregarSaidasCD() {
 
 // ── ALMOX VISUAL (da Matriz) ──
 async function carregarAlmoxChefao() {
-  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+  var res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
   if (Array.isArray(res)) {
-    // Atualiza todosEstoques com almoxarifado
-    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado').concat(res);
+    window._almoxEstoques = res;
   }
   renderAlmoxChefao();
 }
 
 function filtrarAlmoxChefao(filtro) {
-  _almoxChefaoFiltro = filtro;
-  document.querySelectorAll('[id^="abtn-"]').forEach(b => b.className = 'btn btn-gray');
-  document.getElementById('abtn-' + filtro).className = 'btn btn-gold';
+  window._almoxFiltro = filtro;
+  // Destacar botão ativo
+  ['todos','ok','comprar','zerado'].forEach(function(f) {
+    var btn = document.getElementById('abtn-' + f);
+    if (btn) btn.style.background = f === filtro ? '#757575' : '';
+  });
   renderAlmoxChefao();
 }
 
 function renderAlmoxChefao() {
-  const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
-  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado');
+  var lista = document.getElementById('almox-chefao-lista');
+  var stats = document.getElementById('almox-chefao-stats');
+  if (!lista) return;
+
+  var dados = window._almoxEstoques || [];
+  var busca = (document.getElementById('almox-chefao-busca') ? document.getElementById('almox-chefao-busca').value : '').toLowerCase();
+  var filtro = window._almoxFiltro || 'todos';
+
+  if (!dados.length) {
+    lista.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">Nenhum produto. Carregando...</div>';
+    return;
+  }
+
+  // Calcular status de cada item
+  var processados = dados.map(function(p) {
+    var est = parseFloat(p.estoque) || 0;
+    var min = parseFloat(p.estoque_min) || 0;
+    var status = est <= 0 ? 'zerado' : (min > 0 && est <= min ? 'comprar' : 'ok');
+    return Object.assign({}, p, { _est: est, _min: min, _status: status });
+  });
 
   // Stats
-  const total = prods.length;
-  const zerados = prods.filter(p => (parseFloat(p.estoque)||0) === 0).length;
-  const comprar = prods.filter(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    return min > 0 && est <= min;
-  }).length;
-  const ok = total - zerados - comprar;
+  var nTodos   = processados.length;
+  var nOk      = processados.filter(function(p){ return p._status === 'ok'; }).length;
+  var nComprar = processados.filter(function(p){ return p._status === 'comprar'; }).length;
+  var nZerado  = processados.filter(function(p){ return p._status === 'zerado'; }).length;
+  if (stats) {
+    stats.innerHTML = [
+      ['📦 Todos', nTodos, '#757575'],
+      ['✅ OK', nOk, '#388e3c'],
+      ['🛒 Comprar', nComprar, '#f57c00'],
+      ['🔴 Zerado', nZerado, '#c62828'],
+    ].map(function(s) {
+      return '<div style="flex:1;background:' + s[2] + ';border-radius:8px;padding:6px 8px;text-align:center;min-width:60px;">'
+        + '<div style="font-size:0.65rem;color:#fff;">' + s[0] + '</div>'
+        + '<div style="font-size:1.1rem;font-weight:700;color:#fff;">' + s[1] + '</div>'
+        + '</div>';
+    }).join('');
+  }
 
-  document.getElementById('almox-chefao-stats').innerHTML = `
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#f9a825;">${total}</div>
-      <div style="font-size:0.7rem;color:#888;">TOTAL</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#2e7d32;">${ok}</div>
-      <div style="font-size:0.7rem;color:#888;">OK</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#ff9800;">${comprar}</div>
-      <div style="font-size:0.7rem;color:#888;">COMPRAR</div>
-    </div>
-    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
-      <div style="font-size:1.4rem;font-weight:700;color:#b71c1c;">${zerados}</div>
-      <div style="font-size:0.7rem;color:#888;">ZERADO</div>
-    </div>`;
-
-  let lista = prods.filter(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    const buscarOk = !busca || p.nome.toLowerCase().includes(busca);
-    if (!buscarOk) return false;
-    if (_almoxChefaoFiltro === 'zerado') return est === 0;
-    if (_almoxChefaoFiltro === 'comprar') return min > 0 && est <= min && est > 0;
-    if (_almoxChefaoFiltro === 'ok') return est > 0 && !(min > 0 && est <= min);
-    return true;
+  // Filtrar
+  var filtrados = processados.filter(function(p) {
+    var matchBusca = !busca || p.nome.toLowerCase().includes(busca);
+    var matchFiltro = filtro === 'todos' || p._status === filtro;
+    return matchBusca && matchFiltro;
   });
 
-  const el = document.getElementById('almox-chefao-lista');
-  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+  if (!filtrados.length) {
+    lista.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">Nenhum item.</div>';
+    return;
+  }
 
-  // Ordenar: zerados primeiro, depois abaixo do min, depois ok
-  lista.sort((a,b) => {
-    const estA = parseFloat(a.estoque)||0, estB = parseFloat(b.estoque)||0;
-    const minA = parseFloat(a.estoque_min)||0, minB = parseFloat(b.estoque_min)||0;
-    const prioA = estA === 0 ? 0 : (minA > 0 && estA <= minA ? 1 : 2);
-    const prioB = estB === 0 ? 0 : (minB > 0 && estB <= minB ? 1 : 2);
-    return prioA - prioB || a.nome.localeCompare(b.nome);
-  });
-
-  el.innerHTML = lista.map(p => {
-    const est = parseFloat(p.estoque)||0;
-    const min = parseFloat(p.estoque_min)||0;
-    const max = parseFloat(p.estoque_max)||0;
-    const zerado = est === 0;
-    const abaixo = min > 0 && est <= min;
-    const cor = zerado ? '#b71c1c' : abaixo ? '#ff9800' : '#2e7d32';
-    const badge = zerado
-      ? '<span style="background:#b71c1c;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🔴 ZERADO</span>'
-      : abaixo
-        ? '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🛒 COMPRAR</span>'
-        : '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">✅ OK</span>';
-
-    // Sugestão de compra: quanto falta para chegar no máximo (ou min*2 se não tiver max)
-    let sugestao = '';
-    if (zerado || abaixo) {
-      const meta = max > 0 ? max : (min > 0 ? min * 2 : 0);
-      if (meta > 0) {
-        const falta = meta - est;
-        sugestao = '<div style="font-size:0.72rem;color:#ff9800;margin-top:2px;">🛒 Comprar: <strong>' + fmtQ(falta, p.unidade) + '</strong></div>';
-      }
-    }
-
-    const pct = parseFloat(p.qtd_por_pct)||0;
-    return '<div style="background:#161616;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px;margin-bottom:6px;">'
+  lista.innerHTML = filtrados.map(function(p) {
+    var cor = p._status === 'zerado' ? '#c62828' : p._status === 'comprar' ? '#f57c00' : '#388e3c';
+    var bg  = p._status === 'zerado' ? '#1a0000' : p._status === 'comprar' ? '#1a0d00' : '#001a00';
+    var pct = p._min > 0 ? Math.min(100, Math.round((p._est / p._min) * 100)) : (p._est > 0 ? 100 : 0);
+    return '<div class="card" style="margin:0 0 8px;padding:12px;background:' + bg + ';border-left:4px solid ' + cor + ';">'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
       + '<div style="flex:1;">'
-      + '<div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">' + p.nome + ' ' + badge + '</div>'
-      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '')
-      + sugestao
+      + '<div style="font-weight:700;font-size:0.92rem;color:#fff;">' + p.nome + '</div>'
+      + (p._min > 0 ? '<div style="font-size:0.7rem;color:#888;margin-top:2px;">Mín: ' + p._min + ' ' + p.unidade + '</div>' : '')
       + '</div>'
-      + '<div style="text-align:right;margin-left:12px;">'
-      + '<div style="font-size:1.3rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</div>'
-      + (min > 0 ? '<div style="font-size:0.68rem;color:#555;">Mín: ' + fmtQ(min, p.unidade) + '</div>' : '')
-      + (max > 0 ? '<div style="font-size:0.68rem;color:#555;">Máx: ' + fmtQ(max, p.unidade) + '</div>' : '')
+      + '<div style="text-align:right;">'
+      + '<div style="font-size:1.2rem;font-weight:700;color:' + cor + ';">' + p._est + ' <span style="font-size:0.75rem;">' + p.unidade + '</span></div>'
       + '</div>'
       + '</div>'
+      + (p._min > 0 ? '<div style="margin-top:8px;height:4px;background:#333;border-radius:2px;">'
+        + '<div style="height:4px;background:' + cor + ';border-radius:2px;width:' + pct + '%;transition:width 0.3s;"></div>'
+        + '</div>' : '')
       + '</div>';
   }).join('');
 }
