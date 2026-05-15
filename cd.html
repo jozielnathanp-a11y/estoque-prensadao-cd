@@ -448,7 +448,7 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') carregarAlmox();
+  if (name === 'almoxarifado') { carregarAlmox(); carregarAlmoxChefao(); popularAlmoxSelect(); }
   if (name === 'saidas') carregarSaidasCD();
 }
 
@@ -1704,23 +1704,252 @@ async function carregarSaidasCD() {
   el.innerHTML = html;
 }
 // ── FIM FUNÇÕES CD ──
+
+
+// ── ALMOX VISUAL (da Matriz) ──
+async function carregarAlmoxChefao() {
+  const res = await supa('GET', 'produtos', 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+  if (Array.isArray(res)) {
+    // Atualiza todosEstoques com almoxarifado
+    todosEstoques = todosEstoques.filter(p => p.unidade_loja !== 'almoxarifado').concat(res);
+  }
+  renderAlmoxChefao();
+}
+
+function filtrarAlmoxChefao(filtro) {
+  _almoxChefaoFiltro = filtro;
+  document.querySelectorAll('[id^="abtn-"]').forEach(b => b.className = 'btn btn-gray');
+  document.getElementById('abtn-' + filtro).className = 'btn btn-gold';
+  renderAlmoxChefao();
+}
+
+function renderAlmoxChefao() {
+  const busca = (document.getElementById('almox-chefao-busca').value || '').toLowerCase();
+  const prods = todosEstoques.filter(p => p.unidade_loja === 'almoxarifado');
+
+  // Stats
+  const total = prods.length;
+  const zerados = prods.filter(p => (parseFloat(p.estoque)||0) === 0).length;
+  const comprar = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    return min > 0 && est <= min;
+  }).length;
+  const ok = total - zerados - comprar;
+
+  document.getElementById('almox-chefao-stats').innerHTML = `
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#f9a825;">${total}</div>
+      <div style="font-size:0.7rem;color:#888;">TOTAL</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#2e7d32;">${ok}</div>
+      <div style="font-size:0.7rem;color:#888;">OK</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#ff9800;">${comprar}</div>
+      <div style="font-size:0.7rem;color:#888;">COMPRAR</div>
+    </div>
+    <div style="flex:1;background:#1a1a1a;border-radius:8px;padding:10px;text-align:center;">
+      <div style="font-size:1.4rem;font-weight:700;color:#b71c1c;">${zerados}</div>
+      <div style="font-size:0.7rem;color:#888;">ZERADO</div>
+    </div>`;
+
+  let lista = prods.filter(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const buscarOk = !busca || p.nome.toLowerCase().includes(busca);
+    if (!buscarOk) return false;
+    if (_almoxChefaoFiltro === 'zerado') return est === 0;
+    if (_almoxChefaoFiltro === 'comprar') return min > 0 && est <= min && est > 0;
+    if (_almoxChefaoFiltro === 'ok') return est > 0 && !(min > 0 && est <= min);
+    return true;
+  });
+
+  const el = document.getElementById('almox-chefao-lista');
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+
+  // Ordenar: zerados primeiro, depois abaixo do min, depois ok
+  lista.sort((a,b) => {
+    const estA = parseFloat(a.estoque)||0, estB = parseFloat(b.estoque)||0;
+    const minA = parseFloat(a.estoque_min)||0, minB = parseFloat(b.estoque_min)||0;
+    const prioA = estA === 0 ? 0 : (minA > 0 && estA <= minA ? 1 : 2);
+    const prioB = estB === 0 ? 0 : (minB > 0 && estB <= minB ? 1 : 2);
+    return prioA - prioB || a.nome.localeCompare(b.nome);
+  });
+
+  el.innerHTML = lista.map(p => {
+    const est = parseFloat(p.estoque)||0;
+    const min = parseFloat(p.estoque_min)||0;
+    const max = parseFloat(p.estoque_max)||0;
+    const zerado = est === 0;
+    const abaixo = min > 0 && est <= min;
+    const cor = zerado ? '#b71c1c' : abaixo ? '#ff9800' : '#2e7d32';
+    const badge = zerado
+      ? '<span style="background:#b71c1c;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🔴 ZERADO</span>'
+      : abaixo
+        ? '<span style="background:#ff9800;color:#000;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">🛒 COMPRAR</span>'
+        : '<span style="background:#2e7d32;color:#fff;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;">✅ OK</span>';
+
+    // Sugestão de compra: quanto falta para chegar no máximo (ou min*2 se não tiver max)
+    let sugestao = '';
+    if (zerado || abaixo) {
+      const meta = max > 0 ? max : (min > 0 ? min * 2 : 0);
+      if (meta > 0) {
+        const falta = meta - est;
+        sugestao = '<div style="font-size:0.72rem;color:#ff9800;margin-top:2px;">🛒 Comprar: <strong>' + fmtQ(falta, p.unidade) + '</strong></div>';
+      }
+    }
+
+    const pct = parseFloat(p.qtd_por_pct)||0;
+    return '<div style="background:#161616;border-left:4px solid ' + cor + ';border-radius:8px;padding:12px;margin-bottom:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">' + p.nome + ' ' + badge + '</div>'
+      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '')
+      + sugestao
+      + '</div>'
+      + '<div style="text-align:right;margin-left:12px;">'
+      + '<div style="font-size:1.3rem;font-weight:700;color:' + cor + ';">' + fmtQ(est, p.unidade) + '</div>'
+      + (min > 0 ? '<div style="font-size:0.68rem;color:#555;">Mín: ' + fmtQ(min, p.unidade) + '</div>' : '')
+      + (max > 0 ? '<div style="font-size:0.68rem;color:#555;">Máx: ' + fmtQ(max, p.unidade) + '</div>' : '')
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ── FIM ALMOX VISUAL ──
+
+// ── ALMOX CD: TIPO ──
+var _almoxLote = [];
+
+function selecionarTipoAlmox(tipo) {
+  document.getElementById('almox-tipo').value = tipo;
+  document.getElementById('almox-btn-entrada').className  = tipo === 'entrada'  ? 'btn btn-green' : 'btn btn-gray';
+  document.getElementById('almox-btn-contagem').className = tipo === 'contagem' ? 'btn btn-gray btn-active' : 'btn btn-gray';
+  document.getElementById('almox-btn-contagem').style.background = tipo === 'contagem' ? '#64b5f6' : '';
+}
+
+function adicionarAlmoxAoLote() {
+  var cod  = document.getElementById('almox-produto').value;
+  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
+  var tipo = document.getElementById('almox-tipo').value;
+  if (!cod) { showToast('Selecione um produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  var p = getProduto(cod);
+  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
+  if (_almoxLote.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
+  // Verificar duplicata
+  var dup = _almoxLote.find(function(x){ return x.cod === cod && x.tipo === tipo; });
+  if (dup) { dup.qtd += qtd; }
+  else { _almoxLote.push({ cod: cod, nome: p.nome, unidade: p.unidade, qtd: qtd, tipo: tipo }); }
+  document.getElementById('almox-qtd').value = '';
+  document.getElementById('almox-produto').value = '';
+  renderAlmoxLote();
+  showToast('✅ ' + p.nome + ' adicionado', 'success');
+  if (typeof beep === 'function') beep();
+}
+
+function renderAlmoxLote() {
+  var el  = document.getElementById('almox-lista-pendentes');
+  var cnt = document.getElementById('almox-lanc-count');
+  var btn = document.getElementById('almox-btn-salvar');
+  if (!el) return;
+  if (cnt) cnt.textContent = _almoxLote.length;
+  if (!_almoxLote.length) {
+    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:8px;">Confirme um item acima.</p>';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.style.display = 'block';
+  el.innerHTML = _almoxLote.map(function(l, i) {
+    var ic = l.tipo === 'contagem' ? '📊' : '📥';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e1e1e;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:0.85rem;font-weight:700;">' + ic + ' ' + l.nome + '</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:6px;">'
+      + '<input type="number" value="' + l.qtd + '" min="0.001" step="0.001"'
+      + ' onchange="_almoxLote[' + i + '].qtd=parseFloat(this.value)||0;renderAlmoxLote();"'
+      + ' style="width:70px;padding:4px 6px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:0.85rem;" />'
+      + '<span style="font-size:0.75rem;color:#888;">' + l.unidade + '</span>'
+      + '<button onclick="_almoxLote.splice(' + i + ',1);renderAlmoxLote();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">✖</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function limparAlmoxLote() { _almoxLote = []; renderAlmoxLote(); }
+
+async function salvarAlmoxLote() {
+  if (!_almoxLote.length) { showToast('Nenhum item!', 'error'); return; }
+  var btn = document.getElementById('almox-btn-salvar');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Salvando...'; }
+  var ok = 0;
+  for (var i = 0; i < _almoxLote.length; i++) {
+    var l = _almoxLote[i];
+    var dados = {
+      codigo: l.cod, nome: l.nome, unidade_loja: 'cd', tipo: l.tipo,
+      qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
+      status: 'confirmado', categoria: 'embalagem'
+    };
+    var r = await supa('POST', 'movimentacoes', dados);
+    if (r) {
+      // Atualizar estoque do almox
+      var p = getProduto(l.cod);
+      if (p) {
+        var novoEst = l.tipo === 'contagem' ? l.qtd : (parseFloat(p.estoque || 0) + l.qtd);
+        await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + encodeURIComponent(l.cod) + '&unidade_loja=eq.cd');
+      }
+      ok++;
+    }
+  }
+  showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  _almoxLote = [];
+  renderAlmoxLote();
+  if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR NO ALMOXARIFADO'; }
+  carregarAlmox();
+  carregarAlmoxChefao();
+}
+// ── FIM ALMOX CD EXTRA ──
+
+function popularAlmoxSelect() {
+  var sel = document.getElementById('almox-produto');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Selecione --</option>';
+  Object.values(produtosCache).sort(function(a,b){ return a.nome.localeCompare(b.nome); }).forEach(function(p) {
+    sel.innerHTML += '<option value="' + p.codigo + '">' + p.nome + '</option>';
+  });
+}
 </script>
 
-<div class="screen" id="tab-almoxarifado">
 
-    <!-- ESTOQUE DO ALMOXARIFADO -->
+  <div class="screen" id="tab-almoxarifado">
+    <!-- ESTOQUE ALMOXARIFADO -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h3 style="margin:0;">🏬 Almoxarifado</h3>
-        <button class="btn btn-blue" onclick="carregarAlmox()" style="margin:0;padding:8px 14px;">🔄 Atualizar</button>
+      <h3>📦 Almoxarifado de Embalagens</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;background:#757575;">📦 Todos</button>
+        <button onclick="filtrarAlmoxChefao('ok')"    id="abtn-ok"     class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">✅ OK</button>
+        <button onclick="filtrarAlmoxChefao('comprar')" id="abtn-comprar" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🛒 Comprar</button>
+        <button onclick="filtrarAlmoxChefao('zerado')"  id="abtn-zerado"  class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;">🔴 Zerado</button>
       </div>
-      <input type="text" id="almox-busca" placeholder="🔍 Buscar produto..." oninput="filtrarAlmox()" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;" />
-      <div id="lista-almox"><p style="color:#888;text-align:center;padding:16px;">Carregando...</p></div>
+      <input type="text" id="almox-chefao-busca" placeholder="🔍 Buscar embalagem..." oninput="renderAlmoxChefao()" style="margin:0;" />
     </div>
+    <div id="almox-chefao-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"></div>
+    <div id="almox-chefao-lista"></div>
 
-    <!-- LANÇAR NO ALMOXARIFADO -->
-    <div class="card adm-only">
-      <h3>➕ Lançar no Almoxarifado</h3>
+    <!-- LANÇAR NO ALMOXARIFADO (todos) -->
+    <div class="card" style="margin-top:12px;">
+      <h3>➕ Lançar / Contagem</h3>
+
+      <!-- Tipo -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="selecionarTipoAlmox('entrada')"  id="almox-btn-entrada"  class="btn btn-green" style="flex:1;margin:0;">📥 Entrada</button>
+        <button onclick="selecionarTipoAlmox('contagem')" id="almox-btn-contagem" class="btn btn-gray"  style="flex:1;margin:0;">📊 Contagem</button>
+      </div>
+      <input type="hidden" id="almox-tipo" value="entrada" />
 
       <!-- Scanner -->
       <label style="font-size:0.85rem;font-weight:700;">Código de Barras</label>
@@ -1734,18 +1963,29 @@ async function carregarSaidasCD() {
       </div>
 
       <label style="font-size:0.85rem;font-weight:700;">Produto</label>
-      <select id="almox-produto" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:8px;"></select>
-
-      <label style="font-size:0.85rem;font-weight:700;">Tipo</label>
-      <select id="almox-tipo" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:8px;">
-        <option value="entrada">📥 Entrada</option>
-        <option value="contagem">📋 Contagem</option>
+      <select id="almox-produto" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:8px;" onchange="selecionarAlmoxProduto()">
+        <option value="">-- Selecione --</option>
       </select>
 
       <label style="font-size:0.85rem;font-weight:700;">Quantidade</label>
-      <input type="number" id="almox-qtd" placeholder="Quantidade" min="0" step="0.01" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:12px;" />
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="almox-qtd" placeholder="Ex: 10" step="1" min="0" style="flex:1;margin:0;" />
+        <span id="almox-unidade" style="font-size:0.9rem;color:#aaa;min-width:40px;">und</span>
+      </div>
 
-      <button class="btn btn-gold" onclick="lancarAlmox()" style="width:100%;">✅ Confirmar</button>
+      <!-- PENDENTES ALMOX -->
+      <div class="card" style="margin-top:10px;padding:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <h4 style="margin:0;font-size:0.88rem;">⏳ Pendentes (<span id="almox-lanc-count">0</span>/15)</h4>
+          <button onclick="limparAlmoxLote()" style="background:none;border:none;color:#888;font-size:0.75rem;cursor:pointer;">✖ Limpar</button>
+        </div>
+        <div id="almox-lista-pendentes" style="min-height:36px;">
+          <p style="color:#555;text-align:center;font-size:0.78rem;padding:8px;">Confirme um item acima.</p>
+        </div>
+        <button class="btn btn-green" id="almox-btn-salvar" onclick="salvarAlmoxLote()" style="margin-top:8px;width:100%;display:none;">💾 SALVAR NO ALMOXARIFADO</button>
+      </div>
+
+      <button class="btn btn-gray" onclick="adicionarAlmoxAoLote()" style="width:100%;margin-top:8px;">✅ Confirmar</button>
     </div>
   </div>
 <div class="screen adm-only" id="tab-saidas">
