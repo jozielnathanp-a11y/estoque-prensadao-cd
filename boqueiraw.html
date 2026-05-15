@@ -635,6 +635,39 @@ async function confirmarLancamento() {
     novo_estoque: novoEst
   });
 
+
+  // ── SMART CD: descontar do Almoxarifado ou CD ──
+  if (tipo === 'entrada' && qtd > 0) {
+    try {
+      const nomeBusca = encodeURIComponent(p.nome);
+      const almoxRes = await fetch(
+        `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.almoxarifado&nome=eq.${nomeBusca}&select=codigo,estoque`,
+        { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+      ).then(r => r.json());
+      if (almoxRes && almoxRes.length > 0) {
+        const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - qtd);
+        await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${almoxRes[0].codigo}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estoque: novoAlmox })
+        });
+      } else {
+        const cdRes = await fetch(
+          `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.cd&nome=eq.${nomeBusca}&select=codigo,estoque`,
+          { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+        ).then(r => r.json());
+        if (cdRes && cdRes.length > 0) {
+          const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtd);
+          await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cdRes[0].codigo}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estoque: novoCD })
+          });
+        }
+      }
+    } catch(e) { console.warn('Smart CD:', e); }
+  }
+  // ── FIM SMART CD ──
   // Atualizar cache local com o valor confirmado pelo servidor
   produtosCache[cod].estoque = res[0].estoque;
   renderEstoque();
