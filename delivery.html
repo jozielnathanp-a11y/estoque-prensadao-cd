@@ -168,8 +168,12 @@
     <div style="display:flex;gap:8px;margin-bottom:12px;">
       <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
       <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
-        <option value="">Todas</option>
-        <option>Bebidas</option><option>Alimentos</option><option>Carnes</option><option>Frios</option><option>Hortifruti</option><option>Outros</option><option>Embalagens</option><option>Temperos</option><option>Limpeza</option>
+        <option value="">📦 Todas</option>
+        <option value="Bebidas">🍺 Bebidas</option>
+        <option value="Bruto">🌿 Bruto</option>
+        <option value="Embalagens">📦 Embalagens</option>
+        <option value="Limpeza">🧹 Limpeza</option>
+        <option value="Processado">🥩 Processado</option>
       </select>
     </div>
     <div id="lista-estoque"></div>
@@ -1277,7 +1281,7 @@ async function salvarLancamentos() {
         try {
           const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
           const cat = (l.categoria || p.categoria || '').toLowerCase();
-          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens';
+          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens' || cat === 'limpeza';
 
           if (isEmbalagem) {
             // Embalagem → desconta do Almoxarifado pelo código base
@@ -1564,6 +1568,90 @@ function enviarFeedback() {
     status.textContent = '';
   }, 2000);
 }
+
+// TUTORIAL
+var _tutPassos = [
+    ['📦 Estoque', 'Aqui você vê todos os produtos da unidade Delivery. Use os filtros por categoria ou busca para encontrar rápido. Vermelho = zerado, amarelo = abaixo do mínimo.'],
+    ['➕ Lançar', 'Escaneie o código de barras ou selecione o produto manualmente. Escolha Entrada (chegou produto) ou Contagem (ajuste de estoque). Adicione à lista de pendentes e salve tudo de uma vez.'],
+    ['📋 Histórico', 'Veja todas as movimentações do dia ou de datas anteriores. Filtre por tipo (entrada, contagem) para conferir o que foi lançado.'],
+  ];
+var _tutAtual  = 0;
+
+function abrirTutorial() {{
+  _tutAtual = 0;
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+  tutRender();
+}}
+
+function fecharTutorial() {{
+  document.getElementById('tutorial-overlay').style.display = 'none';
+}}
+
+function tutProximo() {{
+  if (_tutAtual < _tutPassos.length - 1) {{
+    _tutAtual++;
+    tutRender();
+  }} else {{
+    fecharTutorial();
+  }}
+}}
+
+function tutAnterior() {{
+  if (_tutAtual > 0) {{
+    _tutAtual--;
+    tutRender();
+  }}
+}}
+
+function tutRender() {{
+  var p = _tutPassos[_tutAtual];
+  var total = _tutPassos.length;
+  // Icone e titulo
+  var partes = p[0].split(' ');
+  var icone  = partes[0];
+  var titulo = partes.slice(1).join(' ');
+  document.getElementById('tut-icone').textContent  = icone;
+  document.getElementById('tut-titulo').textContent = titulo;
+  document.getElementById('tut-desc').textContent   = p[1];
+  document.getElementById('tut-passo-label').textContent = 'Passo ' + (_tutAtual+1) + ' de ' + total;
+  // Dots
+  var dots = '';
+  for (var i=0; i<total; i++) {{
+    dots += '<div style="width:'+(i===_tutAtual?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_tutAtual?'#e53935':'#444')+';transition:width 0.2s;"></div>';
+  }}
+  document.getElementById('tut-dots').innerHTML = dots;
+  // Botoes
+  var btnAnt  = document.getElementById('tut-btn-ant');
+  var btnProx = document.getElementById('tut-btn-prox');
+  if (btnAnt)  btnAnt.style.display  = _tutAtual === 0 ? 'none' : 'block';
+  if (btnProx) btnProx.textContent   = _tutAtual === total-1 ? '✅ Concluir' : 'Próximo →';
+}}
+// FIM TUTORIAL
+
 </script>
+
+<!-- TUTORIAL OVERLAY -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#1e1e1e;border-radius:16px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.6);position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span id="tut-passo-label" style="font-size:0.75rem;color:#888;">Passo 1 de 3</span>
+      <button onclick="fecharTutorial()" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;padding:0;">✕</button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <div id="tut-icone" style="font-size:2.5rem;margin-bottom:8px;">📦</div>
+      <div id="tut-titulo" style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:10px;"></div>
+      <div id="tut-desc" style="font-size:0.88rem;color:#ccc;line-height:1.5;"></div>
+    </div>
+    <!-- Dots -->
+    <div id="tut-dots" style="display:flex;justify-content:center;gap:6px;margin-bottom:20px;"></div>
+    <!-- Botoes -->
+    <div style="display:flex;gap:10px;">
+      <button id="tut-btn-ant" onclick="tutAnterior()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#333;color:#fff;cursor:pointer;font-size:0.9rem;">← Anterior</button>
+      <button id="tut-btn-prox" onclick="tutProximo()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#e53935;color:#fff;cursor:pointer;font-weight:700;font-size:0.9rem;">Próximo →</button>
+    </div>
+  </div>
+</div>
+<!-- FIM TUTORIAL -->
+
 </body>
 </html>
