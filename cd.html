@@ -6,7 +6,7 @@
   <title>Estoques Prensadão CD</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; min-height: 100vh; }
 
     /* LOGIN */
     #login-screen {
@@ -142,15 +142,18 @@
       <h1>🏪 Prensadão CD</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <button onclick="sair()">Sair</button>
+    <button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ajuda">❓</button>
+      <button onclick="sair()">Sair</button>
   </div>
 
   <div class="tabs" id="tabs-bar">
     <div class="tab active" onclick="showTab('estoque')">📦 Estoque</div>
     <div class="tab" onclick="showTab('lancar')">➕ Lançar</div>
     <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
+    <div class="tab adm-only" onclick="showTab('saidas');carregarSaidasCD()">📤 SAÍDAS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
+    <div class="tab adm-only" onclick="showTab('almoxarifado');carregarAlmox()">🏬 Almoxarifado</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -192,29 +195,76 @@
         <video id="camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="fecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
-      <select id="lanc-produto" style="margin-bottom:6px;">
+      <select id="lanc-produto" style="margin-bottom:6px;" onchange="atualizarLabelAberto()">
         <option value="">-- Selecione --</option>
       </select>
       <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
 
-      <!-- PASSO 3: Quantidade -->
+            <!-- PASSO 3: Quantidade -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
-      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 10px;">
-        <label style="font-size:0.82rem;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+
+      <!-- Fechados × fator (opcional) -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 6px;">
+        <label style="font-size:0.82rem;margin-bottom:4px;">📦 Fechados × fator (opcional)</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
           <span style="color:#607d8b;font-weight:700;">×</span>
-          <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
-          <span style="color:#607d8b;font-weight:700;">=</span>
-          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
+          <input type="number" id="lanc-fator" placeholder="Kg ou Und/PCT" step="0.001" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
         </div>
       </div>
-      <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
-      <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
+
+      <!-- Aberto (kg ou und) — aparece só na contagem -->
+      <div id="bloco-aberto" style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin:0 0 6px;display:none;">
+        <label id="label-aberto" style="font-size:0.82rem;margin-bottom:4px;">🔓 Pacote aberto</label>
+        <input type="number" id="lanc-aberto" placeholder="0" step="0.001" min="0" oninput="calcTotal()" style="margin:0;" />
+        <div id="lanc-aberto-unit" style="font-size:0.75rem;color:#888;margin-top:2px;"></div>
+      </div>
+
+      <!-- Total calculado -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
+        <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
+        <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" oninput="calcTotal()" />
+        <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;"></span>
+      </div>
+      <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
+    </div>
+  </div>
+
+
+  <!-- LISTA DE LANÇAMENTOS (embaixo do form) -->
+  <div id="lista-lancamentos-wrap" style="margin-top:12px;display:none;">
+    <div class="card" style="padding:10px 12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:0.95rem;">📋 Lançamentos (<span id="lanc-count">0</span>)</h3>
+        <button onclick="limparLancamentos()" style="background:none;border:none;color:#888;font-size:0.78rem;cursor:pointer;">✖ Limpar</button>
+      </div>
+      <div id="lista-lancamentos-itens"></div>
+      <button class="btn btn-green" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;">💾 SALVAR E ENVIAR AO ESTOQUE</button>
     </div>
   </div>
 
   <!-- HISTÓRICO -->
+  
+  <!-- PEDIDOS (ADM) -->
+    <!-- SAIDAS CD -->
+  <div class="screen adm-only" id="tab-saidas">
+    <div class="card">
+      <h3>📤 Saídas do CD por Unidade</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Entradas registradas nas unidades que saíram do CD.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input type="date" id="saidas-data" onchange="carregarSaidasCD()" style="flex:1;margin:0;" />
+        <select id="saidas-filtro-uni" onchange="carregarSaidasCD()" style="flex:1;margin:0;">
+          <option value="">Todas as unidades</option>
+          <option value="centro">🏪 Centro</option>
+          <option value="delivery">🚗 Delivery</option>
+          <option value="boqueiraw">🍔 Boqueirão</option>
+        </select>
+      </div>
+      <button class="btn btn-red" onclick="carregarSaidasCD()">🔄 Atualizar</button>
+    </div>
+    <div id="lista-saidas-cd"></div>
+  </div>
+
   <div class="screen" id="tab-historico">
     <div class="card">
       <h3>📋 Histórico de Movimentações</h3>
@@ -382,6 +432,7 @@ function iniciarApp() {
   }
 
   carregarProdutos();
+  carregarAlmox();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
@@ -894,22 +945,58 @@ let cameraStream = null;
 let barcodeDetector = null;
 let scanLoop = null;
 
+function extrairPesoBalanca(cod) {
+  if (cod && cod.length === 13 && cod[0] === '2' && /^\d{13}$/.test(cod)) {
+    const pesoG = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoG) && pesoG > 0) return pesoG / 1000;
+  }
+  return null;
+}
+
 function buscarPorCodigo() {
-  const cod = document.getElementById('scan-input').value.trim();
-  if (!cod) return;
-  const p = getProduto(cod);
+  const rawCod = document.getElementById('scan-input').value.trim();
+  if (!rawCod) return;
+
+  const pesoKg = extrairPesoBalanca(rawCod);
+
+  let p = getProduto(rawCod);
+
+  if (!p && pesoKg !== null) {
+    const prefixoProduto = rawCod.substring(1, 7);
+    p = Object.values(produtosCache).find(function(prod) {
+      const base = prod.codigo.replace(/_[a-z]+$/, '');
+      return base === prefixoProduto || prod.codigo.includes(prefixoProduto);
+    });
+  }
+
   if (p) {
     const sel = document.getElementById('lanc-produto');
-    sel.value = cod;
+    sel.value = p.codigo;
     sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
-    document.getElementById('lanc-qtd').focus();
+
+    if (pesoKg !== null) {
+      document.getElementById('lanc-qtd').value = pesoKg;
+      document.getElementById('lanc-total').textContent = pesoKg + ' kg';
+      showToast('⚖️ ' + p.nome + ' — ' + pesoKg + ' kg', 'success');
+      setTimeout(function() {
+        var btn = document.querySelector('#tab-lancar .btn-red');
+        if (btn) btn.focus();
+      }, 100);
+    } else {
+      if (!document.getElementById('lanc-qtd').value) {
+        document.getElementById('lanc-qtd').value = 1;
+      }
+      document.getElementById('lanc-qtd').focus();
+      document.getElementById('lanc-qtd').select();
+      showToast('✅ ' + p.nome, 'success');
+    }
     beep();
-    showToast('✅ ' + p.nome, 'success');
   } else {
-    showToast('Produto não encontrado: ' + cod, 'error');
+    showToast('Produto não encontrado! Pede pro chefe cadastrar esse código 😤', 'error');
   }
 }
+
 
 async function abrirCamera() {
   const area = document.getElementById('camera-area');
@@ -951,9 +1038,405 @@ function fecharCamera() {
 
 // Init
 document.getElementById('login-usuario').focus();
+
+
+
+// ── CALC TOTAL (fechados + aberto) ──
+function calcTotal() {
+  const pct    = parseFloat(document.getElementById('lanc-pct').value)    || 0;
+  const fator  = parseFloat(document.getElementById('lanc-fator').value)  || 0;
+  const aberto = parseFloat(document.getElementById('lanc-aberto') ? document.getElementById('lanc-aberto').value : 0) || 0;
+
+  const subtotalFechados = pct > 0 && fator > 0 ? pct * fator : 0;
+  const total = subtotalFechados + aberto;
+
+  if (total > 0) {
+    document.getElementById('lanc-qtd').value = parseFloat(total.toFixed(3));
+    document.getElementById('lanc-total').textContent = total.toFixed(3);
+  } else if (pct > 0 || fator > 0 || aberto > 0) {
+    document.getElementById('lanc-total').textContent = '—';
+  }
+}
+
+// Alias para compatibilidade
+function calcMultiplicador() { calcTotal(); }
+
+// Mostrar/ocultar campo aberto conforme tipo
+function selecionarTipo(tipo) {
+  document.getElementById('lanc-tipo').value = tipo;
+  const isCont = tipo === 'contagem';
+  const blocoAberto = document.getElementById('bloco-aberto');
+  if (blocoAberto) blocoAberto.style.display = isCont ? 'block' : 'none';
+  // Atualizar botões
+  document.getElementById('btn-tipo-entrada').className   = 'btn ' + (tipo === 'entrada'   ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-tipo-contagem').className  = 'btn ' + (tipo === 'contagem'  ? 'btn-red' : 'btn-gray');
+  // Atualizar label do campo aberto conforme unidade do produto selecionado
+  atualizarLabelAberto();
+}
+
+function atualizarLabelAberto() {
+  const cod = document.getElementById('lanc-produto') ? document.getElementById('lanc-produto').value : '';
+  const p = cod ? getProduto(cod) : null;
+  const isKg = p && (p.unidade === 'kg' || p.unidade === 'Kg' || p.unidade === 'KG');
+  const label = document.getElementById('label-aberto');
+  const unitEl = document.getElementById('lanc-aberto-unit');
+  const input = document.getElementById('lanc-aberto');
+  if (label) {
+    if (isKg) {
+      label.textContent = '⚖️ Kg de pacote aberto';
+      if (input) { input.step = '0.001'; input.placeholder = 'Ex: 0.350'; }
+      if (unitEl) unitEl.textContent = 'kg restantes no pacote aberto';
+    } else {
+      label.textContent = '🔓 Unidades de pacote aberto';
+      if (input) { input.step = '1'; input.placeholder = 'Ex: 3'; }
+      if (unitEl) unitEl.textContent = (p ? p.unidade + ' ' : '') + 'restantes no pacote aberto';
+    }
+  }
+}
+// ── FIM CALC TOTAL ──
+
+
+
+// ── LISTA DE LANÇAMENTOS ──
+var _lancamentos = [];
+
+function adicionarAoLote() {
+  var cod  = document.getElementById('lanc-produto').value;
+  var tipo = document.getElementById('lanc-tipo').value;
+  var qtd  = parseFloat(document.getElementById('lanc-qtd').value);
+  if (!cod)             { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+  if (_lancamentos.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
+  var p = getProduto(cod);
+  var dup = null;
+  for (var i=0;i<_lancamentos.length;i++){
+    if(_lancamentos[i].cod===cod&&_lancamentos[i].tipo===tipo){dup=_lancamentos[i];break;}
+  }
+  if (dup) { dup.qtd += qtd; } else {
+    _lancamentos.push({cod:cod,tipo:tipo,qtd:qtd,nome:p.nome,unidade:p.unidade});
+  }
+  document.getElementById('lanc-qtd').value='';
+  var elp=document.getElementById('lanc-pct'); if(elp) elp.value='';
+  var ela=document.getElementById('lanc-aberto'); if(ela) ela.value='';
+  document.getElementById('lanc-total').textContent='';
+  beep();
+  renderLancamentos();
+}
+
+function renderLancamentos() {
+  var wrap=document.getElementById('lista-lancamentos-wrap');
+  var el=document.getElementById('lista-lancamentos-itens');
+  var cnt=document.getElementById('lanc-count');
+  if(!_lancamentos.length){if(wrap)wrap.style.display='none';return;}
+  if(wrap)wrap.style.display='block';
+  if(cnt)cnt.textContent=_lancamentos.length;
+  if(!el)return;
+  el.innerHTML=_lancamentos.map(function(l,i){
+    var tl=l.tipo==='contagem'?'📊':'📥';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #222;">'
+      +'<div><span style="font-size:0.85rem;font-weight:700;">'+l.nome+'</span>'
+      +'<span style="font-size:0.75rem;color:#888;margin-left:6px;">'+tl+' '+l.qtd+' '+l.unidade+'</span></div>'
+      +'<button onclick="_lancamentos.splice('+i+',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">&#10006;</button>'
+      +'</div>';
+  }).join('');
+}
+
+function limparLancamentos(){_lancamentos=[];renderLancamentos();}
+
+async function salvarLancamentos() {
+  if (!_lancamentos.length) { showToast('Nenhum lançamento!', 'error'); return; }
+  const btn = document.querySelector('#lista-lancamentos-wrap .btn-green');
+  if (btn) btn.disabled = true;
+  let ok = 0;
+  for (const l of _lancamentos) {
+    const p = getProduto(l.cod);
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${l.cod}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
+    const res = await r.json();
+    if (Array.isArray(res) && res.length) {
+      await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada CD', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
+      });
+      produtosCache[l.cod].estoque = res[0].estoque;
+      ok++;
+    }
+  }
+  renderEstoque();
+  limparLancamentos();
+  showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  if (btn) btn.disabled = false;
+}
+
+// ── FIM LISTA DE LANÇAMENTOS ──
+
+// ── SAÍDAS CD ──
+async function carregarSaidasCD() {
+  var el = document.getElementById('lista-saidas-cd');
+  if (!el) return;
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  // Buscar movimentações de ENTRADA nas unidades que têm Smart CD (ou seja, saídas do ponto de vista do CD)
+  // São as entradas registradas em centro/delivery/boqueiraw com produtos que existem no CD
+  var data = document.getElementById('saidas-data') ? document.getElementById('saidas-data').value : '';
+  var filtroUnidade = document.getElementById('saidas-filtro-uni') ? document.getElementById('saidas-filtro-uni').value : '';
+
+  var query = 'tipo=eq.entrada&unidade_loja=in.(centro,delivery,boqueiraw)&status=eq.confirmado&order=created_at.desc&select=*&limit=100';
+  if (data) {
+    query += '&created_at=gte.' + data + 'T00:00:00&created_at=lte.' + data + 'T23:59:59';
+  }
+  if (filtroUnidade) {
+    query = query.replace('unidade_loja=in.(centro,delivery,boqueiraw)', 'unidade_loja=eq.' + filtroUnidade);
+  }
+
+  var movs = await supa('GET', 'movimentacoes', null, query);
+
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhuma saída encontrada.</p>';
+    return;
+  }
+
+  // Agrupar por produto
+  var agrup = {};
+  movs.forEach(function(m) {
+    var base = m.codigo.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+    if (!agrup[base]) agrup[base] = { nome: m.nome, unidade: m.unidade || '', total: 0, por_uni: {} };
+    agrup[base].total += parseFloat(m.qtd) || 0;
+    if (!agrup[base].por_uni[m.unidade_loja]) agrup[base].por_uni[m.unidade_loja] = 0;
+    agrup[base].por_uni[m.unidade_loja] += parseFloat(m.qtd) || 0;
+  });
+
+  var uniLabel = { centro: '🏪 Centro', delivery: '🚗 Delivery', boqueiraw: '🍔 Boqueirão' };
+  var html = '<div style="margin-bottom:8px;font-size:0.78rem;color:#888;">'+movs.length+' registros encontrados</div>';
+  Object.entries(agrup).forEach(function(entry) {
+    var base = entry[0]; var p = entry[1];
+    var uniStr = Object.entries(p.por_uni).map(function(e){ return (uniLabel[e[0]]||e[0])+': '+e[1]+' '+p.unidade; }).join(' | ');
+    html += '<div class="card" style="margin:0 0 8px;padding:12px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;">'
+      + '<div><div style="font-weight:700;font-size:0.92rem;">'+p.nome+'</div>'
+      + '<div style="font-size:0.72rem;color:#aaa;margin-top:2px;">'+uniStr+'</div></div>'
+      + '<div style="background:#1a2a1a;color:#81c784;padding:4px 10px;border-radius:8px;font-weight:700;font-size:0.88rem;">Total: '+p.total.toFixed(3)+' '+p.unidade+'</div>'
+      + '</div></div>';
+  });
+  el.innerHTML = html;
+}
+// ── FIM SAÍDAS CD ──
+
+
+// ── ALMOXARIFADO ──
+var _almoxCache = [];
+var _almoxCameraStream = null;
+var _almoxScanLoop = null;
+
+async function carregarAlmox() {
+  var el = document.getElementById('lista-almox');
+  var sel = document.getElementById('almox-produto');
+  if (el) el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
+
+  var prods = await supa('GET', 'produtos', null,
+    'unidade_loja=eq.almoxarifado&order=categoria,nome&select=*');
+  _almoxCache = prods || [];
+
+  // Popular select de produto
+  if (sel) {
+    sel.innerHTML = '<option value="">-- Selecione --</option>' +
+      _almoxCache.map(function(p){
+        return '<option value="'+p.codigo+'">'+p.nome+' ('+p.categoria+')</option>';
+      }).join('');
+  }
+
+  renderAlmox(_almoxCache);
+}
+
+function renderAlmox(lista) {
+  var el = document.getElementById('lista-almox');
+  if (!el) return;
+  if (!lista || !lista.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Nenhum produto encontrado.</p>';
+    return;
+  }
+
+  var catAtual = '';
+  var html = '';
+  lista.forEach(function(p) {
+    var est = parseFloat(p.estoque) || 0;
+    var min = parseFloat(p.estoque_min) || 0;
+    var cor = est === 0 ? '#f44336' : (min > 0 && est <= min ? '#ff9800' : '#4caf50');
+    var dot = est === 0 ? '🔴' : (min > 0 && est <= min ? '🟡' : '🟢');
+
+    if (p.categoria !== catAtual) {
+      catAtual = p.categoria;
+      html += '<div style="font-size:0.72rem;font-weight:700;color:#888;letter-spacing:1px;padding:10px 0 4px;border-top:1px solid #222;margin-top:6px;">'+catAtual.toUpperCase()+'</div>';
+    }
+
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1a1a1a;" onclick="selecionarAlmoxProduto(''+p.codigo+'')" style="cursor:pointer;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:0.88rem;font-weight:600;color:#f0f0f0;">'+dot+' '+p.nome+'</div>'
+      + '<div style="font-size:0.72rem;color:#666;">'+p.codigo+'</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+      + '<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+est+'</div>'
+      + '<div style="font-size:0.68rem;color:#555;">'+p.unidade+'</div>'
+      + '</div>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function filtrarAlmox() {
+  var busca = (document.getElementById('almox-busca').value || '').toLowerCase();
+  var filtrado = _almoxCache.filter(function(p){
+    return p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca) || (p.categoria||'').toLowerCase().includes(busca);
+  });
+  renderAlmox(filtrado);
+}
+
+function selecionarAlmoxProduto(cod) {
+  var sel = document.getElementById('almox-produto');
+  if (sel) { sel.value = cod; }
+  document.getElementById('almox-qtd').focus();
+}
+
+function buscarAlmoxPorCodigo() {
+  var raw = (document.getElementById('almox-scan').value || '').trim();
+  if (!raw) return;
+  // Busca pelo código exato ou pelo código base (sem sufixo _almoxarifado)
+  var found = _almoxCache.find(function(p){
+    return p.codigo === raw ||
+           p.codigo === raw + '_almoxarifado' ||
+           p.codigo.replace('_almoxarifado','') === raw;
+  });
+  if (found) {
+    document.getElementById('almox-produto').value = found.codigo;
+    document.getElementById('almox-scan').value = '';
+    document.getElementById('almox-qtd').focus();
+    if (typeof beep === 'function') beep();
+    if (typeof showToast === 'function') showToast('✅ ' + found.nome, 'success');
+  } else {
+    if (typeof showToast === 'function') showToast('Produto não encontrado no Almoxarifado!', 'error');
+  }
+}
+
+async function abrirCameraAlmox() {
+  var area  = document.getElementById('almox-camera-area');
+  var video = document.getElementById('almox-camera-video');
+  if (!('BarcodeDetector' in window)) {
+    showToast('Scanner não suportado neste navegador.', 'error');
+    return;
+  }
+  try {
+    _almoxCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = _almoxCameraStream;
+    area.style.display = 'block';
+    var detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','qr_code'] });
+    _almoxScanLoop = setInterval(async function() {
+      try {
+        var codes = await detector.detect(video);
+        if (codes.length > 0) {
+          fecharCameraAlmox();
+          document.getElementById('almox-scan').value = codes[0].rawValue;
+          buscarAlmoxPorCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) { showToast('Erro ao acessar câmera.', 'error'); }
+}
+
+function fecharCameraAlmox() {
+  if (_almoxCameraStream) { _almoxCameraStream.getTracks().forEach(function(t){t.stop();}); _almoxCameraStream = null; }
+  if (_almoxScanLoop) { clearInterval(_almoxScanLoop); _almoxScanLoop = null; }
+  var area = document.getElementById('almox-camera-area');
+  if (area) area.style.display = 'none';
+}
+
+async function lancarAlmox() {
+  var cod  = document.getElementById('almox-produto').value;
+  var tipo = document.getElementById('almox-tipo').value;
+  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
+  if (!cod)         { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+
+  var p = _almoxCache.find(function(x){ return x.codigo === cod; });
+  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
+
+  var est = parseFloat(p.estoque) || 0;
+  var novoEst = tipo === 'contagem' ? qtd : est + qtd;
+
+  var r = await supa('PATCH', 'produtos?codigo=eq.'+cod+'&unidade_loja=eq.almoxarifado', { estoque: novoEst });
+  await supa('POST', 'movimentacoes', {
+    codigo: cod, nome: p.nome, tipo: tipo, qtd: qtd, unidade: p.unidade,
+    colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
+    obs: tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox',
+    unidade_loja: 'almoxarifado', status: 'confirmado',
+    estoque_anterior: est, novo_estoque: novoEst
+  });
+
+  // Atualizar cache local
+  var idx = _almoxCache.findIndex(function(x){ return x.codigo === cod; });
+  if (idx >= 0) _almoxCache[idx].estoque = novoEst;
+
+  document.getElementById('almox-qtd').value = '';
+  document.getElementById('almox-produto').value = '';
+  showToast('✅ ' + p.nome + ': ' + novoEst + ' ' + p.unidade, 'success');
+  if (typeof beep === 'function') beep();
+  renderAlmox(_almoxCache);
+}
+// ── FIM ALMOXARIFADO ──
+
 </script>
 
 
+  <!-- ALMOXARIFADO -->
+    <div class="screen" id="tab-almoxarifado">
+
+    <!-- ESTOQUE DO ALMOXARIFADO -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h3 style="margin:0;">🏬 Almoxarifado</h3>
+        <button class="btn btn-blue" onclick="carregarAlmox()" style="margin:0;padding:8px 14px;">🔄 Atualizar</button>
+      </div>
+      <input type="text" id="almox-busca" placeholder="🔍 Buscar produto..." oninput="filtrarAlmox()" style="width:100%;margin-bottom:10px;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;" />
+      <div id="lista-almox"><p style="color:#888;text-align:center;padding:16px;">Carregando...</p></div>
+    </div>
+
+    <!-- LANÇAR NO ALMOXARIFADO -->
+    <div class="card adm-only">
+      <h3>➕ Lançar no Almoxarifado</h3>
+
+      <!-- Scanner -->
+      <label style="font-size:0.85rem;font-weight:700;">Código de Barras</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="almox-scan" placeholder="Digita ou escaneia..." style="flex:1;margin:0;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;" onkeydown="if(event.key==='Enter'){buscarAlmoxPorCodigo();}" />
+        <button onclick="abrirCameraAlmox()" style="background:#1565c0;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+      </div>
+      <div id="almox-camera-area" style="display:none;margin-bottom:10px;">
+        <video id="almox-camera-video" style="width:100%;border-radius:10px;max-height:200px;" autoplay playsinline></video>
+        <button onclick="fecharCameraAlmox()" style="margin-top:6px;width:100%;padding:8px;background:#333;border:none;border-radius:8px;color:#fff;cursor:pointer;">✖ Fechar câmera</button>
+      </div>
+
+      <label style="font-size:0.85rem;font-weight:700;">Produto</label>
+      <select id="almox-produto" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:8px;"></select>
+
+      <label style="font-size:0.85rem;font-weight:700;">Tipo</label>
+      <select id="almox-tipo" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:8px;">
+        <option value="entrada">📥 Entrada</option>
+        <option value="contagem">📋 Contagem</option>
+      </select>
+
+      <label style="font-size:0.85rem;font-weight:700;">Quantidade</label>
+      <input type="number" id="almox-qtd" placeholder="Quantidade" min="0" step="0.01" style="width:100%;padding:10px;border-radius:8px;border:1px solid #333;background:#1a1a1a;color:#fff;margin-bottom:12px;" />
+
+      <button class="btn btn-gold" onclick="lancarAlmox()" style="width:100%;">✅ Confirmar</button>
+    </div>
+  </div>
 
 <!-- CHATBOT -->
 <div id="chat-btn" onclick="toggleChat()" style="position:fixed;bottom:20px;right:20px;width:54px;height:54px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;z-index:8000;box-shadow:0 4px 16px rgba(0,0,0,0.4);">💬</div>
