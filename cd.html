@@ -1708,9 +1708,19 @@ async function carregarSaidasCD() {
 
 // ── ALMOX VISUAL (da Matriz) ──
 async function carregarAlmoxChefao() {
-  var res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
-  if (Array.isArray(res)) {
-    window._almoxEstoques = res;
+  var el = document.getElementById('almox-chefao-lista');
+  if (el) el.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">⏳ Carregando...</div>';
+  try {
+    var res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+    if (res && Array.isArray(res)) {
+      window._almoxEstoques = res;
+    } else {
+      window._almoxEstoques = [];
+    }
+  } catch(e) {
+    window._almoxEstoques = [];
+    if (el) el.innerHTML = '<div class="card" style="text-align:center;color:#f44336;padding:20px;">Erro ao carregar.</div>';
+    return;
   }
   renderAlmoxChefao();
 }
