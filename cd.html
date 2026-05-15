@@ -619,9 +619,7 @@ function editarProduto(cod) {
   showToast('Editando: ' + p.nome, '');
 }
 
-function limparFormProduto() {
-  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
-}
+
 
 async function zerarEstoqueProduto(cod) {
   const p = getProduto(cod);
@@ -1059,20 +1057,10 @@ function calcTotal() {
 }
 
 // Alias para compatibilidade
-function calcMultiplicador() { calcTotal(); }
+
 
 // Mostrar/ocultar campo aberto conforme tipo
-function selecionarTipo(tipo) {
-  document.getElementById('lanc-tipo').value = tipo;
-  const isCont = tipo === 'contagem';
-  const blocoAberto = document.getElementById('bloco-aberto');
-  if (blocoAberto) blocoAberto.style.display = isCont ? 'block' : 'none';
-  // Atualizar botões
-  document.getElementById('btn-tipo-entrada').className   = 'btn ' + (tipo === 'entrada'   ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-tipo-contagem').className  = 'btn ' + (tipo === 'contagem'  ? 'btn-red' : 'btn-gray');
-  // Atualizar label do campo aberto conforme unidade do produto selecionado
-  atualizarLabelAberto();
-}
+
 
 function atualizarLabelAberto() {
   const cod = document.getElementById('lanc-produto') ? document.getElementById('lanc-produto').value : '';
@@ -1173,6 +1161,7 @@ async function salvarLancamentos() {
   renderEstoque();
   limparLancamentos();
   showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  carregarHistoricoRecente();
   if (btn) btn.disabled = false;
 }
 
@@ -1390,6 +1379,38 @@ async function lancarAlmox() {
   renderAlmox(_almoxCache);
 }
 // ── FIM ALMOXARIFADO ──
+
+
+// ── HISTÓRICO RECENTE ──
+async function carregarHistoricoRecente() {
+  var el = document.getElementById('historico-recente');
+  if (!el) return;
+  var movs = await supa('GET', 'movimentacoes', null,
+    'unidade_loja=eq.' + UNIDADE_LOJA + '&order=created_at.desc&limit=15&select=*');
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:10px;">Nenhum lançamento ainda.</p>';
+    return;
+  }
+  var tipoIcon = { entrada: '📥', contagem: '📊', saida: '📤' };
+  el.innerHTML = movs.map(function(m) {
+    var dt = new Date(m.created_at);
+    var hora = dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    var dia  = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+    var icon = tipoIcon[m.tipo] || '•';
+    var cor  = m.tipo === 'entrada' ? '#81c784' : m.tipo === 'contagem' ? '#64b5f6' : '#ffb74d';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1e1e1e;">'
+      + '<div style="flex:1;">'
+      + '<span style="font-size:0.82rem;font-weight:700;color:'+cor+';">'+icon+' '+m.nome+'</span>'
+      + '<span style="font-size:0.7rem;color:#555;margin-left:6px;">'+m.colaborador+'</span>'
+      + '</div>'
+      + '<div style="text-align:right;white-space:nowrap;">'
+      + '<div style="font-size:0.85rem;font-weight:700;color:'+cor+';">'+m.qtd+' '+m.unidade+'</div>'
+      + '<div style="font-size:0.65rem;color:#444;">'+dia+' '+hora+'</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+// ── FIM HISTÓRICO RECENTE ──
 
 </script>
 
