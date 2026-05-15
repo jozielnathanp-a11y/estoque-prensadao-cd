@@ -164,7 +164,7 @@ function iniciarApp() {
   var hoje = (function(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
   var hd = document.getElementById('hist-data'); if(hd) hd.value = hoje;
   var rd = document.getElementById('rel-data');  if(rd) rd.value = hoje;
-  if (typeof carregarProdutos === 'function') carregarProdutos();
+  setTimeout(function() { if (typeof carregarProdutos === 'function') { carregarProdutos(); } else { console.error('carregarProdutos nao definido'); } }, 200);
 }
 
 </script>
