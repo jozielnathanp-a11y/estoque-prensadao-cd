@@ -727,180 +727,20 @@ function selecionarTipo(tipo) {
   document.getElementById('btn-tipo-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-red' : 'btn-gray');
 }
 
-function selecionarCat(cat) {
-  document.getElementById('rel-cat-sel').value = cat;
-  document.getElementById('btn-cat-proc').className = 'btn ' + (cat === 'Processado' ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-cat-bruto').className = 'btn ' + (cat === 'Bruto' ? 'btn-red' : 'btn-gray');
-  document.getElementById('btn-cat-todos').className = 'btn ' + (cat === 'Todos' ? 'btn-red' : 'btn-gray');
-}
+// selecionarCat redefinida abaixo
+
 
 // ── RELATÓRIO ──
-async function gerarRelatorio() {
-  const data = document.getElementById('rel-data').value;
-  const cat = document.getElementById('rel-cat-sel').value;
-  if (!data) { showToast('Selecione uma data!', 'error'); return; }
+// gerarRelatorio redefinida abaixo
 
-  const el = document.getElementById('relatorio-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
-
-  const hoje = dataHoje();
-  const eHoje = data === hoje;
-
-  // Filtrar produtos pela categoria
-  const produtos = Object.values(produtosCache).filter(p => cat === 'Todos' || p.categoria === cat);
-
-  // Buscar movimentações do período completo (dia anterior + dia atual)
-  const diaAnterior = new Date(data);
-  diaAnterior.setDate(diaAnterior.getDate() - 1);
-  const diaAntStr = diaAnterior.getFullYear()+'-'+String(diaAnterior.getMonth()+1).padStart(2,'0')+'-'+String(diaAnterior.getDate()).padStart(2,'0');
-
-  const inicio = data + 'T00:00:00';
-  const fim = data + 'T23:59:59';
-  const inicioAnt = diaAntStr + 'T00:00:00';
-  const fimAnt = diaAntStr + 'T23:59:59';
-
-  // Movimentações do dia selecionado
-  const movsHoje = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
-
-  // Movimentações do dia anterior
-  const movsAnt = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
-
-  let resultado = {};
-  produtos.forEach(p => {
-    resultado[p.codigo] = {
-      nome: p.nome, unidade: p.unidade, categoria: p.categoria,
-      estoque_min: p.estoque_min || 0,
-      entrada_anterior: 0,   // entradas do dia anterior
-      contagem: null,        // última contagem do dia
-      entrada_atual: 0,      // entradas do dia atual
-      consumo: null,
-      estoque_atual: eHoje ? parseFloat(p.estoque) || 0 : null
-    };
-  });
-
-  // Processar movimentações do dia anterior
-  if (Array.isArray(movsAnt)) {
-    movsAnt.forEach(m => {
-      if (!resultado[m.codigo]) return;
-      if (m.tipo === 'entrada') resultado[m.codigo].entrada_anterior += m.qtd;
-    });
-  }
-
-  // Processar movimentações do dia atual
-  if (Array.isArray(movsHoje)) {
-    movsHoje.forEach(m => {
-      if (!resultado[m.codigo]) return;
-      if (m.tipo === 'contagem') resultado[m.codigo].contagem = m.novo_estoque;
-      else if (m.tipo === 'entrada') resultado[m.codigo].entrada_atual += m.qtd;
-    });
-  }
-
-  // Para hoje: estoque atual = estoque no banco
-  // Calcular consumo para Processado
-  if (Array.isArray(movsHoje)) {
-    movsHoje.forEach(m => {
-      if (!resultado[m.codigo]) return;
-      const r = resultado[m.codigo];
-      if (m.tipo === 'contagem' && m.estoque_anterior !== null) {
-        r.consumo = (m.estoque_anterior || 0) - m.qtd + r.entrada_atual;
-        if (r.consumo < 0) r.consumo = 0;
-      }
-    });
-  }
-
-  const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
-  window._ultimoRelatorio = itens;
-  window._ultimoRelCat = cat;
-
-  if (!itens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
-
-  const [ano, mes, dia] = data.split('-');
-  let html = `<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
-    📅 ${dia}/${mes}/${ano} · ${cat === 'Todos' ? 'Todas categorias' : cat}
-  </div>`;
-
-  itens.forEach(p => {
-    const isProc = true;
-    const semCont = p.contagem === null;
-    const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
-    const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
-
-    html += `<div style="background:#fff;border-left:4px solid ${cor};border-radius:8px;padding:10px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
-      <div style="font-weight:700;font-size:0.92rem;">${p.nome} <span style="font-size:0.72rem;color:#aaa;font-weight:400;">${p.categoria}</span></div>
-      <div style="font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">`;
-
-    if (isProc) {
-      // PROCESSADO: Entrada anterior | Contagem | Entrada atual | Consumo
-      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
-      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem, p.unidade)}</b></span>`;
-      html += `<span style="background:#e8f5e9;padding:3px 8px;border-radius:6px;">📥 Ent. atual: <b style="color:#2e7d32">${p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '—'}</b></span>`;
-      if (p.consumo !== null && p.consumo > 0) html += `<span style="background:#fff3e0;padding:3px 8px;border-radius:6px;">🍳 Consumo: <b style="color:#e65100">${fmtQ(p.consumo, p.unidade)}</b></span>`;
-    } else {
-      // BRUTO: Entrada anterior | Contagem | Pedido sugerido
-      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
-      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
-      const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
-      if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
-    }
-
-    html += `</div></div>`;
-  });
-
-  el.innerHTML = html;
-}
 
 // ── COMPARTILHAR WHATSAPP ──
-function compartilharWhatsApp() {
-  const data = document.getElementById('rel-data').value;
-  const el = document.getElementById('relatorio-resultado');
-  if (!el.innerHTML || el.innerHTML.includes('Carregando') || el.innerHTML.includes('Selecione')) {
-    showToast('Gere o relatório primeiro!', 'error'); return;
-  }
+// compartilharWhatsApp redefinida abaixo
 
-  const itens = window._ultimoRelatorio;
-  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
-
-  const [ano, mes, dia] = data.split('-');
-  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
-
-  itens.forEach(p => {
-    const semCont = p.contagem === null;
-    texto += `▪️ *${p.nome}*\n`;
-    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
-    if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
-    if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
-    texto += '\n';
-  });
-
-  texto += `\n_Gerado por Estoques Prensadão CD_`;
-  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
-  window.open(url, '_blank');
-}
 
 // ── EXPORTAR CSV ──
-function exportarCSV() {
-  const data = document.getElementById('rel-data').value;
-  const itens = window._ultimoRelatorio;
-  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+// exportarCSV redefinida abaixo
 
-  const [ano, mes, dia] = data.split('-');
-  let csv = 'Produto;Unidade;Estoque;Entrada;Consumo\n';
-  itens.forEach(p => {
-    const est = p.contagem !== null ? p.contagem : '';
-    const ent = p.entradas > 0 ? p.entradas : '';
-    const con = p.consumo > 0 ? p.consumo : '';
-    csv += `"${p.nome}";${p.unidade};${est};${ent};${con}\n`;
-  });
-
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `estoque_prensadao_${dia}-${mes}-${ano}.csv`;
-  link.click();
-  showToast('✅ Planilha baixada!', 'success');
-}
 
 // ── BEEP ──
 function beep() {
@@ -1909,6 +1749,182 @@ function popularAlmoxSelect() {
     sel.innerHTML += '<option value="' + p.codigo + '">' + p.nome + '</option>';
   });
 }
+
+
+// ── RELATÓRIO CD (restaurado) ──
+function selecionarCat(cat) {
+  document.getElementById('rel-cat-sel').value = cat;
+  document.getElementById('btn-cat-proc').className = 'btn ' + (cat === 'Processado' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-cat-bruto').className = 'btn ' + (cat === 'Bruto' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-cat-todos').className = 'btn ' + (cat === 'Todos' ? 'btn-red' : 'btn-gray');
+}
+
+async function gerarRelatorio() {
+  const data = document.getElementById('rel-data').value;
+  const cat = document.getElementById('rel-cat-sel').value;
+  if (!data) { showToast('Selecione uma data!', 'error'); return; }
+
+  const el = document.getElementById('relatorio-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const hoje = dataHoje();
+  const eHoje = data === hoje;
+
+  // Filtrar produtos pela categoria
+  const produtos = Object.values(produtosCache).filter(p => cat === 'Todos' || p.categoria === cat);
+
+  // Buscar movimentações do período completo (dia anterior + dia atual)
+  const diaAnterior = new Date(data);
+  diaAnterior.setDate(diaAnterior.getDate() - 1);
+  const diaAntStr = diaAnterior.getFullYear()+'-'+String(diaAnterior.getMonth()+1).padStart(2,'0')+'-'+String(diaAnterior.getDate()).padStart(2,'0');
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const inicioAnt = diaAntStr + 'T00:00:00';
+  const fimAnt = diaAntStr + 'T23:59:59';
+
+  // Movimentações do dia selecionado
+  const movsHoje = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&select=*&order=created_at.asc`);
+
+  // Movimentações do dia anterior
+  const movsAnt = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&select=*&order=created_at.asc`);
+
+  let resultado = {};
+  produtos.forEach(p => {
+    resultado[p.codigo] = {
+      nome: p.nome, unidade: p.unidade, categoria: p.categoria,
+      estoque_min: p.estoque_min || 0,
+      entrada_anterior: 0,   // entradas do dia anterior
+      contagem: null,        // última contagem do dia
+      entrada_atual: 0,      // entradas do dia atual
+      consumo: null,
+      estoque_atual: eHoje ? parseFloat(p.estoque) || 0 : null
+    };
+  });
+
+  // Processar movimentações do dia anterior
+  if (Array.isArray(movsAnt)) {
+    movsAnt.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      if (m.tipo === 'entrada') resultado[m.codigo].entrada_anterior += m.qtd;
+    });
+  }
+
+  // Processar movimentações do dia atual
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      if (m.tipo === 'contagem') resultado[m.codigo].contagem = m.novo_estoque;
+      else if (m.tipo === 'entrada') resultado[m.codigo].entrada_atual += m.qtd;
+    });
+  }
+
+  // Para hoje: estoque atual = estoque no banco
+  // Calcular consumo para Processado
+  if (Array.isArray(movsHoje)) {
+    movsHoje.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      const r = resultado[m.codigo];
+      if (m.tipo === 'contagem' && m.estoque_anterior !== null) {
+        r.consumo = (m.estoque_anterior || 0) - m.qtd + r.entrada_atual;
+        if (r.consumo < 0) r.consumo = 0;
+      }
+    });
+  }
+
+  const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
+  window._ultimoRelatorio = itens;
+  window._ultimoRelCat = cat;
+
+  if (!itens.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>'; return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let html = `<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">
+    📅 ${dia}/${mes}/${ano} · ${cat === 'Todos' ? 'Todas categorias' : cat}
+  </div>`;
+
+  itens.forEach(p => {
+    const isProc = p.categoria === 'Processado';
+    const semCont = p.contagem === null;
+    const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
+    const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
+
+    html += `<div style="background:#fff;border-left:4px solid ${cor};border-radius:8px;padding:10px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
+      <div style="font-weight:700;font-size:0.92rem;">${p.nome} <span style="font-size:0.72rem;color:#aaa;font-weight:400;">${p.categoria}</span></div>
+      <div style="font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">`;
+
+    if (isProc) {
+      // PROCESSADO: Entrada anterior | Contagem | Entrada atual | Consumo
+      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
+      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem, p.unidade)}</b></span>`;
+      html += `<span style="background:#e8f5e9;padding:3px 8px;border-radius:6px;">📥 Ent. atual: <b style="color:#2e7d32">${p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '—'}</b></span>`;
+      if (p.consumo !== null && p.consumo > 0) html += `<span style="background:#fff3e0;padding:3px 8px;border-radius:6px;">🍳 Consumo: <b style="color:#e65100">${fmtQ(p.consumo, p.unidade)}</b></span>`;
+    } else {
+      // BRUTO: Entrada anterior | Contagem | Pedido sugerido
+      html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
+      html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
+      const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
+      if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function compartilharWhatsApp() {
+  const data = document.getElementById('rel-data').value;
+  const el = document.getElementById('relatorio-resultado');
+  if (!el.innerHTML || el.innerHTML.includes('Carregando') || el.innerHTML.includes('Selecione')) {
+    showToast('Gere o relatório primeiro!', 'error'); return;
+  }
+
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
+
+  itens.forEach(p => {
+    const semCont = p.contagem === null;
+    texto += `▪️ *${p.nome}*\n`;
+    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
+    if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
+    if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
+    texto += '\n';
+  });
+
+  texto += `\n_Gerado por Estoques Prensadão CD_`;
+  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+}
+
+function exportarCSV() {
+  const data = document.getElementById('rel-data').value;
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let csv = 'Produto;Unidade;Estoque;Entrada;Consumo\n';
+  itens.forEach(p => {
+    const est = p.contagem !== null ? p.contagem : '';
+    const ent = p.entradas > 0 ? p.entradas : '';
+    const con = p.consumo > 0 ? p.consumo : '';
+    csv += `"${p.nome}";${p.unidade};${est};${ent};${con}\n`;
+  });
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `estoque_prensadao_${dia}-${mes}-${ano}.csv`;
+  link.click();
+  showToast('✅ Planilha baixada!', 'success');
+}
+
+// ── FIM RELATÓRIO CD ──
 </script>
 
 
