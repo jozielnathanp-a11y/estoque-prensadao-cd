@@ -158,6 +158,7 @@
     <div class="tab adm-only" onclick="showTab('pedidos')">🛒 PEDIDOS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ BASE</div>
+    <div class="tab" onclick="showTab('almoxarifado')">🏬 Almoxarifado</div>
   </div>
 
   <!-- ESTOQUE -->
@@ -532,6 +533,7 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
+  if (name === 'almoxarifado') { carregarAlmox(); }
 }
 
 // ── PRODUTOS ──
