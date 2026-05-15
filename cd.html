@@ -426,7 +426,7 @@ async function fazerLogin() {
     const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
-      iniciarApp(); verificarTutorial();;
+      iniciarApp(); verificarTutorial();
     } else {
       document.getElementById('login-erro').style.display = 'block';
     }
@@ -437,7 +437,7 @@ async function fazerLogin() {
 
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
-function iniciarApp(); verificarTutorial(); {
+function iniciarApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
@@ -1342,8 +1342,7 @@ document.getElementById('login-usuario').focus();
 
 function fecharTutorial() {
   document.getElementById('tutorial-overlay').style.display = 'none';
-  localStorage.setItem('tutorial_visto_cd', '1');
-}
+  }
 
 function tutorialNext() {
   if (_tutStep < TUTORIAL_PASSOS.length - 1) { _tutStep++; renderTutorial(); }
@@ -1368,13 +1367,6 @@ function renderTutorial() {
   document.getElementById('tut-btn-prev').disabled = _tutStep === 0;
   document.getElementById('tut-btn-next').textContent = _tutStep === total - 1 ? '✅ Entendi!' : 'Próximo →';
 }
-
-function verificarTutorial() {
-  if (!localStorage.getItem('tutorial_visto_cd')) {
-    setTimeout(abrirTutorial, 800);
-  }
-}
-
 
 // ── TUTORIAL ──
 const TUTORIAL_PASSOS_CD = [{"titulo": "\ud83d\udce6 ESTOQUE CD", "texto": "Aqui \u00e9 o raio-x do CD, sangue! V\u00ea tudo que tem na base.<br><br>\ud83d\udd34 Vermelho = zerou<br>\ud83d\udfe1 Amarelo = t\u00e1 no limite<br>\ud83d\udfe2 Verde = t\u00e1 suave<br><br>Filtra por categoria ou digita o nome."}, {"titulo": "\u2795 LAN\u00c7AR", "texto": "Aqui voc\u00ea registra o que entrou no CD.<br><br><b>ENTRADA</b> = chegou do fornecedor<br><b>CONTAGEM</b> = confer\u00eancia do estoque<br><br>1\ufe0f\u20e3 Escolhe o tipo<br>2\ufe0f\u20e3 Escaneia ou digita o produto<br>3\ufe0f\u20e3 Coloca a quantidade em PCT<br>4\ufe0f\u20e3 ADICIONAR \u2192 CONFIRMAR TUDO"}, {"titulo": "\ud83d\udce6 ALMOXARIFADO", "texto": "O Almoxarifado \u00e9 separado do estoque normal, brother!<br><br>Aqui ficam todas as <b>embalagens</b> (caixas, sacolas, copos...).<br><br>Quando uma unidade recebe embalagem com origem CD \u2192 desconta do Almoxarifado automaticamente. Faz a entrada aqui!"}, {"titulo": "\ud83d\udccb HIST\u00d3RICO", "texto": "Aqui \u00e9 o livro de ata do CD. Tudo que movimentou aparece aqui, filtra por data."}, {"titulo": "\u2699\ufe0f DICAS FINAIS", "texto": "\ud83d\udd25 Dicas pra n\u00e3o vacilar:<br><br>\u2705 Confirma os pendentes antes de sair<br>\ud83d\udcf7 Escanear \u00e9 mais r\u00e1pido que digitar<br>\ud83c\udfed Embalagens \u2192 lan\u00e7a no Almoxarifado<br>\ud83e\udd69 Bruto/Processado \u2192 lan\u00e7a no Estoque normal<br>\u2753 Travou? Cola no bot\u00e3o de ajuda!"}];
@@ -1416,62 +1408,1368 @@ function renderTutorial() {
 }
 
 function verificarTutorial() {
-  if (!localStorage.getItem('tut_teste_NUNCA_cd')) {
+  if (!localStorage.getItem('tut_visto_cd')) {
     setTimeout(abrirTutorial, 1000);
   }
 }
 
-</script>
+</script>E html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Estoques Prensadão CD</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Rajdhani', sans-serif; background: #0a0a0a; min-height: 100vh; color: #f0f0f0; letter-spacing: 0.02em; }
 
-      <button onclick="fecharTutorial()" style="background:transparent;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
-    </div>
-    <!-- Progresso -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;" id="tut-dots"></div>
-    <!-- Conteúdo -->
-    <div id="tut-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#fff;letter-spacing:1px;margin-bottom:10px;"></div>
-    <div id="tut-texto" style="font-size:0.88rem;color:#ccc;line-height:1.7;min-height:120px;"></div>
-    <!-- Navegação -->
-    <div style="display:flex;gap:8px;margin-top:20px;">
-      <button id="tut-btn-prev" onclick="tutorialPrev()" style="flex:1;background:#222;border:1px solid #444;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-size:0.88rem;">← Anterior</button>
-      <button id="tut-btn-next" onclick="tutorialNext()" style="flex:1;background:#37474f;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">Próximo →</button>
-    </div>
-    <button onclick="fecharTutorial()" style="width:100%;margin-top:8px;background:transparent;border:none;color:#444;font-size:0.78rem;cursor:pointer;">Pular tutorial</button>
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #616161 0%, #37474f 100%);
+    }
+    .login-box {
+      background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 0 40px #60606044; border: 1px solid #60606033;
+    }
+    .login-box h1 { font-size: 1.4rem; color: #546e7a; text-align: center; margin-bottom: 6px; }
+    .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
+      font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
+    }
+    .login-box input:focus { border-color: #546e7a; }
+    .login-box button {
+      width: 100%; padding: 14px; background: #607d8b; color: #000; border: none;
+      border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
+    }
+    .login-box button:hover { background: #37474f; }
+    #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
+
+    /* APP */
+    #app { display: none; }
+    .topbar {
+      background: #111; color: #607d8b; padding: 12px 16px; border-bottom: 2px solid #607d8b44;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar h1 { font-size: 1rem; font-weight: 700; }
+    .topbar span { font-size: 0.78rem; opacity: 0.85; }
+    .topbar button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
+
+    .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
+    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
+    .tab.active { color: #607d8b; border-bottom-color: #607d8b; }
+
+    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; background: #0a0a0a; }
+    .screen.active { display: block; }
+
+    .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .card h3 { font-size: 1rem; color: #607d8b; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+    .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+    .btn-red { background: #607d8b; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
+    .btn-green { background: #2e7d32; color: #fff; }
+    .btn-blue { background: #37474f; color: #fff; }
+    .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
+
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
+    input:focus, select:focus { border-color: #607d8b; }
+    label { font-size: 0.82rem; font-weight: 700; color: #607d8b; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+
+    .produto-item {
+      background: #161616; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-left: 4px solid #333;
+    }
+    .produto-item.ok { border-left-color: #2e7d32; }
+    .produto-item.baixo { border-left-color: #ff9800; }
+    .produto-item.zerado { border-left-color: #b71c1c; }
+    .produto-nome { font-weight: 700; font-size: 0.9rem; color: #f0f0f0; }
+    .produto-cod { font-size: 0.72rem; color: #555; }
+    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #607d8b; }
+    .produto-qty small { font-size: 0.7rem; color: #888; }
+
+    #toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #333; color: #fff; padding: 10px 20px; border-radius: 20px;
+      font-size: 0.88rem; opacity: 0; transition: opacity 0.3s; z-index: 9999;
+      pointer-events: none; max-width: 90%;
+    }
+    #toast.show { opacity: 1; }
+    #toast.success { background: #2e7d32; }
+    #toast.error { background: #b71c1c; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
+    .badge-adm { background: #fde8e8; color: #b71c1c; }
+    .badge-op { background: #e8f5e9; color: #2e7d32; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-card { background: #161616; border-radius: 4px; padding: 14px; text-align: center; border: 1px solid #222; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #607d8b; font-family: 'Bebas Neue', sans-serif; }
+    .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
+
+    .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
+    .hist-contagem { background: #e3f2fd; color: #37474f; }
+    .hist-entrada { background: #e8f5e9; color: #2e7d32; }
+    .hist-saida { background: #fde8e8; color: #b71c1c; }
+
+    /* Modal movimentação */
+    #modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+      z-index: 1000; align-items: flex-end; justify-content: center;
+    }
+    .modal-box {
+      background: #111; border-radius: 4px 4px 0 0; padding: 24px 20px 36px;
+      width: 100%; max-width: 480px; border-top: 2px solid #607d8b;
+    }
+    .modal-box h2 { font-size: 1.3rem; color: #607d8b; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .modal-box p { font-size: 0.8rem; color: #555; margin-bottom: 12px; }
+
+    @media (min-width: 600px) {
+      .tabs { justify-content: center; }
+      .tab { padding: 14px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🏪 Estoques Prensadão CD</h1>
+    <p>Bora se identificar, mano 👊</p>
+    <label>Qual é o seu nome, parceiro?</label>
+    <input type="text" id="login-usuario" placeholder="Seu usuário aqui, chefe..." autocomplete="username" />
+    <label>Senha, sangue</label>
+    <input type="password" id="login-senha" placeholder="••••" autocomplete="current-password" />
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <div id="login-erro">Errou feio, mano! Confere o usuário e a senha 🤨</div>
   </div>
 </div>
 
-
-<!-- TUTORIAL -->
-<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#0d0d0d;border:2px solid #37474f;border-radius:18px;width:100%;max-width:420px;padding:24px 20px;position:relative;">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#37474f;letter-spacing:2px;">COMO USAR O SISTEMA</div>
-      <button onclick="fecharTutorial()" style="background:transparent;border:none;color:#444;font-size:1.5rem;cursor:pointer;line-height:1;">✕</button>
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>🏪 Prensadão CD</h1>
+      <span id="topbar-usuario"></span>
     </div>
-    <div style="font-size:0.72rem;color:#444;margin-bottom:16px;font-style:italic;">Lê com atenção, mano 👇</div>
+    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button onclick="sair()">Sair</button></div>
+  </div>
 
-    <!-- Dots progresso -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;" id="tut-dots"></div>
+  <div class="tabs" id="tabs-bar">
+    <div class="tab active" onclick="showTab('estoque')">📦 Estoque</div>
+    <div class="tab" onclick="showTab('lancar')">➕ Lançar</div>
+    <div class="tab" onclick="showTab('almox')">📦 Almoxarifado</div>
+    <div class="tab" onclick="showTab('historico')">📋 Histórico</div>
+    <div class="tab adm-only" onclick="showTab('relatorio')">📊 Relatório</div>
+    <div class="tab adm-only" onclick="showTab('produtos')">⚙️ Produtos</div>
+  </div>
 
-    <!-- Conteúdo -->
-    <div id="tut-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#fff;letter-spacing:1px;margin-bottom:10px;"></div>
-    <div id="tut-texto" style="font-size:0.9rem;color:#bbb;line-height:1.8;min-height:130px;"></div>
-
-    <!-- Navegação -->
-    <div style="display:flex;gap:8px;margin-top:20px;">
-      <button id="tut-btn-prev" onclick="tutorialPrev()" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-size:0.85rem;font-weight:700;">← VOLTAR</button>
-      <button id="tut-btn-next" onclick="tutorialNext()" style="flex:2;background:#37474f;border:none;color:#fff;border-radius:10px;padding:11px;cursor:pointer;font-weight:700;font-size:0.9rem;letter-spacing:1px;">PRÓXIMO →</button>
+  <!-- ESTOQUE -->
+  <div class="screen active" id="tab-estoque">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Produtos</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-baixo" style="color:#ff9800">0</div><div class="stat-label">Estoque baixo</div></div>
     </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="text" id="busca-estoque" placeholder="🔍 Qual produto cê quer, irmão?" style="margin:0;" oninput="renderEstoque()" />
+      <select id="filtro-cat" style="margin:0;width:auto;" onchange="renderEstoque()">
+        <option value="">Todas</option>
+        <option>Bruto</option><option>Processado</option>
+      </select>
+    </div>
+    <div id="lista-estoque"></div>
+  </div>
 
-    <!-- Ajuda -->
-    <div style="margin-top:12px;border-top:1px solid #1a1a1a;padding-top:12px;display:flex;gap:8px;align-items:center;">
-      <a href="https://wa.me/5542988819420?text=Oi%20Josiel,%20preciso%20de%20ajuda%20no%20sistema%20do%20CD!" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#1a3a1a;border:1px solid #2e7d32;color:#4caf50;border-radius:10px;padding:10px;text-decoration:none;font-size:0.82rem;font-weight:700;">
-        💬 Preciso de ajuda
-      </a>
-      <button onclick="fecharTutorial()" style="flex:1;background:transparent;border:1px solid #222;color:#444;border-radius:10px;padding:10px;cursor:pointer;font-size:0.78rem;">Pular tutorial</button>
+  <!-- LANÇAR -->
+  <div class="screen" id="tab-lancar">
+    <div class="card">
+      <h3>➕ Novo Lançamento</h3>
+
+      <!-- PASSO 1: Tipo -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">1️⃣ Tipo de lançamento</label>
+      <div style="display:flex;gap:8px;margin:8px 0 16px;">
+        <button id="btn-tipo-entrada" onclick="selecionarTipo('entrada')" class="btn btn-red" style="flex:1;margin:0;padding:14px;">📥 Entrada</button>
+        <button id="btn-tipo-contagem" onclick="selecionarTipo('contagem')" class="btn btn-gray" style="flex:1;margin:0;padding:14px;">📊 Contagem</button>
+      </div>
+      <input type="hidden" id="lanc-tipo" value="entrada" />
+
+      <!-- PASSO 2: Produto -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
+      <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
+        <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
+        <button onclick="abrirCamera()" style="background:#607d8b;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+      </div>
+      <div id="camera-area" style="display:none;margin-bottom:10px;">
+        <video id="camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
+        <button onclick="fecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
+      </div>
+      <select id="lanc-produto" style="margin-bottom:6px;">
+        <option value="">-- Selecione --</option>
+      </select>
+      <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
+
+      <!-- PASSO 3: Quantidade -->
+      <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 10px;">
+        <label style="font-size:0.82rem;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">×</span>
+          <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <span style="color:#607d8b;font-weight:700;">=</span>
+          <span id="lanc-total" style="font-weight:700;color:#37474f;min-width:50px;text-align:right;">—</span>
+        </div>
+      </div>
+      <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
+      <button class="btn btn-red" onclick="adicionarPendente_CD()">➕ ADICIONAR</button>
+
+      <!-- PENDENTES -->
+      <div id="pendentes-area" style="display:none;margin-top:16px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#607d8b;letter-spacing:1px;margin-bottom:8px;">📋 PENDENTES</div>
+        <div id="lista-pendentes"></div>
+        <button class="btn btn-green" onclick="confirmarTodosPendentes_CD()" style="width:100%;margin-top:8px;">✅ CONFIRMAR TUDO</button>
+        <button class="btn btn-gray" onclick="limparPendentes_CD()" style="width:100%;margin-top:6px;">🗑️ LIMPAR TUDO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALMOXARIFADO -->
+  <div class="screen" id="tab-almox">
+    <div class="card">
+      <h3>📦 Almoxarifado de Embalagens</h3>
+      <p style="font-size:0.78rem;color:#888;margin-bottom:10px;">Estoque central de embalagens para todas as unidades</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select id="almox-tipo" style="margin:0;flex:1;">
+          <option value="entrada">📥 Entrada</option>
+          <option value="contagem">📊 Contagem</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input type="text" id="almox-scan" placeholder="Escaneia ou digita o código..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter') buscarAlmox()" />
+        <button onclick="buscarAlmox()" style="background:#607d8b;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">🔍</button>
+      </div>
+      <select id="almox-produto" style="margin-bottom:8px;" onchange="selecionarAlmox()">
+        <option value="">-- Selecione o produto --</option>
+      </select>
+      <div id="almox-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin-bottom:8px;display:none;"></div>
+      <input type="number" id="almox-qtd" placeholder="Quantidade (PCT)" step="1" min="1" style="margin-bottom:8px;" />
+      <button class="btn btn-green" onclick="adicionarAlmoxPendente()">➕ ADICIONAR</button>
+      <div id="almox-pendentes-area" style="display:none;margin-top:12px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:#607d8b;letter-spacing:1px;margin-bottom:8px;">📋 PENDENTES</div>
+        <div id="almox-lista-pendentes"></div>
+        <button class="btn btn-green" onclick="confirmarAlmox()" style="width:100%;margin-top:8px;">✅ CONFIRMAR TUDO</button>
+        <button class="btn btn-gray" onclick="limparAlmox()" style="width:100%;margin-top:6px;">🗑️ LIMPAR</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:8px;">
+      <h3>📊 Estoque Atual</h3>
+      <input type="text" id="almox-busca" placeholder="🔍 Buscar..." oninput="renderAlmox()" style="margin-bottom:8px;" />
+      <div id="almox-estoque"></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div class="screen" id="tab-historico">
+    <div class="card">
+      <h3>📋 Histórico de Movimentações</h3>
+      <input type="date" id="hist-data" onchange="carregarHistorico()" />
+      <div id="lista-historico"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data</p></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO (ADM) -->
+  <div class="screen adm-only" id="tab-relatorio">
+    <div class="card">
+      <h3>📊 Relatório de Estoque</h3>
+      <label>Data</label>
+      <input type="date" id="rel-data" />
+      <label>Categoria</label>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button id="btn-cat-proc" onclick="selecionarCat('Processado')" class="btn btn-red" style="flex:1;margin:0;">🥩 Processado</button>
+        <button id="btn-cat-bruto" onclick="selecionarCat('Bruto')" class="btn btn-gray" style="flex:1;margin:0;">🌿 Bruto</button>
+        <button id="btn-cat-todos" onclick="selecionarCat('Todos')" class="btn btn-gray" style="flex:1;margin:0;">📦 Todos</button>
+      </div>
+      <input type="hidden" id="rel-cat-sel" value="Processado" />
+      <button class="btn btn-red" onclick="gerarRelatorio()">📊 Gerar Relatório</button>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-green" onclick="compartilharWhatsApp()" style="flex:1;">📱 WhatsApp</button>
+        <button class="btn btn-blue" onclick="exportarCSV()" style="flex:1;">📊 Planilha CSV</button>
+      </div>
+    </div>
+    <div id="relatorio-resultado"></div>
+
+  <div class="card adm-only" style="margin-top:16px;">
+    <h3>📦 EMBALAGENS</h3>
+    <button class="btn btn-red" onclick="gerarRelatorioEmbalagens()">📊 GERAR RELATÓRIO</button>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button class="btn btn-green" onclick="compartilharEmbalagens()" style="flex:1;">📱 WhatsApp</button>
+      <button class="btn btn-blue" onclick="pedidoEmbalagens()" style="flex:1;">🛒 Pedido</button>
+    </div>
+    <div id="embalagens-resultado"></div>
+  </div>
+  </div>
+
+
+  <!-- ABA EMBALAGENS -->
+  <div class="screen adm-only" id="tab-embalagens">
+    <div class="card">
+      <h3>📦 Relatório de Embalagens</h3>
+      <button class="btn btn-red" onclick="gerarRelatorioEmbalagens()">📊 Ver Estoque</button>
+      <button class="btn btn-green" onclick="pedidoEmbalagens()" style="margin-top:4px;">📱 Enviar pelo WhatsApp o que precisa</button>
+    </div>
+    <div id="embalagens-resultado"></div>
+  </div>
+
+  <!-- PRODUTOS (ADM) -->
+  <div class="screen adm-only" id="tab-produtos">
+    <div class="card">
+      <h3>➕ Novo Produto</h3>
+      <button class="btn btn-red" onclick="mostrarFormProduto()" id="btn-novo-produto">+ Cadastrar novo produto</button>
+      <div id="form-produto" style="display:none;margin-top:10px;">
+        <input type="hidden" id="prod-id" />
+        <label>Código (EAN/barras)</label>
+        <input type="text" id="prod-codigo" placeholder="Ex: 7894900015119" />
+        <label>Nome</label>
+        <input type="text" id="prod-nome" placeholder="Ex: Bacon" />
+        <label>Categoria</label>
+        <select id="prod-cat">
+          <option>Bruto</option><option>Processado</option>
+        </select>
+        <label>Unidade</label>
+        <select id="prod-unidade">
+          <option>un</option><option>kg</option><option>g</option>
+          <option>L</option><option>ml</option><option>cx</option><option>pct</option>
+        </select>
+        <label>Estoque mínimo</label>
+        <input type="number" id="prod-min" placeholder="0" step="0.01" min="0" />
+        <label>Qtd por PCT em kg (opcional)</label>
+        <input type="number" id="prod-pct" placeholder="Ex: 2 (para 2kg por pacote)" step="0.001" min="0" />
+        <button class="btn btn-red" onclick="salvarProduto()">💾 Salvar Produto</button>
+        <button class="btn btn-gray" onclick="limparFormProduto()">✖ Cancelar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📦 Produtos Cadastrados</h3>
+      <input type="text" id="busca-prod" placeholder="🔍 Buscar..." oninput="renderProdutos()" />
+      <div id="lista-produtos"></div>
+    </div>
+    <div class="card">
+      <h3>🗑️ Zerar Histórico</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Apaga todas as movimentações do banco. O estoque atual não é alterado.</p>
+      <input type="date" id="hist-zerar-data" style="margin-bottom:8px;" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data selecionada</button>
+        <button class="btn btn-red" style="flex:1;background:#b71c1c;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
+      </div>
     </div>
   </div>
 </div>
 
-</body>
-</html>
+<!-- MODAL MOVIMENTAÇÃO -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;align-items:flex-end;justify-content:center;">
+  <div class="modal-box">
+    <h2 id="modal-nome"></h2>
+    <p id="modal-info"></p>
+    <label>Quantidade</label>
+    <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="font-size:1.4rem;text-align:center;" />
+    <div id="modal-unidade" style="font-size:0.8rem;color:#888;margin:-4px 0 10px;"></div>
+    <button class="btn btn-green" onclick="confirmarModal()">✅ Confirmar</button>
+    <button class="btn btn-gray" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
+const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
+const UNIDADE_LOJA = 'cd';
+
+let usuarioLogado = null;
+let produtosCache = {};
+let modalCodigo = null;
+let modalTipo = null;
+
+// ── UTILS ──
+function showToast(msg, tipo='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + tipo;
+  setTimeout(() => t.className = '', 2500);
+}
+
+function fmtQ(v, u) {
+  if (!v && v !== 0) return '—';
+  return u === 'kg' ? parseFloat(v).toFixed(3) + ' kg' : parseFloat(v) + ' ' + u;
+}
+
+function dataHoje() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// ── API SUPABASE ──
+async function supa(metodo, tabela, dados=null, params='') {
+  const opts = {
+    method: metodo,
+    headers: {
+      'apikey': SUPA_ANON,
+      'Authorization': 'Bearer ' + SUPA_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': metodo === 'POST' ? 'return=representation' : 'return=minimal'
+    }
+  };
+  if (dados) opts.body = JSON.stringify(dados);
+  const r = await fetch(`${SUPA_URL}/rest/v1/${tabela}?${params}`, opts);
+  if (metodo === 'GET') return r.json();
+  return r.ok;
+}
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
+
+  try {
+    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`);
+    if (res && res.length > 0) {
+      usuarioLogado = res[0];
+      iniciarApp(); verificarTutorial();
+    } else {
+      document.getElementById('login-erro').style.display = 'block';
+    }
+  } catch(e) {
+    showToast('Erro de conexão', 'error');
+  }
+}
+
+document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+  carregarProdutos();
+  carregarAlmox();
+  const hoje = dataHoje();
+  document.getElementById('hist-data').value = hoje;
+  document.getElementById('rel-data').value = hoje;
+}
+
+function sair() {
+  usuarioLogado = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-senha').value = '';
+}
+
+// ── TABS ──
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (name === 'historico') carregarHistorico();
+  if (name === 'almox') { carregarAlmox(); }
+  if (name === 'lancar') popularSelectProdutos();
+}
+
+// ── PRODUTOS ──
+async function carregarProdutos() {
+  try {
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.cd');
+    produtosCache = {};
+    if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
+    renderEstoque();
+    renderProdutos();
+    atualizarStats();
+  } catch(e) {
+    showToast('Eita! Deu pau ao carregar os produtos 😤', 'error');
+  }
+}
+
+function extrairPesoEAN(cod) {
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const pesoRaw = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoRaw) && pesoRaw > 0) return pesoRaw / 1000;
+  }
+  return null;
+}
+
+function getProduto(cod) {
+  if (produtosCache[cod]) return produtosCache[cod];
+  const chaves = Object.keys(produtosCache);
+  // Busca direta sem sufixo _cd
+  const match = chaves.find(k => k === cod + '_cd' || k.replace('_cd','') === cod);
+  if (match) return produtosCache[match];
+  // EAN-13 peso variavel: pos 1-6 = codigo produto
+  if (cod && cod.length === 13 && cod[0] === '2') {
+    const prefixo = cod.substring(1, 7);
+    const matchKg = chaves.find(k => {
+      const codSemLoja = k.replace('_cd', '');
+      return codSemLoja.substring(0, 6) === prefixo;
+    });
+    if (matchKg) return produtosCache[matchKg];
+  }
+  return null;
+}
+
+function atualizarStats() {
+  const lista = Object.values(produtosCache);
+  document.getElementById('stat-total').textContent = lista.length;
+  document.getElementById('stat-baixo').textContent = lista.filter(p => parseFloat(p.estoque) > 0 && parseFloat(p.estoque) <= parseFloat(p.estoque_min || 0)).length;
+}
+
+function renderEstoque() {
+  const busca = (document.getElementById('busca-estoque').value || '').toLowerCase();
+  const cat = document.getElementById('filtro-cat').value;
+  const lista = Object.values(produtosCache)
+    .filter(p => (!cat || p.categoria === cat) && (!busca || p.nome.toLowerCase().includes(busca)))
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+
+  const el = document.getElementById('lista-estoque');
+  if (!lista.length) { el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto encontrado</p>'; return; }
+
+  el.innerHTML = lista.map(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const cls = est === 0 ? 'zerado' : (min > 0 && est <= min) ? 'baixo' : 'ok';
+    return `<div class="produto-item ${cls}">
+      <div>
+        <div class="produto-nome">${p.nome}</div>
+        <div class="produto-cod">${p.codigo} · ${p.categoria}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="produto-qty">${fmtQ(est, p.unidade)}<br><small>${p.unidade}</small></div>
+        ${usuarioLogado.perfil === 'adm' ? `<button onclick="editarProduto('${p.codigo}')" style="background:#f5f5f5;border:1.5px solid #ddd;border-radius:8px;padding:6px 9px;cursor:pointer;">✏️</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderProdutos() {
+  const busca = (document.getElementById('busca-prod')?.value || '').toLowerCase();
+  const lista = Object.values(produtosCache)
+    .filter(p => !busca || p.nome.toLowerCase().includes(busca))
+    .sort((a,b) => a.nome.localeCompare(b.nome));
+
+  const el = document.getElementById('lista-produtos');
+  if (!el) return;
+  el.innerHTML = lista.map(p => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+      <div>
+        <div style="font-weight:600;font-size:0.88rem;">${p.nome}</div>
+        <div style="font-size:0.72rem;color:#aaa;">${p.codigo} · ${p.categoria} · ${p.unidade}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="editarProduto('${p.codigo}')" style="background:#e3f2fd;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">✏️</button>
+        <button onclick="zerarEstoqueProduto('${p.codigo}')" style="background:#fff0f0;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+function calcMultiplicador() {
+  const pct = parseFloat(document.getElementById('lanc-pct').value) || 0;
+  const fator = parseFloat(document.getElementById('lanc-fator').value) || 0;
+  const total = document.getElementById('lanc-total');
+  if (pct > 0 && fator > 0) {
+    const resultado = pct * fator;
+    total.textContent = resultado.toFixed(3);
+    document.getElementById('lanc-qtd').value = resultado.toFixed(3);
+  } else {
+    total.textContent = '—';
+  }
+}
+
+function popularSelectProdutos() {
+  const sel = document.getElementById('lanc-produto');
+  const lista = Object.values(produtosCache).sort((a,b) => a.nome.localeCompare(b.nome));
+  sel.innerHTML = '<option value="">-- Selecione --</option>' +
+    lista.map(p => `<option value="${p.codigo}">${p.nome} (${fmtQ(p.estoque, p.unidade)})</option>`).join('');
+  sel.onchange = () => {
+    const p = getProduto(sel.value);
+    const info = document.getElementById('lanc-info');
+    // Limpar multiplicador
+    document.getElementById('lanc-pct').value = '';
+    document.getElementById('lanc-total').textContent = '—';
+    if (p && p.unidade === 'kg' && p.qtd_por_pct > 0) {
+      info.textContent = '1 PCT = ' + p.qtd_por_pct + ' kg';
+      info.style.display = 'block';
+      document.getElementById('lanc-fator').value = p.qtd_por_pct;
+    } else {
+      info.style.display = 'none';
+      document.getElementById('lanc-fator').value = '';
+    }
+  };
+}
+
+// ── SALVAR PRODUTO ──
+async function salvarProduto() {
+  const id = document.getElementById('prod-id').value;
+  const dados = {
+    codigo: document.getElementById('prod-codigo').value.trim(),
+    nome: document.getElementById('prod-nome').value.trim(),
+    categoria: document.getElementById('prod-cat').value,
+    unidade: document.getElementById('prod-unidade').value,
+    estoque_min: parseFloat(document.getElementById('prod-min').value) || 0,
+    qtd_por_pct: parseFloat(document.getElementById('prod-pct').value) || 0,
+  };
+  if (!dados.codigo || !dados.nome) { showToast('Para aí! Coloca o código e o nome primeiro, mano 😤', 'error'); return; }
+
+  if (id) {
+    await supa('PATCH', `produtos?id=eq.${id}`, dados);
+    showToast('✅ Produto atualizado!', 'success');
+  } else {
+    const existe = await supa('GET', 'produtos', null, `codigo=eq.${dados.codigo}&select=id`);
+    if (existe && existe.length > 0) {
+      await supa('PATCH', `produtos?codigo=eq.${dados.codigo}`, dados);
+      showToast('✅ Produto atualizado!', 'success');
+    } else {
+      dados.estoque = 0;
+      await supa('POST', 'produtos', dados);
+      showToast('✅ Produto cadastrado!', 'success');
+    }
+  }
+  limparFormProduto();
+  carregarProdutos();
+}
+
+function mostrarFormProduto() {
+  document.getElementById('form-produto').style.display = 'block';
+  document.getElementById('btn-novo-produto').style.display = 'none';
+}
+
+function limparFormProduto() {
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('form-produto').style.display = 'none';
+  document.getElementById('btn-novo-produto').style.display = 'block';
+}
+
+function editarProduto(cod) {
+  const p = getProduto(cod);
+  if (!p) return;
+  document.getElementById('prod-id').value = p.id || '';
+  document.getElementById('prod-codigo').value = p.codigo;
+  document.getElementById('prod-nome').value = p.nome;
+  document.getElementById('prod-cat').value = p.categoria;
+  document.getElementById('prod-unidade').value = p.unidade;
+  document.getElementById('prod-min').value = p.estoque_min || '';
+  document.getElementById('prod-pct').value = p.qtd_por_pct || '';
+  mostrarFormProduto();
+  showTab('produtos');
+  showToast('Editando: ' + p.nome, '');
+}
+
+function limparFormProduto() {
+  ['prod-id','prod-codigo','prod-nome','prod-min','prod-pct'].forEach(id => document.getElementById(id).value = '');
+}
+
+async function zerarEstoqueProduto(cod) {
+  const p = getProduto(cod);
+  if (!confirm('Vai zerar o estoque de ' + p.nome + '? Tem certeza, mano? 🤔')) return;
+  await supa('PATCH', `produtos?codigo=eq.${cod}`, { estoque: 0 });
+  produtosCache[cod].estoque = 0;
+  renderEstoque();
+  renderProdutos();
+  showToast('✅ Estoque zerado!', 'success');
+}
+
+// ── LANÇAMENTO ──
+// ── PENDENTES CD ──
+let pendentesCd = [];
+
+function origemPadrao_cd(categoria) {
+  return (categoria === 'Bruto' || categoria === 'Processado') ? 'cd' : 'fornecedor';
+}
+
+function adicionarPendente_CD() {
+  const cod = document.getElementById('lanc-produto').value;
+  const tipo = document.getElementById('lanc-tipo').value;
+  const qtd = parseFloat(document.getElementById('lanc-qtd').value);
+
+  if (!cod) { showToast('Calma aí! Seleciona o produto primeiro, mano 😤', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Ô irmão, quanto é? Coloca a quantidade aí! 😤', 'error'); return; }
+
+  const p = getProduto(cod);
+  if (!p) { showToast('Produto não encontrado 😤', 'error'); return; }
+
+  // Soma se já existe
+  const idx = pendentesCd.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
+  if (idx >= 0) {
+    pendentesCd[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentesCd[idx].qtd, p.unidade), 'success');
+  } else {
+    const origem = origemPadrao_cd(p.categoria || '');
+    pendentesCd.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, categoria: p.categoria || '', origem });
+    showToast('➕ ' + p.nome + ' adicionado', 'success');
+  }
+
+  // Limpar campos
+  document.getElementById('scan-input').value = '';
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-qtd').value = '';
+  document.getElementById('lanc-pct').value = '';
+  document.getElementById('lanc-fator').value = '';
+  document.getElementById('lanc-total').textContent = '—';
+  document.getElementById('lanc-info').style.display = 'none';
+  beep();
+  renderPendentesCd();
+}
+
+function toggleOrigemCd(i, origem) {
+  pendentesCd[i].origem = origem;
+  renderPendentesCd();
+}
+
+function editarPendenteCd(i, val) {
+  pendentesCd[i].qtd = parseFloat(val) || 0;
+  renderPendentesCd();
+}
+
+function removerPendenteCd(i) {
+  pendentesCd.splice(i, 1);
+  renderPendentesCd();
+}
+
+function limparPendentes_CD() {
+  if (!confirm('Limpar todos os pendentes? 🗑️')) return;
+  pendentesCd = [];
+  renderPendentesCd();
+}
+
+function renderPendentesCd() {
+  const area = document.getElementById('pendentes-area');
+  const lista = document.getElementById('lista-pendentes');
+
+  if (!pendentesCd.length) {
+    area.style.display = 'none';
+    lista.innerHTML = '';
+    return;
+  }
+
+  area.style.display = 'block';
+  lista.innerHTML = pendentesCd.map((item, i) => {
+    const cor = item.tipo === 'contagem' ? '#607d8b' : '#2e7d32';
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+
+    const origemBtns = '';
+
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div>'
+      + origemBtns
+      + '</div>'
+      + '<input type="number" value="' + item.qtd + '" step="0.001" min="0.001" onchange="editarPendenteCd(' + i + ', this.value)" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="removerPendenteCd(' + i + ')" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;font-size:1rem;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function confirmarTodosPendentes_CD() {
+  if (!pendentesCd.length) return;
+  if (!confirm('Confirmar ' + pendentesCd.length + ' lançamento(s)?')) return;
+
+  let erros = 0;
+  for (const item of pendentesCd) {
+    const p = getProduto(item.codigo);
+    if (!p) { erros++; continue; }
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+
+    const opts = {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON,
+        'Content-Type': 'application/json', 'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${item.codigo}&unidade_loja=eq.cd`, opts);
+    const res = await r.json();
+    if (!Array.isArray(res) || !res.length) { erros++; continue; }
+
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem' : (item.origem === 'cd' ? 'Entrada (CD)' : 'Entrada (Fornecedor)'),
+      unidade_loja: 'cd',
+      estoque_anterior: est,
+      novo_estoque: novoEst
+    });
+
+    produtosCache[item.codigo].estoque = res[0].estoque;
+  }
+
+  pendentesCd = [];
+  renderPendentesCd();
+  renderEstoque();
+  popularSelectProdutos();
+  beep();
+
+  if (erros > 0) {
+    showToast('⚠️ ' + erros + ' erro(s). Resto confirmado!', 'error');
+  } else {
+    showToast('✅ Tudo confirmado, mano! 💪', 'success');
+  }
+}
+
+// ── ALMOXARIFADO ──
+let almoxCache = {};
+let almoxPendentes = [];
+
+async function carregarAlmox() {
+  const res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&order=nome.asc&select=*');
+  if (Array.isArray(res)) {
+    almoxCache = {};
+    res.forEach(p => almoxCache[p.codigo] = p);
+    popularSelectAlmox();
+    renderAlmox();
+  }
+}
+
+function popularSelectAlmox() {
+  const sel = document.getElementById('almox-produto');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Selecione o produto --</option>';
+  Object.values(almoxCache).sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => {
+    sel.innerHTML += `<option value="${p.codigo}">${p.nome} — ${fmtQ(p.estoque, p.unidade)}</option>`;
+  });
+}
+
+function buscarAlmox() {
+  const cod = document.getElementById('almox-scan').value.trim();
+  if (!cod) return;
+  const chaves = Object.keys(almoxCache);
+  const match = chaves.find(k => k === cod + '_almoxarifado' || k.replace('_almoxarifado','') === cod
+    || k.replace('_almoxarifado','').substring(0,6) === cod.substring(0,6));
+  if (match) {
+    document.getElementById('almox-produto').value = match;
+    selecionarAlmox();
+    document.getElementById('almox-scan').value = '';
+    document.getElementById('almox-qtd').focus();
+  } else {
+    showToast('Embalagem não encontrada! 😤', 'error');
+  }
+}
+
+function selecionarAlmox() {
+  const cod = document.getElementById('almox-produto').value;
+  const p = almoxCache[cod];
+  const info = document.getElementById('almox-info');
+  if (p) {
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+    info.textContent = 'Estoque: ' + fmtQ(p.estoque, p.unidade) + (pct > 1 ? ' · 1 PCT = ' + pct + ' un' : '');
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function renderAlmox() {
+  const busca = (document.getElementById('almox-busca') ? document.getElementById('almox-busca').value : '').toLowerCase();
+  const el = document.getElementById('almox-estoque');
+  if (!el) return;
+  const prods = Object.values(almoxCache).filter(p => p.nome.toLowerCase().includes(busca));
+  if (!prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto</p>'; return; }
+  el.innerHTML = prods.map(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const pct = parseFloat(p.qtd_por_pct) || 0;
+    const cor = est === 0 ? '#b71c1c' : '#2e7d32';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;background:#161616;border-left:4px solid ' + cor + ';border-radius:6px;padding:10px 12px;margin-bottom:6px;">'
+      + '<div><div style="font-weight:700;font-size:0.88rem;">' + p.nome + '</div>'
+      + (pct > 1 ? '<div style="font-size:0.72rem;color:#555;">PCT: ' + pct + ' un</div>' : '') + '</div>'
+      + '<div style="font-weight:700;color:' + cor + ';font-size:1rem;">' + fmtQ(est, p.unidade) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function adicionarAlmoxPendente() {
+  const cod = document.getElementById('almox-produto').value;
+  const tipo = document.getElementById('almox-tipo').value;
+  const qtdRaw = parseFloat(document.getElementById('almox-qtd').value);
+  if (!cod) { showToast('Seleciona a embalagem! 😤', 'error'); return; }
+  if (!qtdRaw || qtdRaw <= 0) { showToast('Coloca a quantidade! 😤', 'error'); return; }
+  const p = almoxCache[cod];
+  const pct = parseFloat(p.qtd_por_pct) || 1;
+  const qtd = tipo === 'contagem' ? qtdRaw : qtdRaw * pct;
+  const idx = almoxPendentes.findIndex(x => x.codigo === cod && x.tipo === tipo);
+  if (idx >= 0) {
+    almoxPendentes[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(almoxPendentes[idx].qtd, p.unidade), 'success');
+  } else {
+    almoxPendentes.push({ codigo: cod, nome: p.nome, tipo, qtd, unidade: p.unidade });
+    showToast('✅ ' + p.nome + ' adicionado', 'success');
+  }
+  document.getElementById('almox-qtd').value = '';
+  document.getElementById('almox-produto').value = '';
+  document.getElementById('almox-info').style.display = 'none';
+  beep();
+  renderAlmoxPendentes();
+}
+
+function renderAlmoxPendentes() {
+  const area = document.getElementById('almox-pendentes-area');
+  const lista = document.getElementById('almox-lista-pendentes');
+  if (!almoxPendentes.length) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  lista.innerHTML = almoxPendentes.map((item, i) => {
+    const cor = item.tipo === 'contagem' ? '#607d8b' : '#2e7d32';
+    const icone = item.tipo === 'contagem' ? '📊' : '📥';
+    return '<div style="display:flex;align-items:center;gap:8px;background:#161616;border-left:3px solid ' + cor + ';border-radius:6px;padding:10px;margin-bottom:6px;">'
+      + '<div style="flex:1;"><div style="font-weight:700;font-size:0.88rem;">' + icone + ' ' + item.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#aaa;">' + (item.tipo === 'contagem' ? 'Contagem' : 'Entrada') + ' · ' + fmtQ(item.qtd, item.unidade) + '</div></div>'
+      + '<input type="number" value="' + item.qtd + '" step="1" min="1" onchange="almoxPendentes[' + i + '].qtd=parseFloat(this.value)||0;renderAlmoxPendentes()" style="width:70px;margin:0;text-align:center;font-size:0.9rem;padding:6px;" />'
+      + '<button onclick="almoxPendentes.splice(' + i + ',1);renderAlmoxPendentes()" style="background:#b71c1c;border:none;border-radius:8px;padding:6px 10px;color:#fff;cursor:pointer;">🗑️</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function confirmarAlmox() {
+  if (!almoxPendentes.length) return;
+  if (!confirm('Confirmar ' + almoxPendentes.length + ' lançamento(s) no almoxarifado?')) return;
+  for (const item of almoxPendentes) {
+    const p = almoxCache[item.codigo];
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    const novoEst = item.tipo === 'contagem' ? item.qtd : est + item.qtd;
+    await supa('PATCH', 'produtos', { estoque: novoEst }, 'codigo=eq.' + item.codigo + '&unidade_loja=eq.almoxarifado');
+    await supa('POST', 'movimentacoes', {
+      codigo: item.codigo, nome: item.nome, tipo: item.tipo,
+      qtd: item.qtd, unidade: item.unidade,
+      colaborador: usuarioLogado.usuario,
+      obs: item.tipo === 'contagem' ? 'Contagem Almoxarifado' : 'Entrada Almoxarifado',
+      unidade_loja: 'almoxarifado',
+      estoque_anterior: est, novo_estoque: novoEst
+    });
+    almoxCache[item.codigo].estoque = novoEst;
+  }
+  almoxPendentes = [];
+  renderAlmoxPendentes();
+  renderAlmox();
+  popularSelectAlmox();
+  beep();
+  showToast('✅ Almoxarifado atualizado! 💪', 'success');
+}
+
+function limparAlmox() {
+  if (!confirm('Limpar pendentes do almoxarifado?')) return;
+  almoxPendentes = [];
+  renderAlmoxPendentes();
+}
+
+// ── HISTÓRICO ──
+async function carregarHistorico() {
+  const data = document.getElementById('hist-data').value;
+  if (!data) return;
+  const el = document.getElementById('lista-historico');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim = data + 'T23:59:59';
+  const movs = await supa('GET', 'movimentacoes', null,
+    `created_at=gte.${inicio}&created_at=lte.${fim}&unidade_loja=eq.cd&order=created_at.desc&select=*`);
+
+  if (!movs || !movs.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum lançamento nesta data</p>';
+    return;
+  }
+
+  el.innerHTML = movs.map(m => {
+    const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    const isSaida = m.tipo === 'saida';
+    const isContagem = m.tipo === 'contagem';
+    const corBorda = isSaida ? '#b71c1c' : isContagem ? '#607d8b' : '#2e7d32';
+    const corQtd   = isSaida ? '#ef5350' : isContagem ? '#607d8b' : '#66bb6a';
+    const tipoLabel = isContagem ? '📊 Contagem' : isSaida ? '📤 Saída' : '📥 Entrada';
+    const sinal = isSaida ? '−' : isContagem ? '' : '+';
+
+    // Destino da saída (obs: "📤 Saída → CENTRO")
+    let destinoTag = '';
+    if (isSaida && m.obs) {
+      const match = m.obs.match(/→\s*(\w+)/);
+      if (match) {
+        const dest = match[1];
+        const corDest = dest === 'CENTRO' ? '#1565c0' : dest === 'DELIVERY' ? '#c62828' : dest === 'BOQUEIRAW' ? '#f57f17' : '#607d8b';
+        destinoTag = '<span style="background:' + corDest + ';color:#fff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;">→ ' + dest + '</span>';
+      }
+      if (m.obs.includes('NEGATIVO')) {
+        destinoTag += '<span style="background:#b71c1c;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:4px;">⚠️ NEGATIVO</span>';
+      }
+    }
+
+    return '<div style="background:#161616;border-left:4px solid ' + corBorda + ';border-radius:6px;padding:10px 12px;margin-bottom:6px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">'
+      + '<span style="font-size:0.72rem;font-weight:700;color:' + corBorda + ';">' + tipoLabel + '</span>'
+      + '<span style="font-size:0.72rem;color:#555;">' + hora + '</span>'
+      + destinoTag
+      + '</div>'
+      + '<div style="font-weight:700;color:' + corQtd + ';font-size:0.95rem;">' + sinal + fmtQ(m.qtd, m.unidade) + '</div>'
+      + '</div>'
+      + '<div style="font-size:0.85rem;font-weight:600;margin-top:4px;">' + m.nome + '</div>'
+      + '<div style="font-size:0.75rem;color:#555;margin-top:2px;">' + (isSaida ? '→ ' : 'por ') + m.colaborador + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function zerarHistorico(modo) {
+  if (modo === 'tudo') {
+    if (!confirm('VAI APAGAR TODO O HISTÓRICO? Isso não volta atrás, mano! 😱')) return;
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=neq.00000000-0000-0000-0000-000000000000`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  } else {
+    const data = document.getElementById('hist-zerar-data').value;
+    if (!data) { showToast('Qual data, irmão? Seleciona aí! 📅', 'error'); return; }
+    if (!confirm(`Apagar histórico de ${data.split('-').reverse().join('/')}?`)) return;
+    const inicio = data + 'T00:00:00';
+    const fim = data + 'T23:59:59';
+    const r = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?created_at=gte.${inicio}&created_at=lte.${fim}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    showToast(r.ok ? '✅ Histórico do dia zerado!' : 'Erro ao zerar', r.ok ? 'success' : 'error');
+  }
+}
+
+function selecionarTipo(tipo) {
+  document.getElementById('lanc-tipo').value = tipo;
+  document.getElementById('btn-tipo-entrada').className = 'btn ' + (tipo === 'entrada' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-tipo-contagem').className = 'btn ' + (tipo === 'contagem' ? 'btn-red' : 'btn-gray');
+}
+
+function selecionarCat(cat) {
+  document.getElementById('rel-cat-sel').value = cat;
+  document.getElementById('btn-cat-proc').className = 'btn ' + (cat === 'Processado' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-cat-bruto').className = 'btn ' + (cat === 'Bruto' ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-cat-todos').className = 'btn ' + (cat === 'Todos' ? 'btn-red' : 'btn-gray');
+}
+
+// ── RELATÓRIO ──
+async function gerarRelatorio() {
+  const data = document.getElementById('rel-data').value;
+  const cat = document.getElementById('rel-cat-sel').value;
+  if (!data) { showToast('Seleciona uma data!', 'error'); return; }
+
+  const el = document.getElementById('relatorio-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+
+  const inicio = data + 'T00:00:00';
+  const fim    = data + 'T23:59:59';
+
+  const produtos = Object.values(produtosCache).filter(p => cat === 'Todos' || p.categoria === cat);
+
+  // Buscar movimentacoes do dia
+  const movs = await supa('GET', 'movimentacoes', null,
+    'created_at=gte.' + inicio + '&created_at=lte.' + fim + '&select=*&order=created_at.asc');
+
+  let resultado = {};
+  produtos.forEach(p => {
+    resultado[p.codigo] = {
+      nome: p.nome, unidade: p.unidade, categoria: p.categoria,
+      entradas: 0,       // soma das entradas do dia
+      contagem: null,    // ultima contagem do dia (null = nao realizado)
+      estoque: parseFloat(p.estoque) || 0  // estoque atual no banco
+    };
+  });
+
+  if (Array.isArray(movs)) {
+    movs.forEach(m => {
+      if (!resultado[m.codigo]) return;
+      if (m.tipo === 'entrada') resultado[m.codigo].entradas += m.qtd;
+      if (m.tipo === 'contagem') resultado[m.codigo].contagem = m.novo_estoque;
+    });
+  }
+
+  const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
+  window._ultimoRelatorio = itens;
+  window._ultimoRelCat = cat;
+
+  if (!itens.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum produto</p>';
+    return;
+  }
+
+  const [ano, mes, dia2] = data.split('-');
+  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;">'
+    + '\uD83D\uDCC5 ' + dia2 + '/' + mes + '/' + ano + ' \u00B7 ' + (cat === 'Todos' ? 'Todas categorias' : cat)
+    + '</div>';
+
+  // Cabecalho tabela
+  html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
+    + '<span>PRODUTO</span><span style="text-align:center;">ENTRADAS</span><span style="text-align:center;">CONTAGEM ATUAL</span><span style="text-align:center;">ESTOQUE</span>'
+    + '</div>';
+
+  itens.forEach(p => {
+    const estoque = p.estoque;
+    const cor = estoque === 0 ? '#b71c1c' : estoque <= (p.estoque_min || 0) ? '#ff9800' : '#2e7d32';
+    const contagemTxt = p.contagem !== null ? fmtQ(p.contagem, p.unidade) : '<span style="color:#888;font-style:italic;font-size:0.75rem;">Nao realizado</span>';
+    const entradasTxt = p.entradas > 0 ? '+' + fmtQ(p.entradas, p.unidade) : '<span style="color:#555;">-</span>';
+
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid ' + cor + ';padding:8px 10px;margin-bottom:2px;align-items:center;">'
+      + '<span style="font-weight:700;font-size:0.85rem;">' + p.nome + '</span>'
+      + '<span style="text-align:center;font-size:0.82rem;color:#4fc3f7;">' + entradasTxt + '</span>'
+      + '<span style="text-align:center;font-size:0.82rem;">' + contagemTxt + '</span>'
+      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:' + cor + ';">' + fmtQ(estoque, p.unidade) + '</span>'
+      + '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+// ── COMPARTILHAR WHATSAPP ──
+function compartilharWhatsApp() {
+  const data = document.getElementById('rel-data').value;
+  const el = document.getElementById('relatorio-resultado');
+  if (!el.innerHTML || el.innerHTML.includes('Carregando') || el.innerHTML.includes('Selecione')) {
+    showToast('Gere o relatório primeiro!', 'error'); return;
+  }
+
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let texto = `📦 *Relatório de Estoque — Prensadão CD*\n📅 ${dia}/${mes}/${ano}\n\n`;
+
+  itens.forEach(p => {
+    const semCont = p.contagem === null;
+    texto += `▪️ *${p.nome}*\n`;
+    texto += `   Estoque: ${semCont ? '—' : fmtQ(p.contagem, p.unidade)}`;
+    if (p.entradas > 0) texto += ` | Entrada: +${fmtQ(p.entradas, p.unidade)}`;
+    if (p.consumo !== null && p.consumo > 0) texto += ` | Consumo: -${fmtQ(p.consumo, p.unidade)}`;
+    texto += '\n';
+  });
+
+  texto += `\n_Gerado por Estoques Prensadão CD_`;
+  const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+  window.open(url, '_blank');
+}
+
+// ── EXPORTAR CSV ──
+function exportarCSV() {
+  const data = document.getElementById('rel-data').value;
+  const itens = window._ultimoRelatorio;
+  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+
+  const [ano, mes, dia] = data.split('-');
+  let csv = 'Produto;Unidade;Estoque;Entrada;Consumo\n';
+  itens.forEach(p => {
+    const est = p.contagem !== null ? p.contagem : '';
+    const ent = p.entradas > 0 ? p.entradas : '';
+    const con = p.consumo > 0 ? p.consumo : '';
+    csv += `"${p.nome}";${p.unidade};${est};${ent};${con}\n`;
+  });
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `estoque_prensadao_${dia}-${mes}-${ano}.csv`;
+  link.click();
+  showToast('✅ Planilha baixada!', 'success');
+}
+
+// ── BEEP ──
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 1200;
+    o.type = 'square';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.12);
+  } catch(e) {}
+}
+
+// ── SCANNER ──
+let cameraStream = null;
+let barcodeDetector = null;
+let scanLoop = null;
+
+function buscarPorCodigo() {
+  const cod = document.getElementById('scan-input').value.trim();
+  if (!cod) return;
+  const tipo = document.getElementById('lanc-tipo').value;
+  const p = getProduto(cod);
+  if (p) {
+    document.getElementById('scan-input').value = '';
+    beep();
+
+    if (p.unidade === 'kg') {
+      const pesoNoCode = extrairPesoEAN(cod);
+      if (pesoNoCode) {
+        // EAN-13 com peso: vai direto pro pendente
+        adicionarPendenteCd_direto(p, tipo, pesoNoCode);
+      } else {
+        // Sem peso no código: preenche select e aguarda digitação
+        const sel = document.getElementById('lanc-produto');
+        sel.value = p.codigo;
+        sel.dispatchEvent(new Event('change'));
+        document.getElementById('lanc-qtd').focus();
+        showToast('✅ ' + p.nome + ' — informe o peso', '');
+      }
+    } else {
+      // Unidade (bebida/embalagem): vai direto pro pendente com qtd_por_pct
+      const pctPadrao = parseFloat(p.qtd_por_pct) || 1;
+      adicionarPendenteCd_direto(p, tipo, pctPadrao);
+    }
+  } else {
+    showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
+  }
+}
+
+function adicionarPendenteCd_direto(p, tipo, qtd) {
+  const idx = pendentesCd.findIndex(x => x.codigo === p.codigo && x.tipo === tipo);
+  if (idx >= 0) {
+    pendentesCd[idx].qtd += qtd;
+    showToast('➕ ' + p.nome + ' — total: ' + fmtQ(pendentesCd[idx].qtd, p.unidade), 'success');
+  } else {
+    pendentesCd.push({ codigo: p.codigo, nome: p.nome, tipo, qtd, unidade: p.unidade, categoria: p.categoria || '', origem: 'cd' });
+    showToast('✅ ' + p.nome + ' — ' + fmtQ(qtd, p.unidade), 'success');
+  }
+  document.getElementById('lanc-produto').value = '';
+  document.getElementById('lanc-info').style.display = 'none';
+  renderPendentesCd();
+}
+
+async function abrirCamera() {
+  const area = document.getElementById('camera-area');
+  const video = document.getElementById('camera-video');
+
+  // Verificar suporte
+  if (!('BarcodeDetector' in window)) {
+    showToast('Câmera não suportada neste navegador. Use o campo de texto.', 'error');
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = cameraStream;
+    area.style.display = 'block';
+    barcodeDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'code_128', 'qr_code'] });
+
+    scanLoop = setInterval(async () => {
+      try {
+        const barcodes = await barcodeDetector.detect(video);
+        if (barcodes.length > 0) {
+          const cod = barcodes[0].rawValue;
+          fecharCamera();
+          document.getElementById('scan-input').value = cod;
+          buscarPorCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) {
+    showToast('Eita! Câmera não abriu, tenta pelo campo de texto mano 📷', 'error');
+  }
+}
+
+function fecharCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  if (scanLoop) { clearInterval(scanLoop); scanLoop = null; }
+  document.getElementById('camera-area').style.display = 'none';
+}
+
+
+
+async function gerarRelatorioEmbalagens() {
+  const el = document.getElementById('embalagens-resultado');
+  el.innerHTML = '<p style="color:#888;text-align:center;padding:10px;">Carregando...</p>';
+  const prods = await supa('GET', 'produtos', null, 'categoria=eq.Embalagem&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
+  if (!prods || !prods.length) { el.innerHTML = '<p style="color:#888;padding:10px;">Nenhuma embalagem cadastrada</p>'; return; }
+  window._ultimoEmbalagens = prods;
+  const hoje = dataHoje();
+  let html = '<div style="background:#607d8b;color:#fff;border-radius:10px;padding:8px 14px;margin:10px 0 8px;font-weight:700;font-size:0.85rem;">📦 Embalagens</div>';
+  html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#222;border-radius:8px 8px 0 0;padding:8px 10px;font-size:0.72rem;font-weight:700;color:#aaa;letter-spacing:1px;">'
+    + '<span>PRODUTO</span><span style="text-align:center;">ESTOQUE</span><span style="text-align:center;">MINIMO</span><span style="text-align:center;">PRECISA</span></div>';
+  prods.forEach(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const precisa = Math.max(0, min - est);
+    const cor = est === 0 ? '#b71c1c' : precisa > 0 ? '#ff9800' : '#2e7d32';
+    const precisaTxt = precisa > 0 ? fmtQ(precisa, p.unidade) : '<span style="color:#2e7d32;">OK</span>';
+    html += '<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4px;background:#161616;border-left:3px solid '+cor+';padding:8px 10px;margin-bottom:2px;align-items:center;">'
+      + '<span style="font-weight:700;font-size:0.85rem;">'+p.nome+'</span>'
+      + '<span style="text-align:center;font-size:0.85rem;font-weight:700;color:'+cor+';">'+fmtQ(est,p.unidade)+'</span>'
+      + '<span style="text-align:center;font-size:0.82rem;color:#888;">'+fmtQ(min,p.unidade)+'</span>'
+      + '<span style="text-align:center;font-size:0.82rem;">'+precisaTxt+'</span>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+async function compartilharEmbalagens() {
+  const prods = window._ultimoEmbalagens || await supa('GET', 'produtos', null, 'categoria=eq.Embalagem&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*&order=nome.asc');
+  if (!prods || !prods.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
+  const hoje = dataHoje();
+  const [ano, mes, dia] = hoje.split('-');
+  let txt = '*Embalagens - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
+  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
+  prods.forEach(p => {
+    const est = parseFloat(p.estoque) || 0;
+    const min = parseFloat(p.estoque_min) || 0;
+    const precisa = Math.max(0, min - est);
+    txt += p.nome + ': ' + fmtQ(est, p.unidade) + (precisa > 0 ? ' (Pedir: ' + fmtQ(precisa, p.unidade) + ')' : ' ✅') + '\n';
+  });
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+async function pedidoEmbalagens() {
+  const prods = window._ultimoEmbalagens || await supa('GET', 'produtos', null, 'categoria=eq.Embalagem&unidade_loja=eq.' + UNIDADE_LOJA + '&select=*');
+  const pedidos = prods.filter(p => (parseFloat(p.estoque)||0) < (parseFloat(p.estoque_min)||0));
+  if (!pedidos.length) { showToast('Embalagens em dia! Nada para pedir.', 'success'); return; }
+  const hoje = dataHoje();
+  const [ano, mes, dia] = hoje.split('-');
+  let txt = '*Pedido Embalagens - ' + UNIDADE_LOJA.toUpperCase() + '*\n';
+  txt += '📅 ' + dia + '/' + mes + '/' + ano + '\n\n';
+  pedidos.forEach(p => {
+    const precisa = (parseFloat(p.estoque_min)||0) - (parseFloat(p.estoque)||0);
+    txt += p.nome + ': ' + fmtQ(precisa, p.unidade) + '\n';
+  });
+  window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+}
+
+// Init
+document.getElementById('login-usuario').focus();
+
+
+function fecharTutorial() {
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  }
+
+function tutorialNext() {
+  if (_tutStep < TUTORIAL_PASSOS.length - 1) { _tutStep++; renderTutorial(); }
+  else fecharTutorial();
+}
+
+function tutorialPrev() {
+  if (_tutStep > 0) { _tutStep--; renderTutorial(); }
+}
+
+function renderTutorial() {
+  const p = TUTORIAL_PASSOS[_tutStep];
+  const total = TUTORIAL_PASSOS.length;
+  document.getElementById('tut-titulo').textContent = p.titulo;
+  document.getElementById('tut-texto').innerHTML = p.texto;
+  // Dots
+  document.getElementById('tut-dots').innerHTML = TUTORIAL_PASSOS.map((_, i) =>
+    '<div style="width:8px;height:8px;border-radius:50%;background:' + (i === _tutStep ? '#37474f' : '#333') + ';transition:background 0.2s;"></div>'
+  ).join('');
+  // Botões
+  document.getElementById('tut-btn-prev').style.opacity = _tutStep === 0 ? '0.3' : '1';
+  document.getElementById('tut-btn-prev').disabled = _tutStep === 0;
+  document.getElementById('tut-btn-next').textContent = _tutStep === total - 1 ? '✅ Entendi!' : 'Próximo →';
+}
+
