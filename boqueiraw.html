@@ -1181,9 +1181,9 @@ function adicionarAoLote() {
 }
 
 function renderLancamentos() {
-  var el   = document.getElementById('lista-lancamentos-itens');
-  var cnt  = document.getElementById('lanc-count');
-  var btn  = document.getElementById('btn-salvar-estoque');
+  var el  = document.getElementById('lista-lancamentos-itens');
+  var cnt = document.getElementById('lanc-count');
+  var btn = document.getElementById('btn-salvar-estoque');
   if (!el) return;
   if (cnt) cnt.textContent = _lancamentos.length;
   if (!_lancamentos.length) {
@@ -1193,19 +1193,26 @@ function renderLancamentos() {
   }
   if (btn) btn.style.display = 'block';
   el.innerHTML = _lancamentos.map(function(l, i) {
-    var tl = l.tipo === 'contagem' ? '📊' : '📥';
-    var cat = l.categoria ? l.categoria.toLowerCase() : '';
+    var tl  = l.tipo === 'contagem' ? '📊' : '📥';
+    var cat = (l.categoria || '').toLowerCase();
     var isEmb = cat === 'embalagem' || cat === 'embalagens';
     var dest = l.tipo === 'entrada'
-      ? '<span style="font-size:0.68rem;margin-left:4px;color:' + (isEmb ? '#f9a825' : '#64b5f6') + ';">→ ' + (isEmb ? 'Almox' : 'CD') + '</span>'
+      ? '<span style="font-size:0.65rem;margin-left:4px;color:' + (isEmb ? '#f9a825' : '#64b5f6') + ';">→ ' + (isEmb ? 'Almox' : 'CD') + '</span>'
       : '';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e1e1e;">'
-      + '<div>'
-      + '<span style="font-size:0.88rem;font-weight:700;">' + l.nome + '</span>'
-      + '<span style="font-size:0.75rem;color:#888;margin-left:6px;">' + tl + ' ' + l.qtd + ' ' + l.unidade + '</span>'
+    return '<div style="padding:8px 0;border-bottom:1px solid #1e1e1e;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div style="flex:1;">'
+      + '<span style="font-size:0.88rem;font-weight:700;">' + tl + ' ' + l.nome + '</span>'
       + dest
       + '</div>'
-      + '<button onclick="_lancamentos.splice(' + i + ',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">&#10006;</button>'
+      + '<button onclick="_lancamentos.splice(' + i + ',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;padding:0 4px;">&#10006;</button>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">'
+      + '<input type="number" value="' + l.qtd + '" min="0.001" step="0.001"'
+      + ' onchange="_lancamentos[' + i + '].qtd=parseFloat(this.value)||0;renderLancamentos();"'
+      + ' style="width:80px;padding:5px 8px;border-radius:8px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:0.9rem;font-weight:700;" />'
+      + '<span style="font-size:0.82rem;color:#888;">' + l.unidade + '</span>'
+      + '</div>'
       + '</div>';
   }).join('');
 }
