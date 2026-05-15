@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Estoques Prensadão Delivery</title>
+  <title>Estoques Prensadão Boqueirão</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,26 +16,26 @@
     }
     .login-box {
       background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
-      box-shadow: 0 0 40px #ff174444; border: 1px solid #ff174433;
+      box-shadow: 0 0 40px #f9a82544; border: 1px solid #f9a82533;
     }
-    .login-box h1 { font-size: 1.4rem; color: #b71c1c; text-align: center; margin-bottom: 6px; }
+    .login-box h1 { font-size: 1.4rem; color: #f9a825; text-align: center; margin-bottom: 6px; }
     .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
     .login-box input {
       width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
       font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
     }
-    .login-box input:focus { border-color: #b71c1c; }
+    .login-box input:focus { border-color: #f9a825; }
     .login-box button {
-      width: 100%; padding: 14px; background: #ff1744; color: #000; border: none;
+      width: 100%; padding: 14px; background: #f9a825; color: #000; border: none;
       border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
     }
-    .login-box button:hover { background: #7f0000; }
-    #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
+    .login-box button:hover { background: #b8860b; }
+    #login-erro { color: #f9a825; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
 
     /* APP */
     #app { display: none; }
     .topbar {
-      background: #111; color: #ff1744; padding: 12px 16px; border-bottom: 2px solid #ff174444;
+      background: #111; color: #f9a825; padding: 12px 16px; border-bottom: 2px solid #f9a82544;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
@@ -45,23 +45,23 @@
 
     .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
     .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
-    .tab.active { color: #ff1744; border-bottom-color: #ff1744; }
+    .tab.active { color: #f9a825; border-bottom-color: #f9a825; }
 
     .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; background: #0a0a0a; }
     .screen.active { display: block; }
 
     .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-    .card h3 { font-size: 1rem; color: #ff1744; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .card h3 { font-size: 1rem; color: #f9a825; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
 
     .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .btn-red { background: #ff1744; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
+    .btn-red { background: #f9a825; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
     .btn-green { background: #2e7d32; color: #fff; }
     .btn-blue { background: #1a237e; color: #fff; }
     .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
 
     input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
-    input:focus, select:focus { border-color: #ff1744; }
-    label { font-size: 0.82rem; font-weight: 700; color: #ff1744; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+    input:focus, select:focus { border-color: #f9a825; }
+    label { font-size: 0.82rem; font-weight: 700; color: #f9a825; display: block; margin-bottom: 4px; letter-spacing: 1px; }
 
     .produto-item {
       background: #161616; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
@@ -70,10 +70,10 @@
     }
     .produto-item.ok { border-left-color: #2e7d32; }
     .produto-item.baixo { border-left-color: #ff9800; }
-    .produto-item.zerado { border-left-color: #b71c1c; }
+    .produto-item.zerado { border-left-color: #f9a825; }
     .produto-nome { font-weight: 700; font-size: 0.9rem; color: #f0f0f0; }
     .produto-cod { font-size: 0.72rem; color: #555; }
-    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #ff1744; }
+    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #f9a825; }
     .produto-qty small { font-size: 0.7rem; color: #888; }
 
     #toast {
@@ -84,15 +84,15 @@
     }
     #toast.show { opacity: 1; }
     #toast.success { background: #2e7d32; }
-    #toast.error { background: #b71c1c; }
+    #toast.error { background: #f9a825; }
 
     .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; }
-    .badge-adm { background: #fde8e8; color: #b71c1c; }
+    .badge-adm { background: #fde8e8; color: #f9a825; }
     .badge-op { background: #e8f5e9; color: #2e7d32; }
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .stat-card { background: #161616; border-radius: 4px; padding: 14px; text-align: center; border: 1px solid #222; }
-    .stat-num { font-size: 1.6rem; font-weight: 700; color: #ff1744; font-family: 'Bebas Neue', sans-serif; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #f9a825; font-family: 'Bebas Neue', sans-serif; }
     .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
 
     .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
@@ -100,7 +100,7 @@
     .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
     .hist-contagem { background: #e3f2fd; color: #1a237e; }
     .hist-entrada { background: #e8f5e9; color: #2e7d32; }
-    .hist-saida { background: #fde8e8; color: #b71c1c; }
+    .hist-saida { background: #fde8e8; color: #f9a825; }
 
     /* Modal movimentação */
     #modal-overlay {
@@ -109,9 +109,9 @@
     }
     .modal-box {
       background: #111; border-radius: 4px 4px 0 0; padding: 24px 20px 36px;
-      width: 100%; max-width: 480px; border-top: 2px solid #ff1744;
+      width: 100%; max-width: 480px; border-top: 2px solid #f9a825;
     }
-    .modal-box h2 { font-size: 1.3rem; color: #ff1744; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .modal-box h2 { font-size: 1.3rem; color: #f9a825; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
     .modal-box p { font-size: 0.8rem; color: #555; margin-bottom: 12px; }
 
     @media (min-width: 600px) {
@@ -125,7 +125,7 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-box">
-    <h1>🏪 Estoques Prensadão Delivery</h1>
+    <h1>🏪 Estoques Prensadão Boqueirão</h1>
     <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
@@ -143,13 +143,15 @@
       <h1>🏪 Prensadão BOQUEIRÃO</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <button onclick="sair()">Saí fora</button>
+    <button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ajuda">❓</button>
+      <button onclick="sair()">Saí fora</button>
   </div>
 
   <div class="tabs" id="tabs-bar">
     <div class="tab active" onclick="showTab('estoque')">📦 TRAMPO</div>
     <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
     <div class="tab" onclick="showTab('historico')">📋 ROLO</div>
+    <div class="tab adm-only" onclick="showTab('pedidos')">🛒 PEDIDOS</div>
     <div class="tab adm-only" onclick="showTab('relatorio')">📊 EXTRATO</div>
     <div class="tab adm-only" onclick="showTab('produtos')">⚙️ BASE</div>
   </div>
@@ -187,35 +189,72 @@
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">2️⃣ Produto</label>
       <div style="display:flex;gap:8px;margin-top:6px;margin-bottom:8px;">
         <input type="text" id="scan-input" placeholder="Bora! Digita ou escaneia o código, mano..." style="margin:0;flex:1;" onkeydown="if(event.key==='Enter'){buscarPorCodigo();}" />
-        <button onclick="abrirCamera()" style="background:#b71c1c;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
+        <button onclick="abrirCamera()" style="background:#f9a825;border:none;border-radius:10px;padding:0 14px;font-size:1.2rem;cursor:pointer;color:#fff;">📷</button>
       </div>
       <div id="camera-area" style="display:none;margin-bottom:10px;">
         <video id="camera-video" style="width:100%;border-radius:10px;max-height:220px;" autoplay playsinline></video>
         <button onclick="fecharCamera()" class="btn btn-gray" style="margin-top:6px;">✖ Fechar câmera</button>
       </div>
-      <select id="lanc-produto" style="margin-bottom:6px;">
+      <select id="lanc-produto" style="margin-bottom:6px;" onchange="atualizarLabelAberto()">
         <option value="">-- Selecione --</option>
       </select>
       <div id="lanc-info" style="font-size:0.82rem;color:#607d8b;font-weight:600;margin:-4px 0 10px;display:none;"></div>
 
-      <!-- PASSO 3: Quantidade -->
+            <!-- PASSO 3: Quantidade -->
       <label style="font-size:0.95rem;font-weight:700;color:#37474f;">3️⃣ Quantidade</label>
-      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 10px;">
-        <label style="font-size:0.82rem;margin-bottom:4px;">✖️ Multiplicador (opcional)</label>
+
+      <!-- Fechados × fator (opcional) -->
+      <div style="background:#f5f5f5;border-radius:10px;padding:10px;margin:8px 0 6px;">
+        <label style="font-size:0.82rem;margin-bottom:4px;">📦 Fechados × fator (opcional)</label>
         <div style="display:flex;gap:8px;align-items:center;">
-          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="1" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
+          <input type="number" id="lanc-pct" placeholder="Nº PCT" step="1" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
           <span style="color:#607d8b;font-weight:700;">×</span>
-          <input type="number" id="lanc-fator" placeholder="Kg/PCT" step="0.001" min="0" oninput="calcMultiplicador()" style="margin:0;flex:1;" />
-          <span style="color:#607d8b;font-weight:700;">=</span>
-          <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;">—</span>
+          <input type="number" id="lanc-fator" placeholder="Kg ou Und/PCT" step="0.001" min="0" oninput="calcTotal()" style="margin:0;flex:1;" />
         </div>
       </div>
-      <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" />
-      <button class="btn btn-red" onclick="confirmarLancamento()">✅ Confirmar</button>
+
+      <!-- Aberto (kg ou und) — aparece só na contagem -->
+      <div id="bloco-aberto" style="background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin:0 0 6px;display:none;">
+        <label id="label-aberto" style="font-size:0.82rem;margin-bottom:4px;">🔓 Pacote aberto</label>
+        <input type="number" id="lanc-aberto" placeholder="0" step="0.001" min="0" oninput="calcTotal()" style="margin:0;" />
+        <div id="lanc-aberto-unit" style="font-size:0.75rem;color:#888;margin-top:2px;"></div>
+      </div>
+
+      <!-- Total calculado -->
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px;">
+        <label style="font-size:0.95rem;font-weight:700;color:#37474f;margin:0;">Total:</label>
+        <input type="number" id="lanc-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="margin:0;flex:1;" oninput="calcTotal()" />
+        <span id="lanc-total" style="font-weight:700;color:#1a237e;min-width:50px;text-align:right;"></span>
+      </div>
+      <button class="btn btn-red" onclick="adicionarAoLote()">✅ Confirmar</button>
+    </div>
+  </div>
+
+
+  <!-- LISTA DE LANÇAMENTOS (embaixo do form) -->
+  <div id="lista-lancamentos-wrap" style="margin-top:12px;display:none;">
+    <div class="card" style="padding:10px 12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:0.95rem;">📋 Lançamentos (<span id="lanc-count">0</span>)</h3>
+        <button onclick="limparLancamentos()" style="background:none;border:none;color:#888;font-size:0.78rem;cursor:pointer;">✖ Limpar</button>
+      </div>
+      <div id="lista-lancamentos-itens"></div>
+      <button class="btn btn-green" onclick="salvarLancamentos()" style="margin-top:10px;width:100%;">💾 SALVAR E ENVIAR AO ESTOQUE</button>
     </div>
   </div>
 
   <!-- HISTÓRICO -->
+  
+  <!-- PEDIDOS (ADM) -->
+  <div class="screen adm-only" id="tab-pedidos">
+    <div class="card">
+      <h3>🛒 Lista de Pedidos</h3>
+      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Produtos abaixo do estoque mínimo — o que precisa pedir.</p>
+      <button class="btn btn-red" onclick="gerarPedidos()">🔄 Calcular Pedidos</button>
+    </div>
+    <div id="lista-pedidos"></div>
+  </div>
+
   <div class="screen" id="tab-historico">
     <div class="card">
       <h3>📋 Histórico de Movimentações</h3>
@@ -285,7 +324,7 @@
       <input type="date" id="hist-zerar-data" style="margin-bottom:8px;" />
       <div style="display:flex;gap:8px;">
         <button class="btn btn-gray" style="flex:1;" onclick="zerarHistorico('data')">🗑️ Zerar data selecionada</button>
-        <button class="btn btn-red" style="flex:1;background:#b71c1c;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
+        <button class="btn btn-red" style="flex:1;background:#f9a825;" onclick="zerarHistorico('tudo')">⚠️ Zerar tudo</button>
       </div>
     </div>
   </div>
@@ -636,37 +675,36 @@ async function confirmarLancamento() {
   });
 
 
-  // ── SMART CD: descontar do Almoxarifado ou CD ──
-  if (tipo === 'entrada' && qtd > 0) {
-    try {
-      const nomeBusca = encodeURIComponent(p.nome);
-      const almoxRes = await fetch(
-        `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.almoxarifado&nome=eq.${nomeBusca}&select=codigo,estoque`,
+// ── SMART CD: descontar do CD pelo código base ──
+  try {
+    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    }).then(r => r.json());
+    const tipoMov  = movRow && movRow[0] ? movRow[0].tipo : '';
+    const qtdMov   = movRow && movRow[0] ? parseFloat(movRow[0].qtd) : 0;
+    const codMov   = movRow && movRow[0] ? movRow[0].codigo : '';
+
+    if (tipoMov === 'entrada' && qtdMov > 0 && codMov) {
+      // Extrair código base (remover sufixo _unidade)
+      const codBase = codMov.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+      const codCD   = codBase + '_cd';
+
+      const cdRes = await fetch(
+        `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
         { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
       ).then(r => r.json());
-      if (almoxRes && almoxRes.length > 0) {
-        const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - qtd);
-        await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${almoxRes[0].codigo}`, {
+
+      if (cdRes && cdRes.length > 0) {
+        const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtdMov);
+        await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
           method: 'PATCH',
           headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ estoque: novoAlmox })
+          body: JSON.stringify({ estoque: novoCD })
         });
-      } else {
-        const cdRes = await fetch(
-          `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.cd&nome=eq.${nomeBusca}&select=codigo,estoque`,
-          { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
-        ).then(r => r.json());
-        if (cdRes && cdRes.length > 0) {
-          const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - qtd);
-          await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cdRes[0].codigo}`, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estoque: novoCD })
-          });
-        }
+        console.log('Smart CD: descontou ' + qtdMov + ' do CD (' + codCD + ') → novo estoque: ' + novoCD);
       }
-    } catch(e) { console.warn('Smart CD:', e); }
-  }
+    }
+  } catch(e) { console.warn('Smart CD erro:', e); }
   // ── FIM SMART CD ──
   // Atualizar cache local com o valor confirmado pelo servidor
   produtosCache[cod].estoque = res[0].estoque;
@@ -840,7 +878,7 @@ async function gerarRelatorio() {
     const isProc = true;
     const semCont = p.contagem === null;
     const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
-    const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
+    const cor = semCont ? '#bbb' : estAtual === 0 ? '#f9a825' : '#2e7d32';
 
     html += `<div style="background:#fff;border-left:4px solid ${cor};border-radius:8px;padding:10px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
       <div style="font-weight:700;font-size:0.92rem;">${p.nome} <span style="font-size:0.72rem;color:#aaa;font-weight:400;">${p.categoria}</span></div>
@@ -857,7 +895,7 @@ async function gerarRelatorio() {
       html += `<span style="background:#e3f2fd;padding:3px 8px;border-radius:6px;">📦 Ent. anterior: <b>${p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—'}</b></span>`;
       html += `<span style="background:#f3e5f5;padding:3px 8px;border-radius:6px;">📊 Contagem: <b style="color:${cor}">${semCont ? '—' : fmtQ(p.contagem ?? estAtual, p.unidade)}</b></span>`;
       const pedido = p.estoque_min > 0 && estAtual !== null ? Math.max(0, p.estoque_min - (estAtual || 0)) : null;
-      if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#b71c1c">${fmtQ(pedido, p.unidade)}</b></span>`;
+      if (pedido !== null && pedido > 0) html += `<span style="background:#fde8e8;padding:3px 8px;border-radius:6px;">🛒 Pedir: <b style="color:#f9a825">${fmtQ(pedido, p.unidade)}</b></span>`;
     }
 
     html += `</div></div>`;
@@ -889,7 +927,7 @@ function compartilharWhatsApp() {
     texto += '\n';
   });
 
-  texto += `\n_Gerado por Estoques Prensadão Delivery_`;
+  texto += `\n_Gerado por Estoques Prensadão Boqueirão_`;
   const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
   window.open(url, '_blank');
 }
@@ -938,22 +976,58 @@ let cameraStream = null;
 let barcodeDetector = null;
 let scanLoop = null;
 
+function extrairPesoBalanca(cod) {
+  if (cod && cod.length === 13 && cod[0] === '2' && /^\d{13}$/.test(cod)) {
+    const pesoG = parseInt(cod.substring(7, 12), 10);
+    if (!isNaN(pesoG) && pesoG > 0) return pesoG / 1000;
+  }
+  return null;
+}
+
 function buscarPorCodigo() {
-  const cod = document.getElementById('scan-input').value.trim();
-  if (!cod) return;
-  const p = getProduto(cod);
+  const rawCod = document.getElementById('scan-input').value.trim();
+  if (!rawCod) return;
+
+  const pesoKg = extrairPesoBalanca(rawCod);
+
+  let p = getProduto(rawCod);
+
+  if (!p && pesoKg !== null) {
+    const prefixoProduto = rawCod.substring(1, 7);
+    p = Object.values(produtosCache).find(function(prod) {
+      const base = prod.codigo.replace(/_[a-z]+$/, '');
+      return base === prefixoProduto || prod.codigo.includes(prefixoProduto);
+    });
+  }
+
   if (p) {
     const sel = document.getElementById('lanc-produto');
-    sel.value = cod;
+    sel.value = p.codigo;
     sel.dispatchEvent(new Event('change'));
     document.getElementById('scan-input').value = '';
-    document.getElementById('lanc-qtd').focus();
+
+    if (pesoKg !== null) {
+      document.getElementById('lanc-qtd').value = pesoKg;
+      document.getElementById('lanc-total').textContent = pesoKg + ' kg';
+      showToast('⚖️ ' + p.nome + ' — ' + pesoKg + ' kg', 'success');
+      setTimeout(function() {
+        var btn = document.querySelector('#tab-lancar .btn-red');
+        if (btn) btn.focus();
+      }, 100);
+    } else {
+      if (!document.getElementById('lanc-qtd').value) {
+        document.getElementById('lanc-qtd').value = 1;
+      }
+      document.getElementById('lanc-qtd').focus();
+      document.getElementById('lanc-qtd').select();
+      showToast('✅ ' + p.nome, 'success');
+    }
     beep();
-    showToast('✅ ' + p.nome, 'success');
   } else {
-    showToast('Oh! Irmão, só faço a contagem, não sou mãe Dina pra adivinhar! Pede pro chefe cadastrar esse bagulho aí pohh 😤', 'error');
+    showToast('Produto não encontrado! Pede pro chefe cadastrar esse código 😤', 'error');
   }
 }
+
 
 async function abrirCamera() {
   const area = document.getElementById('camera-area');
@@ -995,6 +1069,217 @@ function fecharCamera() {
 
 // Init
 document.getElementById('login-usuario').focus();
+
+// ── PEDIDOS ──
+async function gerarPedidos(){
+  var el=document.getElementById('lista-pedidos');
+  if(!el)return;
+  el.innerHTML='<p style="color:#888;text-align:center;padding:20px;">Calculando...</p>';
+  var prods=Object.values(produtosCache);
+  var precisam=prods.filter(function(p){
+    var min=parseFloat(p.estoque_min)||0;
+    var est=parseFloat(p.estoque)||0;
+    return min>0&&est<min;
+  });
+  if(!precisam.length){el.innerHTML='<p style="color:#4caf50;text-align:center;padding:20px;">Tudo OK!</p>';return;}
+  el.innerHTML=precisam.map(function(p){
+    var est=parseFloat(p.estoque)||0;
+    var min=parseFloat(p.estoque_min)||0;
+    var max=parseFloat(p.estoque_max)||0;
+    var falta=Math.max(0,(max>0?max:min)-est);
+    return '<div class="card" style="margin:0 0 8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;">'
+      +'<div><div style="font-weight:700;font-size:0.9rem;">'+p.nome+'</div>'
+      +'<div style="font-size:0.75rem;color:#888;">Est: '+est+' '+p.unidade+' | Min: '+min+' | Max: '+(max>0?max:'—')+'</div></div>'
+      +'<div style="background:#fde8e8;color:#b71c1c;padding:4px 10px;border-radius:8px;font-weight:700;font-size:0.85rem;">Falta: '+falta+' '+p.unidade+'</div>'
+      +'</div></div>';
+  }).join('');
+}
+// ── FIM PEDIDOS ──
+
+
+// ── CALC TOTAL (fechados + aberto) ──
+function calcTotal() {
+  const pct    = parseFloat(document.getElementById('lanc-pct').value)    || 0;
+  const fator  = parseFloat(document.getElementById('lanc-fator').value)  || 0;
+  const aberto = parseFloat(document.getElementById('lanc-aberto') ? document.getElementById('lanc-aberto').value : 0) || 0;
+
+  const subtotalFechados = pct > 0 && fator > 0 ? pct * fator : 0;
+  const total = subtotalFechados + aberto;
+
+  if (total > 0) {
+    document.getElementById('lanc-qtd').value = parseFloat(total.toFixed(3));
+    document.getElementById('lanc-total').textContent = total.toFixed(3);
+  } else if (pct > 0 || fator > 0 || aberto > 0) {
+    document.getElementById('lanc-total').textContent = '—';
+  }
+}
+
+// Alias para compatibilidade
+function calcMultiplicador() { calcTotal(); }
+
+// Mostrar/ocultar campo aberto conforme tipo
+function selecionarTipo(tipo) {
+  document.getElementById('lanc-tipo').value = tipo;
+  const isCont = tipo === 'contagem';
+  const blocoAberto = document.getElementById('bloco-aberto');
+  if (blocoAberto) blocoAberto.style.display = isCont ? 'block' : 'none';
+  // Atualizar botões
+  document.getElementById('btn-tipo-entrada').className   = 'btn ' + (tipo === 'entrada'   ? 'btn-red' : 'btn-gray');
+  document.getElementById('btn-tipo-contagem').className  = 'btn ' + (tipo === 'contagem'  ? 'btn-red' : 'btn-gray');
+  // Atualizar label do campo aberto conforme unidade do produto selecionado
+  atualizarLabelAberto();
+}
+
+function atualizarLabelAberto() {
+  const cod = document.getElementById('lanc-produto') ? document.getElementById('lanc-produto').value : '';
+  const p = cod ? getProduto(cod) : null;
+  const isKg = p && (p.unidade === 'kg' || p.unidade === 'Kg' || p.unidade === 'KG');
+  const label = document.getElementById('label-aberto');
+  const unitEl = document.getElementById('lanc-aberto-unit');
+  const input = document.getElementById('lanc-aberto');
+  if (label) {
+    if (isKg) {
+      label.textContent = '⚖️ Kg de pacote aberto';
+      if (input) { input.step = '0.001'; input.placeholder = 'Ex: 0.350'; }
+      if (unitEl) unitEl.textContent = 'kg restantes no pacote aberto';
+    } else {
+      label.textContent = '🔓 Unidades de pacote aberto';
+      if (input) { input.step = '1'; input.placeholder = 'Ex: 3'; }
+      if (unitEl) unitEl.textContent = (p ? p.unidade + ' ' : '') + 'restantes no pacote aberto';
+    }
+  }
+}
+// ── FIM CALC TOTAL ──
+
+
+
+
+// ── LISTA DE LANÇAMENTOS ──
+var _lancamentos = [];
+
+function adicionarAoLote() {
+  var cod  = document.getElementById('lanc-produto').value;
+  var tipo = document.getElementById('lanc-tipo').value;
+  var qtd  = parseFloat(document.getElementById('lanc-qtd').value);
+  if (!cod)             { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+  if (_lancamentos.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
+  var p = getProduto(cod);
+  var dup = null;
+  for (var i=0;i<_lancamentos.length;i++){
+    if(_lancamentos[i].cod===cod&&_lancamentos[i].tipo===tipo){dup=_lancamentos[i];break;}
+  }
+  if (dup) { dup.qtd += qtd; } else {
+    _lancamentos.push({cod:cod, tipo:tipo, qtd:qtd, nome:p.nome, unidade:p.unidade, categoria:p.categoria||''});
+  }
+  document.getElementById('lanc-qtd').value='';
+  var elp=document.getElementById('lanc-pct'); if(elp) elp.value='';
+  var ela=document.getElementById('lanc-aberto'); if(ela) ela.value='';
+  document.getElementById('lanc-total').textContent='';
+  beep();
+  renderLancamentos();
+}
+
+function renderLancamentos() {
+  var wrap=document.getElementById('lista-lancamentos-wrap');
+  var el=document.getElementById('lista-lancamentos-itens');
+  var cnt=document.getElementById('lanc-count');
+  if(!_lancamentos.length){if(wrap)wrap.style.display='none';return;}
+  if(wrap)wrap.style.display='block';
+  if(cnt)cnt.textContent=_lancamentos.length;
+  if(!el)return;
+  el.innerHTML=_lancamentos.map(function(l,i){
+    var tl=l.tipo==='contagem'?'📊':'📥';
+    var dest=l.categoria&&(l.categoria.toLowerCase()==='embalagem'||l.categoria.toLowerCase()==='embalagens')?'<span style="font-size:0.68rem;color:#f9a825;margin-left:4px;">→ Almox</span>':'<span style="font-size:0.68rem;color:#64b5f6;margin-left:4px;">→ CD</span>';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #222;">'
+      +'<div><span style="font-size:0.85rem;font-weight:700;">'+l.nome+'</span>'
+      +'<span style="font-size:0.75rem;color:#888;margin-left:6px;">'+tl+' '+l.qtd+' '+l.unidade+'</span>'
+      +(l.tipo==='entrada'?dest:'')+'</div>'
+      +'<button onclick="_lancamentos.splice('+i+',1);renderLancamentos();" style="background:none;border:none;color:#f44336;font-size:1rem;cursor:pointer;">&#10006;</button>'
+      +'</div>';
+  }).join('');
+}
+
+function limparLancamentos(){_lancamentos=[];renderLancamentos();}
+
+async function salvarLancamentos() {
+  if (!_lancamentos.length) { showToast('Nenhum lançamento!', 'error'); return; }
+  const btn = document.querySelector('#lista-lancamentos-wrap .btn-green');
+  if (btn) btn.disabled = true;
+  let ok = 0;
+  for (const l of _lancamentos) {
+    const p = getProduto(l.cod);
+    if (!p) continue;
+    const est = parseFloat(p.estoque) || 0;
+    // ENTRADA soma, CONTAGEM substitui
+    const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
+    const opts = {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ estoque: novoEst })
+    };
+    const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${l.cod}&unidade_loja=eq.${UNIDADE_LOJA}`, opts);
+    const res = await r.json();
+    if (Array.isArray(res) && res.length) {
+      await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
+      });
+
+      // Smart Desconto: SOMENTE em ENTRADA
+      if (l.tipo === 'entrada') {
+        try {
+          const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+          const cat = (l.categoria || p.categoria || '').toLowerCase();
+          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens';
+
+          if (isEmbalagem) {
+            // Embalagem → desconta do Almoxarifado pelo código base
+            const codAlmox = codBase + '_almoxarifado';
+            const almoxRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (almoxRes && almoxRes.length > 0) {
+              const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoAlmox })
+              });
+            }
+          } else {
+            // Processado / Bruto / outros → desconta do CD pelo código base
+            const codCD = codBase + '_cd';
+            const cdRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (cdRes && cdRes.length > 0) {
+              const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoCD })
+              });
+            }
+          }
+        } catch(e) { console.warn('Smart Desconto:', e); }
+      }
+
+      produtosCache[l.cod].estoque = res[0].estoque;
+      ok++;
+    }
+  }
+  renderEstoque();
+  limparLancamentos();
+  showToast('✅ ' + ok + ' lançamento(s) salvos!', 'success');
+  if (btn) btn.disabled = false;
+}
+
+// ── FIM LISTA DE LANÇAMENTOS ──
+
 </script>
 
 
@@ -1155,7 +1440,7 @@ function mostrarTodasOpcoes() {
     <!-- Tipo -->
     <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">TIPO</label>
     <div style="display:flex;gap:8px;margin:8px 0 16px;">
-      <button id="fb-tipo-erro" onclick="setFbTipo('erro')" style="flex:1;background:#2a0a0a;border:2px solid #b71c1c;color:#ef5350;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">🐛 Erro</button>
+      <button id="fb-tipo-erro" onclick="setFbTipo('erro')" style="flex:1;background:#2a0a0a;border:2px solid #f9a825;color:#ef5350;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">🐛 Erro</button>
       <button id="fb-tipo-sugestao" onclick="setFbTipo('sugestao')" style="flex:1;background:#0a2a0a;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">💡 Sugestão</button>
       <button id="fb-tipo-elogio" onclick="setFbTipo('elogio')" style="flex:1;background:#1a1200;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">⭐ Elogio</button>
     </div>
@@ -1187,7 +1472,7 @@ function toggleFeedback() {
 function setFbTipo(tipo) {
   _fbTipo = tipo;
   var estilos = {
-    'erro':     { bg: '#2a0a0a', border: '2px solid #b71c1c', color: '#ef5350' },
+    'erro':     { bg: '#2a0a0a', border: '2px solid #f9a825', color: '#ef5350' },
     'sugestao': { bg: '#0a1a2a', border: '2px solid #1565c0', color: '#42a5f5' },
     'elogio':   { bg: '#1a1200', border: '2px solid #f9a825', color: '#f9a825' },
   };
