@@ -137,7 +137,7 @@
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" style="display:none;">
   <div class="topbar">
     <div>
       <h1>🏪 Prensadão CD</h1>
@@ -449,6 +449,7 @@ function iniciarApp() {
 
   carregarProdutos();
   carregarAlmox();
+  if(typeof _verificarTutorial==="function") _verificarTutorial();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
   document.getElementById('rel-data').value = hoje;
