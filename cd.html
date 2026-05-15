@@ -1988,7 +1988,7 @@ async function carregarAlmox() {
   var el = document.getElementById('almox-lista');
   if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:16px;">Carregando...</p>';
   try {
-    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
+    var res = await supa('GET','produtos',null,'unidade_loja=eq.almoxarifado_cd&select=*&order=categoria.asc,nome.asc');
     _almoxDados = (res && Array.isArray(res)) ? res : [];
   } catch(err) {
     _almoxDados = [];
