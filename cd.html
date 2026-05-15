@@ -437,20 +437,32 @@ async function supa(metodo, tabela, dados=null, params='') {
 
 // ── LOGIN ──
 async function fazerLogin() {
-  const usuario = document.getElementById('login-usuario').value.trim();
-  const senha = document.getElementById('login-senha').value.trim();
-  if (!usuario || !senha) { document.getElementById('login-erro').style.display='block'; return; }
-
+  var usuario = document.getElementById('login-usuario').value.trim();
+  var senha   = document.getElementById('login-senha').value.trim();
+  var erroEl  = document.getElementById('login-erro');
+  if (erroEl) erroEl.style.display = 'none';
+  if (!usuario || !senha) {
+    if (erroEl) erroEl.style.display = 'block';
+    return;
+  }
+  var btnEl = document.querySelector('#login-screen button');
+  if (btnEl) { btnEl.disabled = true; btnEl.textContent = 'Entrando...'; }
   try {
-    const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.cd&select=*`);
+    var url = SUPA_URL + '/rest/v1/usuario?usuario=eq.' + encodeURIComponent(usuario) + '&senha=eq.' + encodeURIComponent(senha) + '&unidade=eq.cd&select=*';
+    var resp = await fetch(url, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    });
+    var res = await resp.json();
     if (res && res.length > 0) {
       usuarioLogado = res[0];
       iniciarApp();
     } else {
-      document.getElementById('login-erro').style.display = 'block';
+      if (erroEl) erroEl.style.display = 'block';
+      if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔓 BORA ENTRAR'; }
     }
   } catch(e) {
-    showToast('Erro de conexão', 'error');
+    if (erroEl) { erroEl.style.display = 'block'; erroEl.textContent = 'Erro de conexao. Tenta de novo.'; }
+    if (btnEl) { btnEl.disabled = false; btnEl.textContent = '🔓 BORA ENTRAR'; }
   }
 }
 
