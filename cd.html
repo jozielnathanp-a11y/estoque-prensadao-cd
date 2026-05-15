@@ -2201,33 +2201,33 @@ var _tutPassos = [
   ];
 var _tutAtual  = 0;
 
-function abrirTutorial() {{
+function abrirTutorial() {
   _tutAtual = 0;
   document.getElementById('tutorial-overlay').style.display = 'flex';
   tutRender();
-}}
+}
 
-function fecharTutorial() {{
+function fecharTutorial() {
   document.getElementById('tutorial-overlay').style.display = 'none';
-}}
+}
 
-function tutProximo() {{
-  if (_tutAtual < _tutPassos.length - 1) {{
+function tutProximo() {
+  if (_tutAtual < _tutPassos.length - 1) {
     _tutAtual++;
     tutRender();
-  }} else {{
+  } else {
     fecharTutorial();
-  }}
-}}
+  }
+}
 
-function tutAnterior() {{
-  if (_tutAtual > 0) {{
+function tutAnterior() {
+  if (_tutAtual > 0) {
     _tutAtual--;
     tutRender();
-  }}
-}}
+  }
+}
 
-function tutRender() {{
+function tutRender() {
   var p = _tutPassos[_tutAtual];
   var total = _tutPassos.length;
   // Icone e titulo
@@ -2240,16 +2240,16 @@ function tutRender() {{
   document.getElementById('tut-passo-label').textContent = 'Passo ' + (_tutAtual+1) + ' de ' + total;
   // Dots
   var dots = '';
-  for (var i=0; i<total; i++) {{
+  for (var i=0; i<total; i++) {
     dots += '<div style="width:'+(i===_tutAtual?'20':'8')+'px;height:8px;border-radius:4px;background:'+(i===_tutAtual?'#e53935':'#444')+';transition:width 0.2s;"></div>';
-  }}
+  }
   document.getElementById('tut-dots').innerHTML = dots;
   // Botoes
   var btnAnt  = document.getElementById('tut-btn-ant');
   var btnProx = document.getElementById('tut-btn-prox');
   if (btnAnt)  btnAnt.style.display  = _tutAtual === 0 ? 'none' : 'block';
   if (btnProx) btnProx.textContent   = _tutAtual === total-1 ? '✅ Concluir' : 'Próximo →';
-}}
+}
 // FIM TUTORIAL
 
 
