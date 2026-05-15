@@ -510,6 +510,7 @@ async function fazerLogin() {
     document.getElementById('ent-data').value = hoje;
     document.getElementById('cont-data').value = hoje;
     carregarTudo(); atualizarCats();
+    setTimeout(function() { if (!localStorage.getItem('tut_ok_chefao')) { abrirTutorial(); } }, 1000);
   } else {
     document.getElementById('login-erro').style.display = 'block';
   }
