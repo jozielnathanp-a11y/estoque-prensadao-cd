@@ -1006,6 +1006,54 @@ async function confirmarPendente(id, codigo, novoEst, nome) {
     headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
     body: JSON.stringify({ status: 'confirmado', confirmado_por: usuarioLogado.usuario, confirmado_em: new Date().toISOString() })
   });
+
+  // ── SMART CD: descontar do Almoxarifado ou CD automaticamente ──
+  try {
+    const movRow = await fetch(`${SUPA_URL}/rest/v1/movimentacoes?id=eq.${id}&select=tipo,qtd,codigo,nome`, {
+      headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON }
+    }).then(r => r.json());
+    const tipoMov = movRow && movRow[0] ? movRow[0].tipo : '';
+    const qtdMov  = movRow && movRow[0] ? parseFloat(movRow[0].qtd) : 0;
+    const nomeProd = movRow && movRow[0] ? movRow[0].nome : nome;
+
+    if (tipoMov === 'entrada' && qtdMov > 0) {
+      // Buscar produto no Almoxarifado pelo nome
+      const almoxRes = await fetch(
+        `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.almoxarifado&nome=eq.${encodeURIComponent(nomeProd)}&select=codigo,estoque,nome`,
+        { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+      ).then(r => r.json());
+
+      if (almoxRes && almoxRes.length > 0) {
+        // Descontar do Almoxarifado
+        const almoxProd = almoxRes[0];
+        const novoAlmox = Math.max(0, parseFloat(almoxProd.estoque || 0) - qtdMov);
+        await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${almoxProd.codigo}`, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ estoque: novoAlmox })
+        });
+        console.log('Smart CD: descontou ' + qtdMov + ' do Almoxarifado (' + nomeProd + ')');
+      } else {
+        // Tentar no CD
+        const cdRes = await fetch(
+          `${SUPA_URL}/rest/v1/produtos?unidade_loja=eq.cd&nome=eq.${encodeURIComponent(nomeProd)}&select=codigo,estoque,nome`,
+          { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+        ).then(r => r.json());
+
+        if (cdRes && cdRes.length > 0) {
+          const cdProd = cdRes[0];
+          const novoCD = Math.max(0, parseFloat(cdProd.estoque || 0) - qtdMov);
+          await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cdProd.codigo}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estoque: novoCD })
+          });
+          console.log('Smart CD: descontou ' + qtdMov + ' do CD (' + nomeProd + ')');
+        }
+      }
+    }
+  } catch(e) { console.warn('Smart CD erro:', e); }
+  // ── FIM SMART CD ──
   // Atualiza cache
   const chave = Object.keys(produtosCache).find(k => k === codigo || k.startsWith(codigo.split('_')[0]));
   if (chave) produtosCache[chave].estoque = novoEst;
