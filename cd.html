@@ -170,9 +170,13 @@ function iniciarApp() {
   var rd=document.getElementById('rel-data');  if(rd) rd.value=hoje;
   // Chamar carregarProdutos depois que o body terminar de carregar
   setTimeout(function(){
-    if(typeof carregarProdutos==='function') carregarProdutos();
-    else console.error('carregarProdutos nao definido');
-  }, 300);
+    // Garantir que usuarioLogado global esta setado
+    try { usuarioLogado = _cdUser; } catch(e){}
+    if(typeof carregarProdutos==='function') {
+      console.log("Chamando carregarProdutos, usuarioLogado:", usuarioLogado);
+      carregarProdutos();
+    } else { console.error('carregarProdutos nao definido'); }
+  }, 500);
 }
 </script>
 </head>
