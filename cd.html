@@ -167,14 +167,6 @@ function iniciarApp() {
   if (typeof carregarProdutos === 'function') carregarProdutos();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var btn = document.getElementById('btn-entrar');
-  if (btn) btn.addEventListener('click', fazerLogin);
-  ['login-senha','login-usuario'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
-  });
-});
 </script>
 </head>
 <body>
@@ -2410,5 +2402,17 @@ function prodAtualizarCats() {
 </div>
 <!-- FIM TUTORIAL -->
 
+
+<script>
+// Bind login - DOM ja carregado
+(function(){
+  var btn = document.getElementById('btn-entrar');
+  if (btn) btn.addEventListener('click', fazerLogin);
+  var us = document.getElementById('login-usuario');
+  if (us) us.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+  var pw = document.getElementById('login-senha');
+  if (pw) pw.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
+})();
+</script>
 </body>
 </html>
