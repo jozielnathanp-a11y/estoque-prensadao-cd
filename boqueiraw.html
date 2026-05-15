@@ -143,7 +143,7 @@
       <h1>🏪 Prensadão BOQUEIRÃO</h1>
       <span id="topbar-usuario"></span>
     </div>
-    <button onclick="sair()">Saí fora</button>
+    <div style="display:flex;gap:6px;"><button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;">❓</button><button onclick="sair()">Saí fora</button></div>
   </div>
 
   <div class="tabs" id="tabs-bar">
@@ -415,7 +415,7 @@ async function fazerLogin() {
     const res = await supa('GET', 'usuario', null, `usuario=eq.${encodeURIComponent(usuario)}&senha=eq.${encodeURIComponent(senha)}&unidade=eq.boqueiraw&select=*`);
     if (res && res.length > 0) {
       usuarioLogado = res[0];
-      iniciarApp();
+      iniciarApp(); verificarTutorial();;
     } else {
       document.getElementById('login-erro').style.display = 'block';
     }
@@ -426,7 +426,7 @@ async function fazerLogin() {
 
 document.getElementById('login-senha').addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
 
-function iniciarApp() {
+function iniciarApp(); verificarTutorial(); {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
@@ -1467,6 +1467,52 @@ async function pedidoEmbalagens() {
 
 // Init
 document.getElementById('login-usuario').focus();
+
+// ── TUTORIAL ──
+const TUTORIAL_PASSOS = [{ titulo: "\ud83d\udce6 TRAMPO", texto: "Aqui voc\u00ea v\u00ea o estoque atual de todos os produtos. Filtra por categoria ou busca pelo nome. Vermelho = zerado, amarelo = abaixo do m\u00ednimo, verde = OK." }, { titulo: "\u2795 LAN\u00c7AR", texto: "Aqui voc\u00ea lan\u00e7a entrada ou contagem de produtos.<br><br>1\ufe0f\u20e3 Escolhe o tipo: ENTRADA (chegou produto) ou CONTAGEM (confer\u00eancia do estoque).<br>2\ufe0f\u20e3 Escaneia o c\u00f3digo de barras ou digita o nome.<br>3\ufe0f\u20e3 Digita a quantidade em PACOTES (PCT) para entrada, ou a quantidade real para contagem.<br>4\ufe0f\u20e3 Clica em ADICIONAR \u2014 vai para a lista de Pendentes.<br>5\ufe0f\u20e3 Confere tudo e clica em CONFIRMAR TUDO." }, { titulo: "\ud83d\udccb ROLO", texto: "Aqui voc\u00ea v\u00ea o hist\u00f3rico de tudo que foi lan\u00e7ado no dia. Filtra por data para ver dias anteriores." }, { titulo: "\u2699\ufe0f Dicas Finais", texto: "Dicas importantes:<br><br>\u2705 Sempre confirme os pendentes antes de sair.<br>\ud83d\udcf7 Use a c\u00e2mera para escanear o c\u00f3digo de barras \u2014 \u00e9 mais r\u00e1pido!<br>\ud83d\udd34 Produto zerado? Lance uma contagem para atualizar.<br>\u2753 D\u00favidas? Toca no bot\u00e3o \u2753 a qualquer momento." }];
+let _tutStep = 0;
+
+function abrirTutorial() {
+  _tutStep = 0;
+  document.getElementById('tutorial-overlay').style.display = 'flex';
+  renderTutorial();
+}
+
+function fecharTutorial() {
+  document.getElementById('tutorial-overlay').style.display = 'none';
+  localStorage.setItem('tutorial_visto_boqueirão', '1');
+}
+
+function tutorialNext() {
+  if (_tutStep < TUTORIAL_PASSOS.length - 1) { _tutStep++; renderTutorial(); }
+  else fecharTutorial();
+}
+
+function tutorialPrev() {
+  if (_tutStep > 0) { _tutStep--; renderTutorial(); }
+}
+
+function renderTutorial() {
+  const p = TUTORIAL_PASSOS[_tutStep];
+  const total = TUTORIAL_PASSOS.length;
+  document.getElementById('tut-titulo').textContent = p.titulo;
+  document.getElementById('tut-texto').innerHTML = p.texto;
+  // Dots
+  document.getElementById('tut-dots').innerHTML = TUTORIAL_PASSOS.map((_, i) =>
+    '<div style="width:8px;height:8px;border-radius:50%;background:' + (i === _tutStep ? '#f57f17' : '#333') + ';transition:background 0.2s;"></div>'
+  ).join('');
+  // Botões
+  document.getElementById('tut-btn-prev').style.opacity = _tutStep === 0 ? '0.3' : '1';
+  document.getElementById('tut-btn-prev').disabled = _tutStep === 0;
+  document.getElementById('tut-btn-next').textContent = _tutStep === total - 1 ? '✅ Entendi!' : 'Próximo →';
+}
+
+function verificarTutorial() {
+  if (!localStorage.getItem('tutorial_visto_boqueirão')) {
+    setTimeout(abrirTutorial, 800);
+  }
+}
+
 </script>
   <!-- MODAL LIMITE PENDENTES -->
   <div id="modal-limite" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;">
@@ -1477,6 +1523,28 @@ document.getElementById('login-usuario').focus();
       <div style="font-size:0.82rem;color:#aaa;margin-top:8px;">Fechando em 4 segundos...</div>
     </div>
   </div>
+
+
+<!-- TUTORIAL -->
+<div id="tutorial-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#111;border:2px solid #f57f17;border-radius:16px;width:100%;max-width:420px;padding:24px;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:#f57f17;letter-spacing:2px;">❓ COMO USAR</div>
+      <button onclick="fecharTutorial()" style="background:transparent;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
+    </div>
+    <!-- Progresso -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;" id="tut-dots"></div>
+    <!-- Conteúdo -->
+    <div id="tut-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#fff;letter-spacing:1px;margin-bottom:10px;"></div>
+    <div id="tut-texto" style="font-size:0.88rem;color:#ccc;line-height:1.7;min-height:120px;"></div>
+    <!-- Navegação -->
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button id="tut-btn-prev" onclick="tutorialPrev()" style="flex:1;background:#222;border:1px solid #444;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-size:0.88rem;">← Anterior</button>
+      <button id="tut-btn-next" onclick="tutorialNext()" style="flex:1;background:#f57f17;border:none;color:#fff;border-radius:10px;padding:10px;cursor:pointer;font-weight:700;font-size:0.88rem;">Próximo →</button>
+    </div>
+    <button onclick="fecharTutorial()" style="width:100%;margin-top:8px;background:transparent;border:none;color:#444;font-size:0.78rem;cursor:pointer;">Pular tutorial</button>
+  </div>
+</div>
 
 </body>
 </html>
