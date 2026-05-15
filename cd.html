@@ -134,7 +134,7 @@
     <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin();" />
     <label>Senha</label>
     <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin();" />
-    <button id="btn-login">🔒 ENTRAR</button>
+    <button id="btn-login" onclick="fazerLogin()">🔒 ENTRAR</button>
     <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
@@ -1162,14 +1162,6 @@ async function salvarLancamentos() {
 
 // ── FIM LISTA DE LANÇAMENTOS ──
 
-
-// Login via addEventListener
-document.addEventListener('DOMContentLoaded', function() {
-  var btn = document.getElementById('btn-login');
-  if (btn) btn.addEventListener('click', fazerLogin);
-  var senhaEl = document.getElementById('login-senha');
-  if (senhaEl) senhaEl.addEventListener('keydown', function(e){ if(e.key==='Enter') fazerLogin(); });
-});
 </script>
 
 
@@ -2418,5 +2410,28 @@ function prodAtualizarCats() {
 </div>
 <!-- FIM TUTORIAL -->
 
+
+<script>
+// Garantir que o botao de login funciona
+(function() {
+  function bindLogin() {
+    var btn = document.getElementById('btn-login');
+    if (btn) {
+      btn.onclick = null;
+      btn.addEventListener('click', function() { fazerLogin(); });
+    }
+    var senha = document.getElementById('login-senha');
+    if (senha) {
+      senha.onkeydown = null;
+      senha.addEventListener('keydown', function(e) { if(e.key==='Enter') fazerLogin(); });
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindLogin);
+  } else {
+    bindLogin();
+  }
+})();
+</script>
 </body>
 </html>
