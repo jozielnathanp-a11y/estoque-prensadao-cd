@@ -8,8 +8,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Estoques Prensadão CD</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; min-height: 100vh; }
+    body { font-family: 'Rajdhani', sans-serif; background: #0a0a0a; min-height: 100vh; color: #f0f0f0; letter-spacing: 0.02em; }
 
     /* LOGIN */
     #login-screen {
@@ -17,27 +18,27 @@
       background: linear-gradient(135deg, #616161 0%, #37474f 100%);
     }
     .login-box {
-      background: #fff; border-radius: 20px; padding: 40px 32px; width: 90%; max-width: 380px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      background: #111; border-radius: 4px; padding: 40px 32px; width: 90%; max-width: 380px;
+      box-shadow: 0 0 40px #2979ff44; border: 1px solid #2979ff33;
     }
-    .login-box h1 { font-size: 1.4rem; color: #37474f; text-align: center; margin-bottom: 6px; }
+    .login-box h1 { font-size: 1.4rem; color: #1565c0; text-align: center; margin-bottom: 6px; }
     .login-box p { font-size: 0.82rem; color: #888; text-align: center; margin-bottom: 28px; }
     .login-box input {
-      width: 100%; padding: 12px 16px; border: 2px solid #eee; border-radius: 10px;
+      width: 100%; padding: 12px 16px; border: 2px solid #333; border-radius: 4px; background: #1a1a1a; color: #f0f0f0;
       font-size: 1rem; margin-bottom: 14px; outline: none; transition: border 0.2s;
     }
-    .login-box input:focus { border-color: #90a4ae; }
+    .login-box input:focus { border-color: #1565c0; }
     .login-box button {
-      width: 100%; padding: 14px; background: #607d8b; color: #fff; color: #fff; border: none;
-      border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      width: 100%; padding: 14px; background: #2979ff; color: #000; border: none;
+      border-radius: 4px; font-size: 1.2rem; font-weight: 700; cursor: pointer; font-family: 'Bebas Neue', sans-serif; letter-spacing: 3px;
     }
-    .login-box button:hover { background: #546e7a; }
+    .login-box button:hover { background: #0d47a1; }
     #login-erro { color: #b71c1c; font-size: 0.85rem; text-align: center; margin-top: 10px; display: none; }
 
     /* APP */
     #app { display: none; }
     .topbar {
-      background: #607d8b; color: #fff; padding: 12px 16px;
+      background: #111; color: #2979ff; padding: 12px 16px; border-bottom: 2px solid #2979ff44;
       display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
@@ -45,37 +46,37 @@
     .topbar span { font-size: 0.78rem; opacity: 0.85; }
     .topbar button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
 
-    .tabs { display: flex; background: #fff; border-bottom: 2px solid #eee; overflow-x: auto; }
-    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 600; color: #888; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
-    .tab.active { color: #607d8b; border-bottom-color: #607d8b; }
+    .tabs { display: flex; background: #111; border-bottom: 2px solid #222; overflow-x: auto; }
+    .tab { padding: 12px 16px; font-size: 0.82rem; font-weight: 700; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; letter-spacing: 1px; }
+    .tab.active { color: #2979ff; border-bottom-color: #2979ff; }
 
-    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; }
+    .screen { display: none; padding: 16px; max-width: 700px; margin: 0 auto; background: #0a0a0a; }
     .screen.active { display: block; }
 
-    .card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
-    .card h3 { font-size: 0.95rem; color: #333; margin-bottom: 12px; }
+    .card { background: #111; border-radius: 4px; padding: 16px; margin-bottom: 12px; border: 1px solid #222; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .card h3 { font-size: 1rem; color: #2979ff; margin-bottom: 12px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
 
     .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .btn-red { background: #607d8b; color: #fff; }
+    .btn-red { background: #2979ff; color: #000; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.1rem; }
     .btn-green { background: #2e7d32; color: #fff; }
     .btn-blue { background: #1a237e; color: #fff; }
-    .btn-gray { background: #f5f5f5; color: #333; }
+    .btn-gray { background: #1a1a1a; color: #888; border: 1px solid #333; }
 
-    input, select { width: 100%; padding: 10px 12px; border: 2px solid #eee; border-radius: 8px; font-size: 0.95rem; margin-bottom: 10px; outline: none; }
-    input:focus, select:focus { border-color: #90a4ae; }
-    label { font-size: 0.82rem; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 12px; border: 2px solid #333; border-radius: 4px; font-size: 0.95rem; margin-bottom: 10px; outline: none; background: #1a1a1a; color: #f0f0f0; }
+    input:focus, select:focus { border-color: #2979ff; }
+    label { font-size: 0.82rem; font-weight: 700; color: #2979ff; display: block; margin-bottom: 4px; letter-spacing: 1px; }
 
     .produto-item {
-      background: #fff; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+      background: #161616; border-radius: 4px; padding: 12px 14px; margin-bottom: 8px;
       display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #eee;
+      border-left: 4px solid #333;
     }
     .produto-item.ok { border-left-color: #2e7d32; }
     .produto-item.baixo { border-left-color: #ff9800; }
     .produto-item.zerado { border-left-color: #b71c1c; }
-    .produto-nome { font-weight: 700; font-size: 0.88rem; }
-    .produto-cod { font-size: 0.72rem; color: #aaa; }
-    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #1a237e; }
+    .produto-nome { font-weight: 700; font-size: 0.9rem; color: #f0f0f0; }
+    .produto-cod { font-size: 0.72rem; color: #555; }
+    .produto-qty { font-size: 1.1rem; font-weight: 700; color: #2979ff; }
     .produto-qty small { font-size: 0.7rem; color: #888; }
 
     #toast {
@@ -93,11 +94,11 @@
     .badge-op { background: #e8f5e9; color: #2e7d32; }
 
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .stat-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
-    .stat-num { font-size: 1.6rem; font-weight: 700; color: #607d8b; }
-    .stat-label { font-size: 0.75rem; color: #888; margin-top: 2px; }
+    .stat-card { background: #161616; border-radius: 4px; padding: 14px; text-align: center; border: 1px solid #222; }
+    .stat-num { font-size: 1.6rem; font-weight: 700; color: #2979ff; font-family: 'Bebas Neue', sans-serif; }
+    .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
 
-    .hist-item { padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
     .hist-item:last-child { border-bottom: none; }
     .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
     .hist-contagem { background: #e3f2fd; color: #1a237e; }
@@ -110,11 +111,11 @@
       z-index: 1000; align-items: flex-end; justify-content: center;
     }
     .modal-box {
-      background: #fff; border-radius: 20px 20px 0 0; padding: 24px 20px 36px;
-      width: 100%; max-width: 480px;
+      background: #111; border-radius: 4px 4px 0 0; padding: 24px 20px 36px;
+      width: 100%; max-width: 480px; border-top: 2px solid #2979ff;
     }
-    .modal-box h2 { font-size: 1.1rem; color: #37474f; margin-bottom: 4px; }
-    .modal-box p { font-size: 0.8rem; color: #888; margin-bottom: 12px; }
+    .modal-box h2 { font-size: 1.3rem; color: #2979ff; margin-bottom: 4px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+    .modal-box p { font-size: 0.8rem; color: #555; margin-bottom: 12px; }
 
     @media (min-width: 600px) {
       .tabs { justify-content: center; }
@@ -128,13 +129,13 @@
 <div id="login-screen">
   <div class="login-box">
     <h1>🏪 Estoques Prensadão CD</h1>
-    <p>Faça login para continuar</p>
+    <p>Acessa aí, parceiro 🔥</p>
     <label>Usuário</label>
-    <input type="text" id="login-usuario" placeholder="Ex: Prensadão CD" autocomplete="username" />
+    <input type="text" id="login-usuario" placeholder="Qual é o seu nome, parceiro?" autocomplete="username" />
     <label>Senha</label>
-    <input type="password" id="login-senha" placeholder="••••" autocomplete="current-password" />
-    <button onclick="fazerLogin()">Entrar</button>
-    <div id="login-erro">Usuário ou senha incorretos</div>
+    <input type="password" id="login-senha" placeholder="Senha, sangue" autocomplete="current-password" />
+    <button onclick="fazerLogin()">🔓 BORA ENTRAR</button>
+    <div id="login-erro">❌ Errou feio, mano! Tenta de novo.</div>
   </div>
 </div>
 
@@ -142,11 +143,11 @@
 <div id="app" style="display:none;">
   <div class="topbar">
     <div>
-      <h1>🏪 Prensadão CD</h1>
+      <h1>🏪 Prensadão CENTRO</h1>
       <span id="topbar-usuario"></span>
     </div>
     <button onclick="abrirTutorial()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:1rem;" title="Ajuda">❓</button>
-      <button onclick="sair()">Sair</button>
+      <button onclick="sair()">Saí fora</button>
   </div>
 
   <div class="tabs" id="tabs-bar">
@@ -247,6 +248,7 @@
 
   
 
+  <!-- HISTÓRICO -->
   <div class="screen" id="tab-historico">
     <div class="card">
       <h3>📋 Histórico de Movimentações</h3>
@@ -320,6 +322,12 @@
       </div>
     </div>
   </div>
+
+  
+  <!-- PEDIDOS (ADM) -->
+  
+
+  
 </div>
 
 <!-- MODAL MOVIMENTAÇÃO -->
@@ -327,7 +335,7 @@
   <div class="modal-box">
     <h2 id="modal-nome"></h2>
     <p id="modal-info"></p>
-    <label>Quantidade</label>
+    <label>Quanto tem, parceiro?</label>
     <input type="number" id="modal-qtd" placeholder="Ex: 5" step="0.001" min="0.001" style="font-size:1.4rem;text-align:center;" />
     <div id="modal-unidade" style="font-size:0.8rem;color:#888;margin:-4px 0 10px;"></div>
     <button class="btn btn-green" onclick="confirmarModal()">✅ Confirmar</button>
@@ -350,10 +358,14 @@ let modalTipo = null;
 // ── UTILS ──
 function showToast(msg, tipo='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show ' + tipo;
-  setTimeout(() => t.className = '', 2500);
+  t.textContent = msg; t.className = 'show ' + tipo;
+  t.onclick = () => { t.className = ''; };
+  t.style.cursor = 'pointer';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  const duracao = tipo === 'error' ? 999999 : 3000;
+  _toastTimer = setTimeout(() => t.className = '', duracao);
 }
+let _toastTimer = null;
 
 function fmtQ(v, u) {
   if (!v && v !== 0) return '—';
@@ -406,17 +418,17 @@ document.getElementById('login-senha').addEventListener('keydown', e => { if (e.
 function iniciarApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '\u{1F451} ADM' : '\u{1F477} Operador');
+  document.getElementById('topbar-usuario').textContent = usuarioLogado.usuario + ' · ' + (usuarioLogado.perfil === 'adm' ? '👑 ADM' : '👷 Operador');
 
+  // Esconder abas ADM se for operador
   if (usuarioLogado.perfil !== 'adm') {
-    document.querySelectorAll('.adm-only').forEach(function(el){ el.style.display = 'none'; });
+    document.querySelectorAll('.adm-only').forEach(el => el.style.display = 'none');
   }
 
   carregarProdutos();
-  carregarAlmox();
   const hoje = dataHoje();
   document.getElementById('hist-data').value = hoje;
-  if(document.getElementById('rel-data')) document.getElementById('rel-data').value = hoje;
+  document.getElementById('rel-data').value = hoje;
 }
 
 function sair() {
@@ -428,24 +440,20 @@ function sair() {
 }
 
 // ── TABS ──
-function showTab(name, el) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
-  var tela = document.getElementById('tab-' + name);
-  if (tela) tela.classList.add('active');
-  if (el) { el.classList.add('active'); }
-  else { try { event.currentTarget.classList.add('active'); } catch(e){} }
+function showTab(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'saidas') carregarSaidasCD();
-  if (name === 'almoxarifado') carregarAlmox();
 }
 
 // ── PRODUTOS ──
 async function carregarProdutos() {
   try {
-    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.cd');
+    const lista = await supa('GET', 'produtos', null, 'select=*&order=nome.asc&unidade_loja=eq.centro');
     produtosCache = {};
     if (Array.isArray(lista)) lista.forEach(p => produtosCache[p.codigo] = p);
     renderEstoque();
@@ -456,7 +464,13 @@ async function carregarProdutos() {
   }
 }
 
-function getProduto(cod) { return produtosCache[cod] || null; }
+function getProduto(cod) {
+  if (produtosCache[cod]) return produtosCache[cod];
+  // buscar pelo sufixo da unidade (código do scanner sem _loja)
+  const chaves = Object.keys(produtosCache);
+  const match = chaves.find(k => k === cod + '_' + UNIDADE_LOJA || k.split('_').slice(0,-1).join('_') === cod);
+  return match ? produtosCache[match] : null;
+}
 
 function atualizarStats() {
   const lista = Object.values(produtosCache);
@@ -622,51 +636,29 @@ async function confirmarLancamento() {
   const tipo = document.getElementById('lanc-tipo').value;
   const qtd = parseFloat(document.getElementById('lanc-qtd').value);
 
-  if (!cod) { showToast('Selecione um produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Informe a quantidade!', 'error'); return; }
+  if (!cod) { showToast('Eita! Seleciona o produto primeiro, mano!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade aí, irmão!', 'error'); return; }
 
   const p = getProduto(cod);
   const est = parseFloat(p.estoque) || 0;
-  const novoEst = tipo === 'contagem' ? qtd : est + qtd;
-
-  // Salvar no Supabase com return=representation para confirmar
-  const opts = {
-    method: 'PATCH',
-    headers: {
-      'apikey': SUPA_ANON,
-      'Authorization': 'Bearer ' + SUPA_ANON,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({ estoque: novoEst })
-  };
-  const r = await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${cod}&unidade_loja=eq.cd`, opts);
-  const res = await r.json();
-
-  if (!Array.isArray(res) || !res.length) {
-    showToast('Erro ao salvar! Tente novamente.', 'error');
-    return;
-  }
 
   await supa('POST', 'movimentacoes', {
     codigo: cod, nome: p.nome, tipo,
     qtd, unidade: p.unidade,
     colaborador: usuarioLogado.usuario,
     obs: tipo === 'contagem' ? 'Contagem' : 'Entrada',
-    unidade_loja: 'cd',
     estoque_anterior: est,
-    novo_estoque: novoEst
+    novo_estoque: tipo === 'contagem' ? qtd : est + qtd,
+    status: 'pendente',
+    unidade_loja: UNIDADE_LOJA
   });
 
-  // Atualizar cache local com o valor confirmado pelo servidor
-  produtosCache[cod].estoque = res[0].estoque;
-  renderEstoque();
-  popularSelectProdutos();
   document.getElementById('lanc-qtd').value = '';
   document.getElementById('lanc-pct').value = '';
   document.getElementById('lanc-total').textContent = '—';
   beep();
-  showToast('✅ ' + p.nome + ' — ' + fmtQ(res[0].estoque, p.unidade), 'success');
+  showToast('📋 Lançado! Aguardando confirmação...', 'success');
+  carregarPendentes();
 }
 
 // ── HISTÓRICO ──
@@ -679,10 +671,10 @@ async function carregarHistorico() {
   const inicio = data + 'T00:00:00';
   const fim = data + 'T23:59:59';
   const movs = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&order=created_at.desc&select=*`);
+    `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
 
   if (!movs || !movs.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nenhum lançamento nesta data</p>';
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nada confirmado nessa data, mano. Dia tranquilo 😎</p>';
     return;
   }
 
@@ -696,10 +688,10 @@ async function carregarHistorico() {
           <span class="hist-tipo ${tipoCls}">${tipoLabel}</span>
           <span style="font-size:0.72rem;color:#aaa;margin-left:6px;">${hora}</span>
         </div>
-        <div style="font-weight:700;color:#1a237e;">${fmtQ(m.qtd, m.unidade)}</div>
+        <div style="font-weight:700;color:#00e5ff;">${fmtQ(m.qtd, m.unidade)}</div>
       </div>
       <div style="font-size:0.85rem;font-weight:600;margin-top:3px;">${m.nome}</div>
-      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador}</div>
+      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador} · confirmado por ${m.confirmado_por || '?'}</div>
     </div>`;
   }).join('');
 }
@@ -827,7 +819,7 @@ async function gerarRelatorio() {
   </div>`;
 
   itens.forEach(p => {
-    const isProc = p.categoria === 'Processado';
+    const isProc = true;
     const semCont = p.contagem === null;
     const estAtual = p.estoque_atual !== null ? p.estoque_atual : p.contagem;
     const cor = semCont ? '#bbb' : estAtual === 0 ? '#b71c1c' : '#2e7d32';
@@ -1058,6 +1050,14 @@ function fecharCamera() {
 // Init
 document.getElementById('login-usuario').focus();
 
+// ── PENDENTES ──
+// carregarPendentes removido (não usado no CD)
+
+
+// confirmarPendente removido (não usado no CD)
+
+
+// rejeitarPendente removido (não usado no CD)
 
 
 // ── CALC TOTAL (fechados + aberto) ──
@@ -1106,6 +1106,9 @@ function atualizarLabelAberto() {
 
 
 
+// gerarPedidos removido (não usado no CD)
+
+
 // ── LISTA DE LANÇAMENTOS ──
 var _lancamentos = [];
 
@@ -1122,7 +1125,7 @@ function adicionarAoLote() {
     if(_lancamentos[i].cod===cod&&_lancamentos[i].tipo===tipo){dup=_lancamentos[i];break;}
   }
   if (dup) { dup.qtd += qtd; } else {
-    _lancamentos.push({cod:cod,tipo:tipo,qtd:qtd,nome:p.nome,unidade:p.unidade});
+    _lancamentos.push({cod:cod, tipo:tipo, qtd:qtd, nome:p.nome, unidade:p.unidade, categoria:p.categoria||''});
   }
   document.getElementById('lanc-qtd').value='';
   var elp=document.getElementById('lanc-pct'); if(elp) elp.value='';
@@ -1180,6 +1183,7 @@ async function salvarLancamentos() {
     const p = getProduto(l.cod);
     if (!p) continue;
     const est = parseFloat(p.estoque) || 0;
+    // ENTRADA soma, CONTAGEM substitui
     const novoEst = l.tipo === 'contagem' ? l.qtd : est + l.qtd;
     const opts = {
       method: 'PATCH',
@@ -1192,8 +1196,50 @@ async function salvarLancamentos() {
       await fetch(`${SUPA_URL}/rest/v1/movimentacoes`, {
         method: 'POST',
         headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada CD', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
+        body: JSON.stringify({ codigo: l.cod, nome: l.nome, tipo: l.tipo, qtd: l.qtd, unidade: l.unidade, colaborador: usuarioLogado.usuario, obs: l.tipo === 'contagem' ? 'Contagem' : 'Entrada', unidade_loja: UNIDADE_LOJA, estoque_anterior: est, novo_estoque: novoEst, status: 'confirmado' })
       });
+
+      // Smart Desconto: SOMENTE em ENTRADA
+      if (l.tipo === 'entrada') {
+        try {
+          const codBase = l.cod.replace(/_centro$|_delivery$|_boqueiraw$/, '');
+          const cat = (l.categoria || p.categoria || '').toLowerCase();
+          const isEmbalagem = cat === 'embalagem' || cat === 'embalagens';
+
+          if (isEmbalagem) {
+            // Embalagem → desconta do Almoxarifado pelo código base
+            const codAlmox = codBase + '_almoxarifado';
+            const almoxRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (almoxRes && almoxRes.length > 0) {
+              const novoAlmox = Math.max(0, parseFloat(almoxRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codAlmox}&unidade_loja=eq.almoxarifado`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoAlmox })
+              });
+            }
+          } else {
+            // Processado / Bruto / outros → desconta do CD pelo código base
+            const codCD = codBase + '_cd';
+            const cdRes = await fetch(
+              `${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd&select=codigo,estoque`,
+              { headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON } }
+            ).then(function(r){ return r.json(); });
+            if (cdRes && cdRes.length > 0) {
+              const novoCD = Math.max(0, parseFloat(cdRes[0].estoque || 0) - l.qtd);
+              await fetch(`${SUPA_URL}/rest/v1/produtos?codigo=eq.${codCD}&unidade_loja=eq.cd`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estoque: novoCD })
+              });
+            }
+          }
+        } catch(e) { console.warn('Smart Desconto:', e); }
+      }
+
       produtosCache[l.cod].estoque = res[0].estoque;
       ok++;
     }
@@ -1207,7 +1253,163 @@ async function salvarLancamentos() {
 
 // ── FIM LISTA DE LANÇAMENTOS ──
 
-// ── SAÍDAS CD ──
+
+
+// ── FUNÇÕES EXCLUSIVAS CD ──
+async function carregarAlmox() {
+  var el = document.getElementById('lista-almox');
+  var sel = document.getElementById('almox-produto');
+  if (el) el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
+
+  var prods = await supa('GET', 'produtos', null,
+    'unidade_loja=eq.almoxarifado&order=categoria,nome&select=*');
+  _almoxCache = prods || [];
+
+  // Popular select de produto
+  if (sel) {
+    sel.innerHTML = '<option value="">-- Selecione --</option>' +
+      _almoxCache.map(function(p){
+        return '<option value="'+p.codigo+'">'+p.nome+' ('+p.categoria+')</option>';
+      }).join('');
+  }
+
+  renderAlmox(_almoxCache);
+}
+
+function filtrarAlmox() {
+  var busca = (document.getElementById('almox-busca').value || '').toLowerCase();
+  var filtrado = _almoxCache.filter(function(p){
+    return p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca) || (p.categoria||'').toLowerCase().includes(busca);
+  });
+  renderAlmox(filtrado);
+}
+
+function renderAlmox(lista) {
+  var el = document.getElementById('lista-almox');
+  if (!el) return;
+  if (!lista || !lista.length) {
+    el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Nenhum produto encontrado.</p>';
+    return;
+  }
+
+  var catAtual = '';
+  var html = '';
+  lista.forEach(function(p) {
+    var est = parseFloat(p.estoque) || 0;
+    var min = parseFloat(p.estoque_min) || 0;
+    var cor = est === 0 ? '#f44336' : (min > 0 && est <= min ? '#ff9800' : '#4caf50');
+    var dot = est === 0 ? '🔴' : (min > 0 && est <= min ? '🟡' : '🟢');
+
+    if (p.categoria !== catAtual) {
+      catAtual = p.categoria;
+      html += '<div style="font-size:0.72rem;font-weight:700;color:#888;letter-spacing:1px;padding:10px 0 4px;border-top:1px solid #222;margin-top:6px;">'+catAtual.toUpperCase()+'</div>';
+    }
+
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1a1a1a;" onclick="selecionarAlmoxProduto(''+p.codigo+'')" style="cursor:pointer;">'
+      + '<div style="flex:1;">'
+      + '<div style="font-size:0.88rem;font-weight:600;color:#f0f0f0;">'+dot+' '+p.nome+'</div>'
+      + '<div style="font-size:0.72rem;color:#666;">'+p.codigo+'</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+      + '<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+est+'</div>'
+      + '<div style="font-size:0.68rem;color:#555;">'+p.unidade+'</div>'
+      + '</div>'
+      + '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function selecionarAlmoxProduto(cod) {
+  var sel = document.getElementById('almox-produto');
+  if (sel) { sel.value = cod; }
+  document.getElementById('almox-qtd').focus();
+}
+
+async function lancarAlmox() {
+  var cod  = document.getElementById('almox-produto').value;
+  var tipo = document.getElementById('almox-tipo').value;
+  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
+  if (!cod)         { showToast('Seleciona o produto!', 'error'); return; }
+  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
+
+  var p = _almoxCache.find(function(x){ return x.codigo === cod; });
+  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
+
+  var est = parseFloat(p.estoque) || 0;
+  var novoEst = tipo === 'contagem' ? qtd : est + qtd;
+
+  var r = await supa('PATCH', 'produtos?codigo=eq.'+cod+'&unidade_loja=eq.almoxarifado', { estoque: novoEst });
+  await supa('POST', 'movimentacoes', {
+    codigo: cod, nome: p.nome, tipo: tipo, qtd: qtd, unidade: p.unidade,
+    colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
+    obs: tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox',
+    unidade_loja: 'almoxarifado', status: 'confirmado',
+    estoque_anterior: est, novo_estoque: novoEst
+  });
+
+  // Atualizar cache local
+  var idx = _almoxCache.findIndex(function(x){ return x.codigo === cod; });
+  if (idx >= 0) _almoxCache[idx].estoque = novoEst;
+
+  document.getElementById('almox-qtd').value = '';
+  document.getElementById('almox-produto').value = '';
+  showToast('✅ ' + p.nome + ': ' + novoEst + ' ' + p.unidade, 'success');
+  if (typeof beep === 'function') beep();
+  renderAlmox(_almoxCache);
+}
+
+async function abrirCameraAlmox() {
+  var area  = document.getElementById('almox-camera-area');
+  var video = document.getElementById('almox-camera-video');
+  if (!('BarcodeDetector' in window)) {
+    showToast('Scanner não suportado neste navegador.', 'error');
+    return;
+  }
+  try {
+    _almoxCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = _almoxCameraStream;
+    area.style.display = 'block';
+    var detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','qr_code'] });
+    _almoxScanLoop = setInterval(async function() {
+      try {
+        var codes = await detector.detect(video);
+        if (codes.length > 0) {
+          fecharCameraAlmox();
+          document.getElementById('almox-scan').value = codes[0].rawValue;
+          buscarAlmoxPorCodigo();
+        }
+      } catch(e) {}
+    }, 500);
+  } catch(e) { showToast('Erro ao acessar câmera.', 'error'); }
+}
+
+function fecharCameraAlmox() {
+  if (_almoxCameraStream) { _almoxCameraStream.getTracks().forEach(function(t){t.stop();}); _almoxCameraStream = null; }
+  if (_almoxScanLoop) { clearInterval(_almoxScanLoop); _almoxScanLoop = null; }
+  var area = document.getElementById('almox-camera-area');
+  if (area) area.style.display = 'none';
+}
+
+function buscarAlmoxPorCodigo() {
+  var raw = (document.getElementById('almox-scan').value || '').trim();
+  if (!raw) return;
+  // Busca pelo código exato ou pelo código base (sem sufixo _almoxarifado)
+  var found = _almoxCache.find(function(p){
+    return p.codigo === raw ||
+           p.codigo === raw + '_almoxarifado' ||
+           p.codigo.replace('_almoxarifado','') === raw;
+  });
+  if (found) {
+    document.getElementById('almox-produto').value = found.codigo;
+    document.getElementById('almox-scan').value = '';
+    document.getElementById('almox-qtd').focus();
+    if (typeof beep === 'function') beep();
+    if (typeof showToast === 'function') showToast('✅ ' + found.nome, 'success');
+  } else {
+    if (typeof showToast === 'function') showToast('Produto não encontrado no Almoxarifado!', 'error');
+  }
+}
+
 async function carregarSaidasCD() {
   var el = document.getElementById('lista-saidas-cd');
   if (!el) return;
@@ -1257,176 +1459,13 @@ async function carregarSaidasCD() {
   });
   el.innerHTML = html;
 }
-// ── FIM SAÍDAS CD ──
-
-
-// ── ALMOXARIFADO ──
-var _almoxCache = [];
-var _almoxCameraStream = null;
-var _almoxScanLoop = null;
-
-async function carregarAlmox() {
-  var el = document.getElementById('lista-almox');
-  var sel = document.getElementById('almox-produto');
-  if (el) el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Carregando...</p>';
-
-  var prods = await supa('GET', 'produtos', null,
-    'unidade_loja=eq.almoxarifado&order=categoria,nome&select=*');
-  _almoxCache = prods || [];
-
-  // Popular select de produto
-  if (sel) {
-    sel.innerHTML = '<option value="">-- Selecione --</option>' +
-      _almoxCache.map(function(p){
-        return '<option value="'+p.codigo+'">'+p.nome+' ('+p.categoria+')</option>';
-      }).join('');
-  }
-
-  renderAlmox(_almoxCache);
-}
-
-function renderAlmox(lista) {
-  var el = document.getElementById('lista-almox');
-  if (!el) return;
-  if (!lista || !lista.length) {
-    el.innerHTML = '<p style="color:#888;text-align:center;padding:16px;">Nenhum produto encontrado.</p>';
-    return;
-  }
-
-  var catAtual = '';
-  var html = '';
-  lista.forEach(function(p) {
-    var est = parseFloat(p.estoque) || 0;
-    var min = parseFloat(p.estoque_min) || 0;
-    var cor = est === 0 ? '#f44336' : (min > 0 && est <= min ? '#ff9800' : '#4caf50');
-    var dot = est === 0 ? '🔴' : (min > 0 && est <= min ? '🟡' : '🟢');
-
-    if (p.categoria !== catAtual) {
-      catAtual = p.categoria;
-      html += '<div style="font-size:0.72rem;font-weight:700;color:#888;letter-spacing:1px;padding:10px 0 4px;border-top:1px solid #222;margin-top:6px;">'+catAtual.toUpperCase()+'</div>';
-    }
-
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1a1a1a;" onclick="selecionarAlmoxProduto(''+p.codigo+'')" style="cursor:pointer;">'
-      + '<div style="flex:1;">'
-      + '<div style="font-size:0.88rem;font-weight:600;color:#f0f0f0;">'+dot+' '+p.nome+'</div>'
-      + '<div style="font-size:0.72rem;color:#666;">'+p.codigo+'</div>'
-      + '</div>'
-      + '<div style="text-align:right;">'
-      + '<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+est+'</div>'
-      + '<div style="font-size:0.68rem;color:#555;">'+p.unidade+'</div>'
-      + '</div>'
-      + '</div>';
-  });
-  el.innerHTML = html;
-}
-
-function filtrarAlmox() {
-  var busca = (document.getElementById('almox-busca').value || '').toLowerCase();
-  var filtrado = _almoxCache.filter(function(p){
-    return p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca) || (p.categoria||'').toLowerCase().includes(busca);
-  });
-  renderAlmox(filtrado);
-}
-
-function selecionarAlmoxProduto(cod) {
-  var sel = document.getElementById('almox-produto');
-  if (sel) { sel.value = cod; }
-  document.getElementById('almox-qtd').focus();
-}
-
-function buscarAlmoxPorCodigo() {
-  var raw = (document.getElementById('almox-scan').value || '').trim();
-  if (!raw) return;
-  // Busca pelo código exato ou pelo código base (sem sufixo _almoxarifado)
-  var found = _almoxCache.find(function(p){
-    return p.codigo === raw ||
-           p.codigo === raw + '_almoxarifado' ||
-           p.codigo.replace('_almoxarifado','') === raw;
-  });
-  if (found) {
-    document.getElementById('almox-produto').value = found.codigo;
-    document.getElementById('almox-scan').value = '';
-    document.getElementById('almox-qtd').focus();
-    if (typeof beep === 'function') beep();
-    if (typeof showToast === 'function') showToast('✅ ' + found.nome, 'success');
-  } else {
-    if (typeof showToast === 'function') showToast('Produto não encontrado no Almoxarifado!', 'error');
-  }
-}
-
-async function abrirCameraAlmox() {
-  var area  = document.getElementById('almox-camera-area');
-  var video = document.getElementById('almox-camera-video');
-  if (!('BarcodeDetector' in window)) {
-    showToast('Scanner não suportado neste navegador.', 'error');
-    return;
-  }
-  try {
-    _almoxCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    video.srcObject = _almoxCameraStream;
-    area.style.display = 'block';
-    var detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','qr_code'] });
-    _almoxScanLoop = setInterval(async function() {
-      try {
-        var codes = await detector.detect(video);
-        if (codes.length > 0) {
-          fecharCameraAlmox();
-          document.getElementById('almox-scan').value = codes[0].rawValue;
-          buscarAlmoxPorCodigo();
-        }
-      } catch(e) {}
-    }, 500);
-  } catch(e) { showToast('Erro ao acessar câmera.', 'error'); }
-}
-
-function fecharCameraAlmox() {
-  if (_almoxCameraStream) { _almoxCameraStream.getTracks().forEach(function(t){t.stop();}); _almoxCameraStream = null; }
-  if (_almoxScanLoop) { clearInterval(_almoxScanLoop); _almoxScanLoop = null; }
-  var area = document.getElementById('almox-camera-area');
-  if (area) area.style.display = 'none';
-}
-
-async function lancarAlmox() {
-  var cod  = document.getElementById('almox-produto').value;
-  var tipo = document.getElementById('almox-tipo').value;
-  var qtd  = parseFloat(document.getElementById('almox-qtd').value);
-  if (!cod)         { showToast('Seleciona o produto!', 'error'); return; }
-  if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
-
-  var p = _almoxCache.find(function(x){ return x.codigo === cod; });
-  if (!p) { showToast('Produto não encontrado!', 'error'); return; }
-
-  var est = parseFloat(p.estoque) || 0;
-  var novoEst = tipo === 'contagem' ? qtd : est + qtd;
-
-  var r = await supa('PATCH', 'produtos?codigo=eq.'+cod+'&unidade_loja=eq.almoxarifado', { estoque: novoEst });
-  await supa('POST', 'movimentacoes', {
-    codigo: cod, nome: p.nome, tipo: tipo, qtd: qtd, unidade: p.unidade,
-    colaborador: usuarioLogado ? usuarioLogado.usuario : 'CD',
-    obs: tipo === 'contagem' ? 'Contagem Almox' : 'Entrada Almox',
-    unidade_loja: 'almoxarifado', status: 'confirmado',
-    estoque_anterior: est, novo_estoque: novoEst
-  });
-
-  // Atualizar cache local
-  var idx = _almoxCache.findIndex(function(x){ return x.codigo === cod; });
-  if (idx >= 0) _almoxCache[idx].estoque = novoEst;
-
-  document.getElementById('almox-qtd').value = '';
-  document.getElementById('almox-produto').value = '';
-  showToast('✅ ' + p.nome + ': ' + novoEst + ' ' + p.unidade, 'success');
-  if (typeof beep === 'function') beep();
-  renderAlmox(_almoxCache);
-}
-// ── FIM ALMOXARIFADO ──
-
-
+// ── FIM CD ──
 
 </script>
 
 
-  <!-- ALMOXARIFADO -->
-    <div class="screen" id="tab-almoxarifado">
+
+<div class="screen" id="tab-almoxarifado">
 
     <!-- ESTOQUE DO ALMOXARIFADO -->
     <div class="card">
@@ -1469,9 +1508,7 @@ async function lancarAlmox() {
     </div>
   </div>
 
-
-  <!-- SAIDAS CD -->
-  <div class="screen adm-only" id="tab-saidas">
+<div class="screen adm-only" id="tab-saidas">
     <div class="card">
       <h3>📤 Saídas do CD por Unidade</h3>
       <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Entradas registradas nas unidades que saíram do CD.</p>
@@ -1708,7 +1745,7 @@ function enviarFeedback() {
   }
 
   var tipoLabel = _fbTipo === 'erro' ? '🐛 ERRO' : _fbTipo === 'sugestao' ? '💡 SUGESTÃO' : '⭐ ELOGIO';
-  var msg = tipoLabel + ' — Sistema CD\n\nDe: ' + nome + '\n\n' + texto;
+  var msg = tipoLabel + ' — Sistema Centro\n\nDe: ' + nome + '\n\n' + texto;
   var url = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msg);
 
   window.open(url, '_blank');
