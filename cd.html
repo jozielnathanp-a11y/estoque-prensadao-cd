@@ -157,8 +157,7 @@ function fazerLogin() {
 function iniciarApp() {
   var u = _cdUser;
   if(!u){console.error('usuarioLogado nulo'); return;}
-  // Sincronizar com a variavel global do script do body
-  if(typeof usuarioLogado !== 'undefined') { try { usuarioLogado = u; } catch(e){} }
+  window.usuarioLogado = u;
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='block';
   var tb=document.getElementById('topbar-usuario');
@@ -170,8 +169,7 @@ function iniciarApp() {
   var rd=document.getElementById('rel-data');  if(rd) rd.value=hoje;
   // Chamar carregarProdutos depois que o body terminar de carregar
   setTimeout(function(){
-    // Garantir que usuarioLogado global esta setado
-    try { usuarioLogado = _cdUser; } catch(e){}
+    window.usuarioLogado = _cdUser;
     if(typeof carregarProdutos==='function') {
       console.log("Chamando carregarProdutos, usuarioLogado:", usuarioLogado);
       carregarProdutos();
@@ -448,7 +446,7 @@ const SUPA_URL = 'https://trbyynbtuzpszdvjivbs.supabase.co';
 const SUPA_ANON = 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj';
 const UNIDADE_LOJA = 'cd';
 
-let usuarioLogado = null;
+var usuarioLogado = null; // var para ser acessivel entre scripts
 let produtosCache = {};
 let modalCodigo = null;
 let modalTipo = null;
