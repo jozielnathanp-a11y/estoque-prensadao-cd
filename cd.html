@@ -489,7 +489,7 @@ function showTab(name) {
 
   if (name === 'historico') carregarHistorico();
   if (name === 'lancar') popularSelectProdutos();
-  if (name === 'almoxarifado') { carregarAlmox(); setTimeout(carregarAlmoxChefao, 300); popularAlmoxSelect(); }
+  if (name === 'almoxarifado') { carregarAlmox(); }
   if (name === 'saidas') carregarSaidasCD();
 }
 
@@ -1575,19 +1575,7 @@ async function carregarSaidasCD() {
 
 
 // ── ALMOX VISUAL (da Matriz) ──
-async function carregarAlmoxChefao() {
-  var el = document.getElementById('almox-chefao-lista');
-  if (el) el.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">⏳ Carregando...</div>';
-  try {
-    var res = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado&select=*&order=nome.asc');
-    window._almoxEstoques = (res && Array.isArray(res)) ? res : [];
-  } catch(e) {
-    window._almoxEstoques = [];
-    if (el) el.innerHTML = '<div style="text-align:center;color:#f44336;padding:20px;">❌ Erro ao carregar. <button onclick="carregarAlmoxChefao()" style="margin-left:8px;padding:6px 12px;background:#757575;border:none;border-radius:6px;color:#fff;cursor:pointer;">🔄 Tentar</button></div>';
-    return;
-  }
-  renderAlmoxChefao();
-}
+
 
 function filtrarAlmoxChefao(filtro) {
   window._almoxFiltro = filtro;
@@ -1609,7 +1597,7 @@ function renderAlmoxChefao() {
   var filtro = window._almoxFiltro || 'todos';
 
   if (!dados.length) {
-    lista.innerHTML = '<div style="text-align:center;padding:20px;"><p style="color:#888;">Nenhum produto carregado.</p><button onclick="carregarAlmoxChefao()" style="margin-top:8px;padding:10px 20px;background:#757575;border:none;border-radius:8px;color:#fff;cursor:pointer;">🔄 Tentar novamente</button></div>';
+    lista.innerHTML = '<div style="text-align:center;padding:20px;"><p style="color:#888;">Nenhum produto carregado.</p><button onclick="carregarAlmox()" style="margin-top:8px;padding:10px 20px;background:#757575;border:none;border-radius:8px;color:#fff;cursor:pointer;">🔄 Tentar novamente</button></div>';
     return;
   }
 
@@ -1764,7 +1752,7 @@ async function salvarAlmoxLote() {
   renderAlmoxLote();
   if (btn) { btn.disabled = false; btn.textContent = '💾 SALVAR NO ALMOXARIFADO'; }
   carregarAlmox();
-  carregarAlmoxChefao();
+  carregarAlmox();
 }
 // ── FIM ALMOX CD EXTRA ──
 
@@ -2297,7 +2285,7 @@ function prodAtualizarCats() {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h3 style="margin:0;">📦 Almoxarifado de Embalagens</h3>
-        <button onclick="carregarAlmoxChefao()" style="background:#424242;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:0.8rem;">🔄 Atualizar</button>
+        <button onclick="carregarAlmox()" style="background:#424242;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;font-size:0.8rem;">🔄 Atualizar</button>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
         <button onclick="filtrarAlmoxChefao('todos')" id="abtn-todos" class="btn btn-gray" style="flex:1;margin:0;font-size:0.78rem;background:#757575;">📦 Todos</button>
