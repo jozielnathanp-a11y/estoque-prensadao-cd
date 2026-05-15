@@ -242,30 +242,7 @@
   </div>
 
 
-  <!-- LISTA DE LANÇAMENTOS (embaixo do form) -->
   
-
-  <!-- HISTÓRICO -->
-  
-  <!-- PEDIDOS (ADM) -->
-    <!-- SAIDAS CD -->
-  <div class="screen adm-only" id="tab-saidas">
-    <div class="card">
-      <h3>📤 Saídas do CD por Unidade</h3>
-      <p style="font-size:0.82rem;color:#888;margin-bottom:10px;">Entradas registradas nas unidades que saíram do CD.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-        <input type="date" id="saidas-data" onchange="carregarSaidasCD()" style="flex:1;margin:0;" />
-        <select id="saidas-filtro-uni" onchange="carregarSaidasCD()" style="flex:1;margin:0;">
-          <option value="">Todas as unidades</option>
-          <option value="centro">🏪 Centro</option>
-          <option value="delivery">🚗 Delivery</option>
-          <option value="boqueiraw">🍔 Boqueirão</option>
-        </select>
-      </div>
-      <button class="btn btn-red" onclick="carregarSaidasCD()">🔄 Atualizar</button>
-    </div>
-    <div id="lista-saidas-cd"></div>
-  </div>
 
   <div class="screen" id="tab-historico">
     <div class="card">
