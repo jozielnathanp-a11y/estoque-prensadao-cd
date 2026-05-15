@@ -114,6 +114,7 @@
     <div class="tab" onclick="showTab('lancar')">➕ LANÇAR</div>
     <div class="tab" onclick="showTab('entradas')">📥 ENTRADAS</div>
     <div class="tab" onclick="showTab('contagens')">📊 CONTAGENS</div>
+      <div class="tab" onclick="showTab('historico', this)">📋 Histórico</div>
     <div class="tab" onclick="showTab('pedidos')">🛒 PRECISÃO</div>
     <div class="tab" onclick="showTab('minimos')">⚙️ LIMITES</div>
     <div class="tab" onclick="showTab('hist-cd')">📤 SAÍDAS CD</div>
@@ -1925,6 +1926,97 @@ function enviarFeedback() {
     status.textContent = '';
   }, 2000);
 }
+
+// HISTORICO GERAL CHEFAO
+async function carregarHistorico() {
+  var el   = document.getElementById('hist-resultado');
+  var data = document.getElementById('hist-data').value;
+  var uni  = document.getElementById('hist-unidade').value;
+  var tipo = document.getElementById('hist-tipo').value;
+  if (!data) { showToast('Selecione uma data!','error'); return; }
+  if (el) el.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Carregando...</p>';
+
+  var query = 'select=*&order=created_at.desc';
+  query += '&created_at=gte.' + data + 'T00:00:00';
+  query += '&created_at=lte.' + data + 'T23:59:59';
+  if (uni)  query += '&unidade_loja=eq.' + uni;
+  if (tipo) query += '&tipo=eq.' + tipo;
+
+  var movs = await supa('GET','movimentacoes',null,query);
+  if (!movs || !movs.length) {
+    if (el) el.innerHTML = '<div class="card" style="text-align:center;color:#888;padding:20px;">Nenhuma movimentacao encontrada.</div>';
+    return;
+  }
+
+  // Agrupar por unidade
+  var grupos = {};
+  for (var i=0; i<movs.length; i++) {
+    var m = movs[i];
+    var u = m.unidade_loja || 'desconhecido';
+    if (!grupos[u]) grupos[u] = [];
+    grupos[u].push(m);
+  }
+
+  var NOMES_UNI = { cd:'CD', almoxarifado:'Almoxarifado', centro:'Centro', delivery:'Delivery', boqueiraw:'Boqueirao' };
+  var TIPO_COR  = { entrada:'#388e3c', contagem:'#1565c0', saida:'#c62828', saída:'#c62828' };
+  var TIPO_IC   = { entrada:'📥', contagem:'📊', saida:'📤', saída:'📤' };
+
+  var html = '<div class="card" style="background:#222;padding:10px;margin-bottom:8px;text-align:center;">'
+    +'<span style="font-size:1.1rem;font-weight:700;">'+movs.length+' movimentaçoes em '+data+'</span></div>';
+
+  var unidades = Object.keys(grupos).sort();
+  for (var j=0; j<unidades.length; j++) {
+    var u = unidades[j];
+    var items = grupos[u];
+    html += '<div class="card" style="padding:0;overflow:hidden;margin-bottom:12px;">'
+      +'<div style="background:#333;padding:10px 14px;font-weight:700;font-size:0.9rem;">'
+      +(NOMES_UNI[u]||u)+' <span style="font-size:0.75rem;color:#aaa;font-weight:400;">('+items.length+' registros)</span>'
+      +'</div>';
+    for (var k=0; k<items.length; k++) {
+      var mov = items[k];
+      var cor = TIPO_COR[mov.tipo] || '#888';
+      var ic  = TIPO_IC[mov.tipo]  || '📌';
+      var hora = mov.created_at ? mov.created_at.substring(11,16) : '--:--';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-top:1px solid #1a1a1a;">'
+        +'<div>'
+        +'<div style="font-size:0.85rem;font-weight:700;">'+ic+' '+mov.nome+'</div>'
+        +'<div style="font-size:0.7rem;color:#888;">'+mov.colaborador+' · '+hora+'</div>'
+        +'</div>'
+        +'<div style="font-size:1rem;font-weight:700;color:'+cor+';">'+mov.qtd+' '+mov.unidade+'</div>'
+        +'</div>';
+    }
+    html += '</div>';
+  }
+  if (el) el.innerHTML = html;
+}
+// FIM HISTORICO GERAL
+
 </script>
+
+  <div class="screen" id="tab-historico">
+    <div class="card">
+      <h3>📋 Histórico Geral</h3>
+      <p style="font-size:0.8rem;color:#888;margin-bottom:10px;">Todas as movimentações de todas as unidades</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <input type="date" id="hist-data" style="flex:1;margin:0;" />
+        <select id="hist-unidade" style="flex:1;margin:0;">
+          <option value="">Todas unidades</option>
+          <option value="cd">CD</option>
+          <option value="almoxarifado">Almoxarifado</option>
+          <option value="centro">Centro</option>
+          <option value="delivery">Delivery</option>
+          <option value="boqueiraw">Boqueirao</option>
+        </select>
+        <select id="hist-tipo" style="flex:1;margin:0;">
+          <option value="">Todos os tipos</option>
+          <option value="entrada">Entradas</option>
+          <option value="contagem">Contagens</option>
+          <option value="saida">Saidas</option>
+        </select>
+      </div>
+      <button class="btn btn-red" onclick="carregarHistorico()" style="width:100%;margin:0;">🔍 Buscar</button>
+    </div>
+    <div id="hist-resultado"></div>
+  </div>
 </body>
 </html>
