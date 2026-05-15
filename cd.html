@@ -2411,6 +2411,7 @@ function prodAtualizarCats() {
 
 
 <script>
+// Bind botao login
 (function(){
   var b=document.getElementById('btn-entrar');
   if(b) b.addEventListener('click',fazerLogin);
@@ -2418,14 +2419,6 @@ function prodAtualizarCats() {
     var el=document.getElementById(id);
     if(el) el.addEventListener('keydown',function(e){if(e.key==='Enter')fazerLogin();});
   });
-  // Sincronizar usuarioLogado quando carregarProdutos rodar
-  var _origCP = typeof carregarProdutos === 'function' ? carregarProdutos : null;
-  if(_origCP) {
-    carregarProdutos = async function() {
-      if(typeof _cdUser !== 'undefined' && _cdUser) usuarioLogado = _cdUser;
-      return _origCP();
-    };
-  }
 })();
 </script>
 </body>
