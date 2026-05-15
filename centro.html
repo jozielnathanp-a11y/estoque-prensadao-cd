@@ -1709,5 +1709,100 @@ function mostrarTodasOpcoes() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 </script>
+
+<!-- FEEDBACK BTN -->
+<div id="feedback-btn" onclick="toggleFeedback()" style="position:fixed;bottom:84px;right:20px;width:44px;height:44px;border-radius:50%;background:#1a1a2e;border:2px solid #7c4dff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;z-index:7999;box-shadow:0 4px 16px rgba(0,0,0,0.4);" title="Feedback">💡</div>
+
+<!-- FEEDBACK PANEL -->
+<div id="feedback-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:8500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0d0d0d;border:2px solid #7c4dff;border-radius:18px;width:100%;max-width:400px;padding:24px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-family:Bebas Neue,sans-serif;font-size:1.2rem;color:#7c4dff;letter-spacing:2px;">💡 FEEDBACK</span>
+      <button onclick="toggleFeedback()" style="background:none;border:none;color:#555;font-size:1.4rem;cursor:pointer;">✕</button>
+    </div>
+    <p style="font-size:0.78rem;color:#555;margin-bottom:16px;">Encontrou um erro ou tem uma sugestão? Manda aqui — vai direto pro Josiel!</p>
+
+    <!-- Tipo -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">TIPO</label>
+    <div style="display:flex;gap:8px;margin:8px 0 16px;">
+      <button id="fb-tipo-erro" onclick="setFbTipo('erro')" style="flex:1;background:#2a0a0a;border:2px solid #b71c1c;color:#ef5350;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">🐛 Erro</button>
+      <button id="fb-tipo-sugestao" onclick="setFbTipo('sugestao')" style="flex:1;background:#0a2a0a;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">💡 Sugestão</button>
+      <button id="fb-tipo-elogio" onclick="setFbTipo('elogio')" style="flex:1;background:#1a1200;border:1px solid #333;color:#888;border-radius:10px;padding:9px;cursor:pointer;font-weight:700;font-size:0.82rem;">⭐ Elogio</button>
+    </div>
+
+    <!-- Mensagem -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;">MENSAGEM</label>
+    <textarea id="fb-texto" placeholder="Descreve aqui o que aconteceu ou a sua ideia..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:12px;font-size:0.88rem;line-height:1.5;resize:none;height:110px;margin-top:8px;box-sizing:border-box;"></textarea>
+
+    <!-- Quem é -->
+    <label style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:1px;margin-top:12px;display:block;">SEU NOME <span style="color:#444;font-weight:400;">(opcional)</span></label>
+    <input id="fb-nome" type="text" placeholder="Ex: Gabriel, Ruan..." style="width:100%;background:#1a1a1a;border:1px solid #333;color:#fff;border-radius:10px;padding:10px 12px;font-size:0.85rem;margin-top:8px;box-sizing:border-box;" />
+
+    <button onclick="enviarFeedback()" style="width:100%;margin-top:16px;background:#7c4dff;border:none;color:#fff;border-radius:12px;padding:13px;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;">📤 ENVIAR FEEDBACK</button>
+    <div id="fb-status" style="text-align:center;font-size:0.8rem;color:#4caf50;margin-top:8px;min-height:18px;"></div>
+  </div>
+</div>
+
+<script>
+var _fbTipo = 'erro';
+
+function toggleFeedback() {
+  var p = document.getElementById('feedback-panel');
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+  p.style.alignItems = 'center';
+  p.style.justifyContent = 'center';
+  if (p.style.display === 'flex') setFbTipo('erro');
+}
+
+function setFbTipo(tipo) {
+  _fbTipo = tipo;
+  var estilos = {
+    'erro':     { bg: '#2a0a0a', border: '2px solid #b71c1c', color: '#ef5350' },
+    'sugestao': { bg: '#0a1a2a', border: '2px solid #1565c0', color: '#42a5f5' },
+    'elogio':   { bg: '#1a1200', border: '2px solid #f9a825', color: '#f9a825' },
+  };
+  ['erro','sugestao','elogio'].forEach(function(t) {
+    var btn = document.getElementById('fb-tipo-' + t);
+    var s = estilos[t];
+    if (t === tipo) {
+      btn.style.background = s.bg;
+      btn.style.border = s.border;
+      btn.style.color = s.color;
+    } else {
+      btn.style.background = '#111';
+      btn.style.border = '1px solid #333';
+      btn.style.color = '#555';
+    }
+  });
+}
+
+function enviarFeedback() {
+  var texto = document.getElementById('fb-texto').value.trim();
+  var nome = document.getElementById('fb-nome').value.trim() || 'Anônimo';
+  var status = document.getElementById('fb-status');
+
+  if (!texto) {
+    status.style.color = '#ef5350';
+    status.textContent = '⚠️ Escreve a mensagem primeiro!';
+    return;
+  }
+
+  var tipoLabel = _fbTipo === 'erro' ? '🐛 ERRO' : _fbTipo === 'sugestao' ? '💡 SUGESTÃO' : '⭐ ELOGIO';
+  var msg = tipoLabel + ' — Sistema Centro\n\nDe: ' + nome + '\n\n' + texto;
+  var url = 'https://wa.me/5542988819420?text=' + encodeURIComponent(msg);
+
+  window.open(url, '_blank');
+
+  status.style.color = '#4caf50';
+  status.textContent = '✅ Abrindo WhatsApp...';
+  document.getElementById('fb-texto').value = '';
+  document.getElementById('fb-nome').value = '';
+
+  setTimeout(function() {
+    toggleFeedback();
+    status.textContent = '';
+  }, 2000);
+}
+</script>
 </body>
 </html>
