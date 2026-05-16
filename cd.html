@@ -1325,6 +1325,10 @@ function adicionarAoLote() {
   if (!qtd || qtd <= 0) { showToast('Coloca a quantidade!', 'error'); return; }
   if (_lancamentos.length >= 15) { showToast('Limite de 15 itens!', 'error'); return; }
   var p = getProduto(cod);
+  // Multiplicar pela quantidade por pacote (se não for contagem)
+  if (tipo !== 'contagem' && p && p.qtd_por_pct && parseFloat(p.qtd_por_pct) > 1) {
+    qtd = qtd * parseFloat(p.qtd_por_pct);
+  }
   var dup = null;
   for (var i=0;i<_lancamentos.length;i++){
     if(_lancamentos[i].cod===cod&&_lancamentos[i].tipo===tipo){dup=_lancamentos[i];break;}
@@ -1877,6 +1881,10 @@ function adicionarAlmoxAoLote() {
   if (!qtd || qtd <= 0) { alert('Digite uma quantidade!'); return; }
   var prod = _acd.find(function(p){ return p.codigo === cod; });
   if (!prod) return;
+  // Multiplicar pela quantidade por pacote (se não for contagem)
+  if (tipo !== 'contagem' && prod.qtd_por_pct && parseFloat(prod.qtd_por_pct) > 1) {
+    qtd = qtd * parseFloat(prod.qtd_por_pct);
+  }
   // Verificar se já está no lote
   var idx = _almoxLoteCD.findIndex(function(i){ return i.codigo === cod; });
   if (idx !== -1) { _almoxLoteCD[idx].qtd = qtd; }
