@@ -1076,7 +1076,7 @@ function buscarPorCodigo() {
   if (dup) {
     dup.qtd = Math.round((dup.qtd + qtd) * 1000) / 1000;
   } else {
-    _lancamentos.push({ cod: p.codigo, tipo: tipo, qtd: qtd, nome: p.nome, unidade: p.unidade, categoria: p.categoria || '' });
+    bipSom(); _lancamentos.push({ cod: p.codigo, tipo: tipo, qtd: qtd, nome: p.nome, unidade: p.unidade, categoria: p.categoria || '' });
   }
 
   // Limpar campos
@@ -1793,6 +1793,22 @@ function tutRender() {
 
 <script>
 /* ALMOX CD STANDALONE */
+
+function bipSom() {
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
 // ── FUNÇÕES DE LANÇAMENTO ALMOX CD ──
 
 function selecionarTipoAlmox(tipo) {
@@ -1869,6 +1885,7 @@ function adicionarAlmoxAoLote() {
   if (qtdEl) qtdEl.value = '';
   if (sel) sel.value = '';
   _renderAlmoxLoteCD();
+  bipSom();
 }
 
 function _renderAlmoxLoteCD() {
