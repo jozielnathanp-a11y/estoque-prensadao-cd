@@ -1793,6 +1793,165 @@ function tutRender() {
 
 <script>
 /* ALMOX CD STANDALONE */
+// ── FUNÇÕES DE LANÇAMENTO ALMOX CD ──
+
+function selecionarTipoAlmox(tipo) {
+  document.getElementById('almox-tipo').value = tipo;
+  var btnE = document.getElementById('almox-btn-entrada');
+  var btnC = document.getElementById('almox-btn-contagem');
+  if (btnE) { btnE.className = tipo === 'entrada' ? 'btn btn-green' : 'btn btn-gray'; btnE.style.flex='1'; btnE.style.margin='0'; }
+  if (btnC) { btnC.className = tipo === 'contagem' ? 'btn btn-red' : 'btn btn-gray'; btnC.style.flex='1'; btnC.style.margin='0'; }
+}
+
+function buscarAlmoxPorCodigo() {
+  var scanEl = document.getElementById('almox-scan');
+  var cod = scanEl ? scanEl.value.trim() : '';
+  if (!cod) return;
+  // Buscar por código de barras ou código base
+  var found = null;
+  for (var i = 0; i < _acd.length; i++) {
+    var base = _acd[i].codigo.replace('_almoxarifado_cd', '');
+    if (_acd[i].codigo === cod || base === cod || _acd[i].codigo.indexOf(cod) !== -1) {
+      found = _acd[i]; break;
+    }
+  }
+  if (!found) {
+    alert('Produto não encontrado: ' + cod);
+    return;
+  }
+  // Selecionar no select
+  var sel = document.getElementById('almox-produto');
+  if (sel) {
+    sel.value = found.codigo;
+    // Atualizar unidade
+    var unEl = document.getElementById('almox-unidade');
+    if (unEl) unEl.textContent = found.unidade;
+    // Preencher qtd com qtd_por_pct se disponível
+    var qtdEl = document.getElementById('almox-qtd');
+    if (qtdEl && found.qtd_por_pct && parseFloat(found.qtd_por_pct) > 0) {
+      qtdEl.value = parseFloat(found.qtd_por_pct);
+    } else if (qtdEl) {
+      qtdEl.value = '';
+      qtdEl.focus();
+    }
+  }
+  if (scanEl) scanEl.value = '';
+}
+
+function selecionarAlmoxProduto() {
+  var sel = document.getElementById('almox-produto');
+  var cod = sel ? sel.value : '';
+  if (!cod) return;
+  var prod = _acd.find(function(p){ return p.codigo === cod; });
+  if (!prod) return;
+  var unEl = document.getElementById('almox-unidade');
+  if (unEl) unEl.textContent = prod.unidade;
+}
+
+var _almoxLoteCD = [];
+
+function adicionarAlmoxAoLote() {
+  var sel = document.getElementById('almox-produto');
+  var qtdEl = document.getElementById('almox-qtd');
+  var tipoEl = document.getElementById('almox-tipo');
+  var cod = sel ? sel.value : '';
+  var qtd = qtdEl ? parseFloat(qtdEl.value) : 0;
+  var tipo = tipoEl ? tipoEl.value : 'entrada';
+  if (!cod) { alert('Selecione um produto!'); return; }
+  if (!qtd || qtd <= 0) { alert('Digite uma quantidade!'); return; }
+  var prod = _acd.find(function(p){ return p.codigo === cod; });
+  if (!prod) return;
+  // Verificar se já está no lote
+  var idx = _almoxLoteCD.findIndex(function(i){ return i.codigo === cod; });
+  if (idx !== -1) { _almoxLoteCD[idx].qtd = qtd; }
+  else { _almoxLoteCD.push({ codigo: cod, nome: prod.nome, unidade: prod.unidade, qtd: qtd, tipo: tipo, estoque: parseFloat(prod.estoque)||0 }); }
+  // Limpar campos
+  if (qtdEl) qtdEl.value = '';
+  if (sel) sel.value = '';
+  _renderAlmoxLoteCD();
+}
+
+function _renderAlmoxLoteCD() {
+  var lista = document.getElementById('almox-lista-pendentes');
+  var count = document.getElementById('almox-lanc-count');
+  var btnSalvar = document.getElementById('almox-btn-salvar');
+  if (count) count.textContent = _almoxLoteCD.length;
+  if (btnSalvar) btnSalvar.style.display = _almoxLoteCD.length ? 'block' : 'none';
+  if (!lista) return;
+  if (!_almoxLoteCD.length) {
+    lista.innerHTML = '<p style="color:#555;text-align:center;font-size:0.78rem;padding:8px;">Confirme um item acima.</p>';
+    return;
+  }
+  var out = '';
+  for (var i = 0; i < _almoxLoteCD.length; i++) {
+    var item = _almoxLoteCD[i];
+    var ico = item.tipo === 'entrada' ? '📥' : '📊';
+    out += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid #333;font-size:0.82rem;">';
+    out += '<span>' + ico + ' ' + item.nome + '</span>';
+    out += '<span style="color:#aaa;">' + item.qtd + ' ' + item.unidade + '</span>';
+    out += '</div>';
+  }
+  lista.innerHTML = out;
+}
+
+function limparAlmoxLote() {
+  _almoxLoteCD = [];
+  _renderAlmoxLoteCD();
+}
+
+async function salvarAlmoxLote() {
+  if (!_almoxLoteCD.length) return;
+  var btnSalvar = document.getElementById('almox-btn-salvar');
+  if (btnSalvar) { btnSalvar.disabled = true; btnSalvar.textContent = '⏳ Salvando...'; }
+  var erros = 0;
+  for (var i = 0; i < _almoxLoteCD.length; i++) {
+    var item = _almoxLoteCD[i];
+    try {
+      // Calcular novo estoque
+      var novoEst = item.tipo === 'contagem' ? item.qtd : item.estoque + item.qtd;
+      // Atualizar produto
+      await fetch(
+        'https://trbyynbtuzpszdvjivbs.supabase.co/rest/v1/produtos?codigo=eq.' + encodeURIComponent(item.codigo),
+        { method: 'PATCH', headers: { 'apikey': 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj', 'Authorization': 'Bearer sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj', 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ estoque: novoEst }) }
+      );
+      // Registrar movimentação
+      await fetch(
+        'https://trbyynbtuzpszdvjivbs.supabase.co/rest/v1/movimentacoes',
+        { method: 'POST', headers: { 'apikey': 'sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj', 'Authorization': 'Bearer sb_publishable_lA_OIFoNVpmh5fmxNwu_1w_f9waqXfj', 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ codigo: item.codigo, nome: item.nome, tipo: item.tipo === 'contagem' ? 'contagem' : 'entrada', qtd: item.qtd, unidade: item.unidade, colaborador: 'Cozinha CD', obs: item.tipo === 'contagem' ? 'Contagem' : 'Entrada', estoque_anterior: item.estoque, novo_estoque: novoEst, unidade_loja: 'almoxarifado_cd', status: 'confirmado' }) }
+      );
+    } catch(e) { erros++; }
+  }
+  if (erros === 0) {
+    alert('✅ Salvo com sucesso! ' + _almoxLoteCD.length + ' item(s) lançado(s).');
+  } else {
+    alert('⚠️ Salvo com ' + erros + ' erro(s).');
+  }
+  limparAlmoxLote();
+  if (btnSalvar) { btnSalvar.disabled = false; btnSalvar.textContent = '💾 SALVAR NO ALMOXARIFADO'; }
+  carregarAlmox();
+}
+
+function abrirCameraAlmox() {
+  var area = document.getElementById('almox-camera-area');
+  var video = document.getElementById('almox-camera-video');
+  if (!area || !video) return;
+  area.style.display = 'block';
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(function(stream){ video.srcObject = stream; })
+      .catch(function(){ alert('Câmera não disponível.'); area.style.display = 'none'; });
+  }
+}
+
+function fecharCameraAlmox() {
+  var area = document.getElementById('almox-camera-area');
+  var video = document.getElementById('almox-camera-video');
+  if (area) area.style.display = 'none';
+  if (video && video.srcObject) { video.srcObject.getTracks().forEach(function(t){ t.stop(); }); video.srcObject = null; }
+}
+
 var _acd = [];
 var _acdFiltro = 'todos';
 
@@ -1876,7 +2035,7 @@ function almoxRenderStats() {
 }
 
 function _popularSelectAlmoxCD() {
-  var sel = document.getElementById('almox-produto-sel');
+  var sel = document.getElementById('almox-produto');
   if (!sel) return;
   sel.innerHTML = '<option value="">Selecione...</option>';
   for (var i = 0; i < _acd.length; i++) {
