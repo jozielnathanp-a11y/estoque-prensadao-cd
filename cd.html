@@ -1005,147 +1005,105 @@ function exportarCSV() {
   showToast('✅ Planilha baixada!', 'success');
 }
 
-// ── RELATÓRIO ALMOXARIFADO ──
+
+// -- REL ALMOX --
 function abrirRelAlmox() {
-  document.getElementById('modal-rel-almox').style.display = 'block';
-  const hoje = dataHoje();
-  document.getElementById('rel-almox-data').value = hoje;
+  var m = document.getElementById("mra");
+  m.style.display = "block";
+  var inp = document.getElementById("mra-data");
+  inp.value = dataHoje();
   gerarRelAlmox();
 }
 
-function fecharRelAlmox() {
-  document.getElementById('modal-rel-almox').style.display = 'none';
-}
-
 async function gerarRelAlmox() {
-  const data = document.getElementById('rel-almox-data').value;
+  var data = document.getElementById("mra-data").value;
+  var el = document.getElementById("mra-resultado");
   if (!data) return;
-  const el = document.getElementById('rel-almox-resultado');
-  el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
+  el.innerHTML = "<p style='color:#888;text-align:center;padding:20px;'>Carregando...</p>";
 
-  // Buscar produtos do almoxarifado_cd
-  const prods = await supa('GET', 'produtos', null, 'unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc');
-  if (!prods || !prods.length) { el.innerHTML = '<p style="color:#888;text-align:center;">Nenhum produto</p>'; return; }
+  var prods = await supa("GET", "produtos", null, "unidade_loja=eq.almoxarifado_cd&select=*&order=nome.asc");
+  if (!prods || !prods.length) { el.innerHTML = "<p style='color:#888;text-align:center;'>Nenhum produto</p>"; return; }
 
-  // Buscar movimentações do dia (ajuste UTC-3)
-  const dtInicio = new Date(data + 'T00:00:00-03:00');
-  const dtFim    = new Date(data + 'T23:59:59-03:00');
-  const inicio   = dtInicio.toISOString().replace('Z', '');
-  const fim      = dtFim.toISOString().replace('Z', '');
+  var dtI = new Date(data + "T00:00:00-03:00");
+  var dtF = new Date(data + "T23:59:59-03:00");
+  var ini = dtI.toISOString().replace("Z","");
+  var fim = dtF.toISOString().replace("Z","");
 
-  // Dia anterior
-  const dtAntInicio = new Date(data + 'T00:00:00-03:00');
-  dtAntInicio.setDate(dtAntInicio.getDate() - 1);
-  const dtAntFim = new Date(data + 'T00:00:00-03:00');
-  dtAntFim.setMilliseconds(dtAntFim.getMilliseconds() - 1);
-  const inicioAnt = dtAntInicio.toISOString().replace('Z', '');
-  const fimAnt    = dtAntFim.toISOString().replace('Z', '');
+  var dtAI = new Date(data + "T00:00:00-03:00");
+  dtAI.setDate(dtAI.getDate()-1);
+  var dtAF = new Date(data + "T00:00:00-03:00");
+  dtAF.setMilliseconds(dtAF.getMilliseconds()-1);
+  var iniA = dtAI.toISOString().replace("Z","");
+  var fimA = dtAF.toISOString().replace("Z","");
 
-  const movsHoje = await supa('GET', 'movimentacoes', null,
-    `unidade_loja=eq.almoxarifado_cd&created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.asc&select=*`);
-  const movsAnt = await supa('GET', 'movimentacoes', null,
-    `unidade_loja=eq.almoxarifado_cd&created_at=gte.${inicioAnt}&created_at=lte.${fimAnt}&status=eq.confirmado&order=created_at.asc&select=*`);
+  var movsH = await supa("GET","movimentacoes",null,"unidade_loja=eq.almoxarifado_cd&created_at=gte."+ini+"&created_at=lte."+fim+"&status=eq.confirmado&order=created_at.asc&select=*");
+  var movsA = await supa("GET","movimentacoes",null,"unidade_loja=eq.almoxarifado_cd&created_at=gte."+iniA+"&created_at=lte."+fimA+"&status=eq.confirmado&order=created_at.asc&select=*");
 
-  let resultado = {};
-  prods.forEach(p => {
-    resultado[p.codigo] = {
-      nome: p.nome, unidade: p.unidade, categoria: p.categoria,
-      estoque_atual: parseFloat(p.estoque) || 0,
-      entrada_anterior: 0,
-      entrada_atual: 0,
-      saida_atual: 0,
-      contagem: null
-    };
+  var res = {};
+  prods.forEach(function(p){
+    res[p.codigo] = { nome:p.nome, unidade:p.unidade, categoria:p.categoria,
+      est: parseFloat(p.estoque)||0, entA:0, ent:0, sai:0, cont:null };
+  });
+  if (Array.isArray(movsA)) movsA.forEach(function(m){ if(res[m.codigo]&&m.tipo==="entrada") res[m.codigo].entA+=parseFloat(m.qtd)||0; });
+  if (Array.isArray(movsH)) movsH.forEach(function(m){
+    if(!res[m.codigo]) return;
+    if(m.tipo==="entrada") res[m.codigo].ent+=parseFloat(m.qtd)||0;
+    else if(m.tipo==="saida") res[m.codigo].sai+=parseFloat(m.qtd)||0;
+    else if(m.tipo==="contagem") res[m.codigo].cont=parseFloat(m.novo_estoque);
   });
 
-  if (Array.isArray(movsAnt)) {
-    movsAnt.forEach(m => {
-      if (!resultado[m.codigo]) return;
-      if (m.tipo === 'entrada') resultado[m.codigo].entrada_anterior += parseFloat(m.qtd) || 0;
-    });
-  }
-  if (Array.isArray(movsHoje)) {
-    movsHoje.forEach(m => {
-      if (!resultado[m.codigo]) return;
-      if (m.tipo === 'entrada') resultado[m.codigo].entrada_atual += parseFloat(m.qtd) || 0;
-      else if (m.tipo === 'saida') resultado[m.codigo].saida_atual += parseFloat(m.qtd) || 0;
-      else if (m.tipo === 'contagem') resultado[m.codigo].contagem = parseFloat(m.novo_estoque);
-    });
-  }
+  var itens = Object.values(res).sort(function(a,b){return a.nome.localeCompare(b.nome);});
+  window._rla = itens; window._rlaData = data;
 
-  const itens = Object.values(resultado).sort((a,b) => a.nome.localeCompare(b.nome));
-  window._ultimoRelAlmox = itens;
-  window._ultimoRelAlmoxData = data;
+  var parts = data.split("-");
+  var out = "<div style='background:#263238;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;border:1px solid #37474f;'>"+
+    "&#128197; "+parts[2]+"/"+parts[1]+"/"+parts[0]+" &middot; Almoxarifado CD</div>";
 
-  const [ano, mes, dia] = data.split('-');
-  let out = `<div style="background:#263238;color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;border:1px solid #37474f;">
-    📅 ${dia}/${mes}/${ano} · Almoxarifado CD
-  </div>`;
-
-  itens.forEach(p => {
-    const semCont = p.contagem === null;
-    const estAtual = p.estoque_atual;
-    const cor = estAtual === 0 ? '#f44336' : '#4caf50';
-    const contLabel = semCont ? '**' : fmtQ(p.contagem, p.unidade);
-
-    out += '<div style="background:#1e1e1e;border-left:4px solid ' + cor + ';border-radius:8px;padding:10px 14px;margin-bottom:8px;">';
-    out += '<div style="font-weight:700;font-size:0.92rem;color:#f0f0f0;">' + p.nome + ' <span style="font-size:0.72rem;color:#888;">' + p.categoria + '</span></div>';
-    out += '<div style="font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">';
-    out += '<span style="background:#0d2a3a;padding:3px 8px;border-radius:6px;color:#90caf9;">📦 Ent. ant.: <b>' + (p.entrada_anterior > 0 ? fmtQ(p.entrada_anterior, p.unidade) : '—') + '</b></span>';
-    out += '<span style="background:#0d2a0d;padding:3px 8px;border-radius:6px;color:#a5d6a7;">📥 Entrada: <b>' + (p.entrada_atual > 0 ? fmtQ(p.entrada_atual, p.unidade) : '—') + '</b></span>';
-    if (p.saida_atual > 0) out += '<span style="background:#2a0d0d;padding:3px 8px;border-radius:6px;color:#ef9a9a;">📤 Saída: <b>' + fmtQ(p.saida_atual, p.unidade) + '</b></span>';
-    out += '<span style="background:#2a0d3a;padding:3px 8px;border-radius:6px;color:#ce93d8;">📊 Contagem: <b style="color:' + cor + '">' + contLabel + '</b></span>';
-    out += '<span style="background:#1a1a2a;padding:3px 8px;border-radius:6px;color:#90caf9;">📦 Estoque: <b style="color:#fff">' + fmtQ(estAtual, p.unidade) + '</b></span>';
-    out += '</div></div>';
+  itens.forEach(function(p){
+    var cor = p.est===0?"#f44336":"#4caf50";
+    var contLabel = p.cont===null ? "**" : fmtQ(p.cont, p.unidade);
+    out += "<div style='background:#1e1e1e;border-left:4px solid "+cor+";border-radius:8px;padding:10px 14px;margin-bottom:8px;'>";
+    out += "<div style='font-weight:700;font-size:0.92rem;color:#f0f0f0;'>"+p.nome+" <span style='font-size:0.72rem;color:#888;'>"+p.categoria+"</span></div>";
+    out += "<div style='font-size:0.8rem;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;'>";
+    out += "<span style='background:#0d2a3a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Ent.ant.: <b>"+(p.entA>0?fmtQ(p.entA,p.unidade):"&mdash;")+"</b></span>";
+    out += "<span style='background:#0d2a0d;padding:3px 8px;border-radius:6px;color:#a5d6a7;'>&#128229; Entrada: <b>"+(p.ent>0?fmtQ(p.ent,p.unidade):"&mdash;")+"</b></span>";
+    if(p.sai>0) out += "<span style='background:#2a0d0d;padding:3px 8px;border-radius:6px;color:#ef9a9a;'>&#128228; Sa&iacute;da: <b>"+fmtQ(p.sai,p.unidade)+"</b></span>";
+    out += "<span style='background:#2a0d3a;padding:3px 8px;border-radius:6px;color:#ce93d8;'>&#128202; Contagem: <b style='color:"+cor+"'>"+contLabel+"</b></span>";
+    out += "<span style='background:#1a1a2a;padding:3px 8px;border-radius:6px;color:#90caf9;'>&#128230; Estoque: <b style='color:#fff'>"+fmtQ(p.est,p.unidade)+"</b></span>";
+    out += "</div></div>";
   });
-
   el.innerHTML = out;
 }
 
 function compartilharRelAlmox() {
-  const itens = window._ultimoRelAlmox;
-  const data = window._ultimoRelAlmoxData;
-  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
-  const [ano, mes, dia] = data.split('-');
-  let texto = '📦 *Relatório Almoxarifado CD — Prensadão*
-📅 ' + dia + '/' + mes + '/' + ano + '
-
-';
-  itens.forEach(p => {
-    if (p.entrada_atual === 0 && p.saida_atual === 0 && p.estoque_atual === 0) return;
-    texto += '▪️ *' + p.nome + '*
-';
-    if (p.entrada_anterior > 0) texto += '   Ent. ant.: ' + fmtQ(p.entrada_anterior, p.unidade) + '
-';
-    if (p.entrada_atual > 0)    texto += '   Entrada: +' + fmtQ(p.entrada_atual, p.unidade) + '
-';
-    if (p.saida_atual > 0)      texto += '   Saída: -' + fmtQ(p.saida_atual, p.unidade) + '
-';
-    texto += '   Estoque: ' + fmtQ(p.estoque_atual, p.unidade) + '
-';
+  var itens = window._rla; var data = window._rlaData;
+  if (!itens||!itens.length) { showToast("Gere o relatorio primeiro!","error"); return; }
+  var p2 = data.split("-");
+  var txt = "&#128230; *Relatorio Almoxarifado CD*\n&#128197; "+p2[2]+"/"+p2[1]+"/"+p2[0]+"\n\n";
+  itens.forEach(function(p){
+    if(p.ent===0&&p.sai===0&&p.est===0) return;
+    txt += "▪️ *"+p.nome+"*\n";
+    if(p.entA>0) txt+="   Ent.ant.: "+fmtQ(p.entA,p.unidade)+"\n";
+    if(p.ent>0)  txt+="   Entrada: +"+fmtQ(p.ent,p.unidade)+"\n";
+    if(p.sai>0)  txt+="   Saida: -"+fmtQ(p.sai,p.unidade)+"\n";
+    txt+="   Estoque: "+fmtQ(p.est,p.unidade)+"\n";
   });
-  texto += '
-_Gerado por Estoques Prensadão CD_';
-  window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+  txt+="\n_Gerado por Estoques Prensadao CD_";
+  window.open("https://wa.me/?text="+encodeURIComponent(txt),"_blank");
 }
 
 function exportarRelAlmoxCSV() {
-  const itens = window._ultimoRelAlmox;
-  const data = window._ultimoRelAlmoxData;
-  if (!itens || !itens.length) { showToast('Gere o relatório primeiro!', 'error'); return; }
-  const [ano, mes, dia] = data.split('-');
-  let csv = 'Produto;Unidade;Ent.Anterior;Entrada;Saida;Estoque
-';
-  itens.forEach(p => {
-    csv += '"' + p.nome + '";' + p.unidade + ';' + (p.entrada_anterior||0) + ';' + (p.entrada_atual||0) + ';' + (p.saida_atual||0) + ';' + p.estoque_atual + '
-';
-  });
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
+  var itens = window._rla; var data = window._rlaData;
+  if (!itens||!itens.length) { showToast("Gere o relatorio primeiro!","error"); return; }
+  var p2 = data.split("-");
+  var csv = "Produto;Unidade;Ent.Ant;Entrada;Saida;Estoque\n";
+  itens.forEach(function(p){ csv+='"'+p.nome+'";'+p.unidade+";"+p.entA+";"+p.ent+";"+p.sai+";"+p.est+"\n"; });
+  var blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  var link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = 'almox_cd_' + dia + '-' + mes + '-' + ano + '.csv';
+  link.download = "almox_cd_"+p2[2]+"-"+p2[1]+"-"+p2[0]+".csv";
   link.click();
-  showToast('✅ Planilha baixada!', 'success');
+  showToast("Planilha baixada!","success");
 }
 
 // ── BEEP ──
@@ -2233,22 +2191,21 @@ function _popularSelectAlmoxCD() {
 function almoxPopularSelect() { _popularSelectAlmoxCD(); }
 </script>
 
-  <!-- MODAL RELATÓRIO ALMOXARIFADO -->
-  <div id="modal-rel-almox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;">
-    <div style="background:#111;border-radius:14px;margin:20px auto;max-width:600px;padding:20px;">
+
+  <div id="mra" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;overflow-y:auto;padding:16px;box-sizing:border-box;">
+    <div style="background:#111;border-radius:14px;max-width:600px;margin:0 auto;padding:20px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h3 style="margin:0;color:#fff;">📊 Relatório Almoxarifado</h3>
-        <button onclick="fecharRelAlmox()" style="background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;">✖</button>
+        <h3 style="margin:0;color:#fff;">&#128202; Relatório Almoxarifado</h3>
+        <button onclick="document.getElementById('mra').style.display='none'" style="background:none;border:none;color:#aaa;font-size:1.4rem;cursor:pointer;">&#x2716;</button>
       </div>
-      <input type="date" id="rel-almox-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelAlmox()" />
+      <input type="date" id="mra-data" style="width:100%;margin-bottom:10px;" onchange="gerarRelAlmox()" />
       <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button class="btn btn-red" onclick="gerarRelAlmox()" style="flex:1;margin:0;">📊 Gerar</button>
-        <button class="btn btn-green" onclick="compartilharRelAlmox()" style="flex:1;margin:0;">📱 WhatsApp</button>
-        <button class="btn btn-gray" onclick="exportarRelAlmoxCSV()" style="flex:1;margin:0;">📄 Planilha</button>
+        <button class="btn btn-red" onclick="gerarRelAlmox()" style="flex:1;margin:0;">&#128202; Gerar</button>
+        <button class="btn btn-green" onclick="compartilharRelAlmox()" style="flex:1;margin:0;">&#128241; WhatsApp</button>
+        <button class="btn btn-gray" onclick="exportarRelAlmoxCSV()" style="flex:1;margin:0;">&#128196; Planilha</button>
       </div>
-      <div id="rel-almox-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data acima.</p></div>
+      <div id="mra-resultado"><p style="color:#888;text-align:center;padding:20px;">Selecione uma data.</p></div>
     </div>
   </div>
-
 </body>
 </html>
