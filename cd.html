@@ -759,8 +759,11 @@ async function carregarHistorico() {
   const el = document.getElementById('lista-historico');
   el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Carregando...</p>';
 
-  const inicio = data + 'T00:00:00';
-  const fim = data + 'T23:59:59';
+  // Ajustar para UTC (banco em UTC, app em UTC-3)
+  const dtInicio = new Date(data + 'T00:00:00-03:00');
+  const dtFim    = new Date(data + 'T23:59:59-03:00');
+  const inicio   = dtInicio.toISOString().replace('Z', '');
+  const fim      = dtFim.toISOString().replace('Z', '');
   const movs = await supa('GET', 'movimentacoes', null,
     `unidade_loja=in.(cd,almoxarifado_cd)&created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
 
