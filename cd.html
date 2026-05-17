@@ -791,13 +791,13 @@ async function carregarHistorico() {
       '<div style="display:flex;justify-content:space-between;align-items:center;">' +
         '<div>' +
           '<span class="hist-tipo ' + tipoCls + '">' + tipoLabel + '</span>' +
-          '<span style="font-size:0.72rem;color:#aaa;margin-left:6px;">' + hora + '</span>' +
+          '<span style="font-size:0.72rem;color:#bbb;margin-left:6px;">' + hora + '</span>' +
           destinoTag +
         '</div>' +
         '<div style="font-weight:700;color:' + corQtd + ';">' + sinal + fmtQ(m.qtd, m.unidade) + '</div>' +
       '</div>' +
-      '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;">' + m.nome + '</div>' +
-      '<div style="font-size:0.75rem;color:#888;">por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '') + '</div>' +
+      '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;color:#f0f0f0;">' + m.nome + '</div>' +
+      '<div style="font-size:0.75rem;color:#aaa;">por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '') + '</div>' +
     '</div>';
   }).join('');
 }
