@@ -799,7 +799,7 @@ async function carregarHistorico() {
         '<div style="font-weight:700;color:' + corQtd + ';">' + sinal + fmtQ(m.qtd, m.unidade) + '</div>' +
       '</div>' +
       '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;color:#f0f0f0;">' + m.nome + '</div>' +
-      '<div style="font-size:0.75rem;color:#aaa;">por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '') + '</div>' +
+      '<div style="font-size:0.75rem;color:#aaa;">' + (m.tipo === 'saida' ? m.colaborador : 'por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '')) + '</div>' +
     '</div>';
   }).join('');
 }
