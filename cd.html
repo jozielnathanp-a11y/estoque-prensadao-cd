@@ -760,28 +760,45 @@ async function carregarHistorico() {
   const inicio = data + 'T00:00:00';
   const fim = data + 'T23:59:59';
   const movs = await supa('GET', 'movimentacoes', null,
-    `created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
+    `unidade_loja=eq.cd&created_at=gte.${inicio}&created_at=lte.${fim}&status=eq.confirmado&order=created_at.desc&select=*`);
 
   if (!movs || !movs.length) {
     el.innerHTML = '<p style="color:#888;text-align:center;padding:20px;">Nada confirmado nessa data, mano. Dia tranquilo 😎</p>';
     return;
   }
 
+  const DEST_MAP = {centro:'🏬 Centro', delivery:'🚚 Delivery', boqueiraw:'🥤 Boqueirão'};
+
   el.innerHTML = movs.map(m => {
     const hora = new Date(m.created_at).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-    const tipoCls = m.tipo === 'contagem' ? 'hist-contagem' : 'hist-entrada';
-    const tipoLabel = m.tipo === 'contagem' ? '📊 Contagem' : '📥 Entrada';
-    return `<div class="hist-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <span class="hist-tipo ${tipoCls}">${tipoLabel}</span>
-          <span style="font-size:0.72rem;color:#aaa;margin-left:6px;">${hora}</span>
-        </div>
-        <div style="font-weight:700;color:#00e5ff;">${fmtQ(m.qtd, m.unidade)}</div>
-      </div>
-      <div style="font-size:0.85rem;font-weight:600;margin-top:3px;">${m.nome}</div>
-      <div style="font-size:0.75rem;color:#888;">por ${m.colaborador} · confirmado por ${m.confirmado_por || '?'}</div>
-    </div>`;
+    let tipoCls, tipoLabel, corQtd = '#00e5ff', sinal = '+';
+    if (m.tipo === 'contagem') {
+      tipoCls = 'hist-contagem'; tipoLabel = '📊 Contagem'; sinal = '';
+    } else if (m.tipo === 'saida') {
+      tipoCls = 'hist-saida'; tipoLabel = '📤 Saída'; corQtd = '#ff5252'; sinal = '-';
+    } else {
+      tipoCls = 'hist-entrada'; tipoLabel = '📥 Entrada';
+    }
+    // Destino: extrair unidade da obs (SYNC_CD:<mov_id>) não tem direto,
+    // mas o colaborador tem o nome da unidade quando é auto
+    let destinoTag = '';
+    if (m.tipo === 'saida' && m.obs && m.obs.startsWith('SYNC_CD:')) {
+      // Buscar a mov de origem para saber a unidade
+      // Por enquanto mostrar tag genérica de enviado para unidade
+      destinoTag = '<span style="font-size:0.7rem;background:#1a2a1a;color:#ff9800;border-radius:4px;padding:1px 6px;margin-left:4px;">⬆️ p/ unidade</span>';
+    }
+    return '<div class="hist-item">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+          '<span class="hist-tipo ' + tipoCls + '">' + tipoLabel + '</span>' +
+          '<span style="font-size:0.72rem;color:#aaa;margin-left:6px;">' + hora + '</span>' +
+          destinoTag +
+        '</div>' +
+        '<div style="font-weight:700;color:' + corQtd + ';">' + sinal + fmtQ(m.qtd, m.unidade) + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;">' + m.nome + '</div>' +
+      '<div style="font-size:0.75rem;color:#888;">por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '') + '</div>' +
+    '</div>';
   }).join('');
 }
 
