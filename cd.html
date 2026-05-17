@@ -98,11 +98,11 @@
     .stat-num { font-size: 1.6rem; font-weight: 700; color: #9e9e9e; font-family: 'Bebas Neue', sans-serif; }
     .stat-label { font-size: 0.72rem; color: #555; margin-top: 2px; letter-spacing: 1px; }
 
-    .hist-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+    .hist-item { padding: 10px 6px; border-bottom: 1px solid #ddd; background: #fff; border-radius: 6px; margin-bottom: 6px; }
     .hist-item:last-child { border-bottom: none; }
     .hist-tipo { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; }
-    .hist-contagem { background: #e3f2fd; color: #1a237e; }
-    .hist-entrada { background: #e8f5e9; color: #2e7d32; }
+    .hist-contagem { background: #e3f2fd; color: #0d47a1; }
+    .hist-entrada { background: #e8f5e9; color: #1b5e20; }
     .hist-saida { background: #fde8e8; color: #b71c1c; }
 
     /* Modal movimentação */
@@ -796,13 +796,13 @@ async function carregarHistorico() {
       '<div style="display:flex;justify-content:space-between;align-items:center;">' +
         '<div>' +
           '<span class="hist-tipo ' + tipoCls + '">' + tipoLabel + '</span>' +
-          '<span style="font-size:0.72rem;color:#bbb;margin-left:6px;">' + hora + '</span>' +
+          '<span style="font-size:0.72rem;color:#555;margin-left:6px;">' + hora + '</span>' +
           destinoTag +
         '</div>' +
         '<div style="font-weight:700;color:' + corQtd + ';">' + sinal + fmtQ(m.qtd, m.unidade) + '</div>' +
       '</div>' +
-      '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;color:#f0f0f0;">' + m.nome + '</div>' +
-      '<div style="font-size:0.75rem;color:#aaa;">' + (m.tipo === 'saida' ? m.colaborador : 'por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '')) + '</div>' +
+      '<div style="font-size:0.85rem;font-weight:600;margin-top:3px;color:#111;">' + m.nome + '</div>' +
+      '<div style="font-size:0.75rem;color:#555;">' + (m.tipo === 'saida' ? m.colaborador : 'por ' + m.colaborador + (m.confirmado_por ? ' · confirmado por ' + m.confirmado_por : '')) + '</div>' +
     '</div>';
   }).join('');
 }
